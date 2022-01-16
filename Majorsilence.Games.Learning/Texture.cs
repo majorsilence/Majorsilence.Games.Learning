@@ -15,7 +15,6 @@ namespace Majorsilence.Games.Learning
         {
             if (ap._disposed) return IntPtr.Zero;
             return ap._texture;
-            //return ap._pinnedArray.AddrOfPinnedObject();
         }
 
         public void Dispose()

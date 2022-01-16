@@ -21,7 +21,7 @@ SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
 var window = SDL.SDL_CreateWindow("SDL2 Displaying Image",
     SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
 
-var renderer = SDL.SDL_CreateRenderer(window, -1, 0);
+var renderer = new Renderer(window);
 
 var image = new Majorsilence.Games.Learning.Image("/Users/petergill/Downloads/stick_people.png");
 var texture =  new Majorsilence.Games.Learning.Texture(renderer, image);
@@ -41,13 +41,15 @@ while (!quit)
     //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
     SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, IntPtr.Zero);
     SDL.SDL_RenderPresent(renderer);
+    renderer.SaveScreenshot();
 }
+
 
 
 texture?.Dispose();
 
 image?.Dispose();
-SDL.SDL_DestroyRenderer(renderer);
+renderer?.Dispose();
 SDL.SDL_DestroyWindow(window);
 
 SDL.SDL_Quit();

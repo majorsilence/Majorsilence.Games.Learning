@@ -25,10 +25,7 @@ namespace Majorsilence.Games.Learning
             using (var image2 = SixLabors.ImageSharp.Image.Load(path))
             {
 
-                var bmpEncoder = new SixLabors.ImageSharp.Formats.Bmp.BmpEncoder()
-                {
-
-                };
+                var bmpEncoder = new SixLabors.ImageSharp.Formats.Bmp.BmpEncoder();
 
                 _tempPath = System.IO.Path.GetTempFileName();
                 image2.SaveAsBmp(_tempPath, bmpEncoder);
@@ -36,16 +33,12 @@ namespace Majorsilence.Games.Learning
                 var bytes = System.IO.File.ReadAllBytes(path);
 
                 _surface = SDL.SDL_LoadBMP(_tempPath);
-
-
-                //_pinnedArray = GCHandle.Alloc(_surface, GCHandleType.Pinned);
             }
         }
         public static implicit operator IntPtr(Image ap)
         {
             if (ap._disposed) return IntPtr.Zero;
             return ap._surface;
-            //return ap._pinnedArray.AddrOfPinnedObject();
         }
 
         public void Dispose()
