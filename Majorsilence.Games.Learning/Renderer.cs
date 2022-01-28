@@ -10,7 +10,8 @@ namespace Majorsilence.Games.Learning
 
         public Renderer(IntPtr window)
         {
-            _renderer = SDL.SDL_CreateRenderer(window, -1, 0);
+            _renderer = SDL.SDL_CreateRenderer(window, -1,
+                SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED);
         }
         public static implicit operator IntPtr(Renderer ap)
         {

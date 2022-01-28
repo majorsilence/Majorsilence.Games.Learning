@@ -5,20 +5,20 @@ using SixLabors.ImageSharp;
 
 namespace Majorsilence.Games.Learning
 {
-    public class Image : IDisposable
+
+    public class ImageIS : Surface, IDisposable
     {
 
-      
-        IntPtr _surface;
-        string _tempPath="";
+        string _tempPath = "";
 
 
-        public Image(string path)
+        public ImageIS(string path)
         {
 
             if (path.ToLower().Trim().EndsWith(".bmp"))
             {
                 _surface = SDL.SDL_LoadBMP(path);
+                SetRect();
                 return;
             }
 
@@ -33,20 +33,27 @@ namespace Majorsilence.Games.Learning
                 var bytes = System.IO.File.ReadAllBytes(path);
 
                 _surface = SDL.SDL_LoadBMP(_tempPath);
+                SetRect();
             }
         }
-        public static implicit operator IntPtr(Image ap)
+
+        private void SetRect()
         {
-            if (ap._disposed) return IntPtr.Zero;
-            return ap._surface;
+            var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
+            var rect = this.Rect;
+            rect.h = sur.h;
+            rect.w = sur.w;
+            rect.x = 0;
+            rect.y = 0;
+            this.Rect = rect;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
         }
 
-        bool _disposed;
+
         public void Dispose(bool disposing)
         {
             if (_disposed)

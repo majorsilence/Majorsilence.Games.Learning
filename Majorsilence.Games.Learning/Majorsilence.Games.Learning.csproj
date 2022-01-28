@@ -7,12 +7,21 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="ppy.SDL2-CS" />
     <None Remove="SixLabors.ImageSharp" />
+    <None Remove="sdl2.nuget" />
+    <None Remove="sdl2_mixer.nuget" />
+    <None Remove="sdl2_image.nuget" />
+    <None Remove="sdl2_ttf.nuget" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ppy.SDL2-CS" Version="1.0.486-alpha" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj" />
   </ItemGroup>
 </Project>

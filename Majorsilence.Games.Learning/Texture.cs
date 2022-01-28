@@ -3,13 +3,16 @@ using SDL2;
 
 namespace Majorsilence.Games.Learning
 {
-	public class Texture : IDisposable
-	{
+    public class Texture : IDisposable
+    {
         IntPtr _texture;
 
-        public Texture(IntPtr renderer, IntPtr surface)
+        public SDL2.SDL.SDL_Rect Rect { get; set; }
+
+        public Texture(Renderer renderer, Surface surface)
         {
             _texture = SDL.SDL_CreateTextureFromSurface(renderer, surface);
+            this.Rect = surface.Rect;
         }
         public static implicit operator IntPtr(Texture ap)
         {
