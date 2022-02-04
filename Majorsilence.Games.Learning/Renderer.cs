@@ -43,6 +43,10 @@ namespace Majorsilence.Games.Learning
             _disposed = true;
         }
 
+        /// <summary>
+        /// Save a screenshot of the current screen.
+        /// </summary>
+        /// <param name="savePath">supports file extensions .bmp, .jpg, .png</param>
         public void SaveScreenshot(string savePath = "screenshot.bmp")
         {
             uint format = SDL.SDL_PIXELFORMAT_RGBX8888;
@@ -64,7 +68,23 @@ namespace Majorsilence.Games.Learning
             var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(surface);
 
             SDL.SDL_RenderReadPixels(_renderer, ref rect, format, sur.pixels, sur.pitch);
-            SDL.SDL_SaveBMP(surface, savePath);
+            if (savePath.EndsWith(".bmp", StringComparison.InvariantCultureIgnoreCase))
+            {
+                SDL.SDL_SaveBMP(surface, savePath);
+            }
+            else if (savePath.EndsWith(".jpg", StringComparison.InvariantCultureIgnoreCase))
+            {
+                SDL_image.IMG_SaveJPG(surface, savePath, 85);
+            }
+            else if (savePath.EndsWith(".jpg", StringComparison.InvariantCultureIgnoreCase))
+            {
+                SDL_image.IMG_SavePNG(surface, savePath);
+            }
+            else
+            {
+                throw new MajorsilenceException("Only bmp, jpg, png file formats are supported.");
+            }
+
             SDL.SDL_FreeSurface(surface);
         }
     }
