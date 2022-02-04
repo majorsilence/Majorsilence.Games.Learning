@@ -36,14 +36,10 @@ bool Alt = false;
 bool Shift = false;
 
 
-const int FPS = 60;
-const int framems = 1000 / FPS;
-
-
 //SDL.SDL_Event[] es = new SDL.SDL_Event[SIZE_EV];
 while (!quit)
 {
-    uint startms = SDL.SDL_GetTicks();
+   
 
     // main game loop
 
@@ -125,17 +121,6 @@ while (!quit)
     SDL.SDL_RenderClear(renderer);
     SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
     SDL.SDL_RenderPresent(renderer);
-
-
-
-    uint endms = SDL.SDL_GetTicks();
-    // how long to delay
-    uint delayms = framems - (endms - startms);
-    if (delayms > 0)
-    {
-        //SDL.SDL_Delay(delayms);
-    }
-
 
 }
 
