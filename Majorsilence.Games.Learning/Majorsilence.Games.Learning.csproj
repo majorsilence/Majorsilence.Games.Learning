@@ -20,6 +20,7 @@
     <None Remove="Surfaces\" />
     <None Remove="assets\" />
     <None Remove="assets\fonts\" />
+    <None Remove="Textures\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SixLabors.ImageSharp" Version="2.0.0" />
@@ -31,6 +32,7 @@
     <Folder Include="Surfaces\" />
     <Folder Include="assets\" />
     <Folder Include="assets\fonts\" />
+    <Folder Include="Textures\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="assets\fonts\Gidole-Regular.ttf">

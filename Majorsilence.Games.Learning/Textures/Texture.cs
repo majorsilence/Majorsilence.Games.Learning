@@ -1,7 +1,7 @@
 ﻿using System;
 using SDL2;
 
-namespace Majorsilence.Games.Learning
+namespace Majorsilence.Games.Learning.Textures
 {
     public class Texture : IDisposable
     {
@@ -22,8 +22,12 @@ namespace Majorsilence.Games.Learning
             return ap._texture;
         }
 
+        /// <summary>
+        /// Higher value is on top
+        /// </summary>
+        public int ZIndex { get; set; } = 1;
 
-        public void Render(int x, int y)
+        public virtual void Render(int x, int y)
         {
             int texW = 0;
             int texH = 0;
