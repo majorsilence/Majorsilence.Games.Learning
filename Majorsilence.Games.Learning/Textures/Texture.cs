@@ -22,11 +22,6 @@ namespace Majorsilence.Games.Learning.Textures
             return ap._texture;
         }
 
-        /// <summary>
-        /// Higher value is on top
-        /// </summary>
-        public int ZIndex { get; set; } = 1;
-
         public virtual void Render(int x, int y)
         {
             int texW = 0;

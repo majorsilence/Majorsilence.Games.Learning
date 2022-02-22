@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Majorsilence.Games.Learning.Textures;
 using SDL2;
 
 namespace Majorsilence.Games.Learning
@@ -14,9 +15,10 @@ namespace Majorsilence.Games.Learning
             _renderer = renderer;
         }
 
-        public void Start(List<Texture> textures)
+        public void Start(List<PlaceholderMovingObject> movingObjects,
+            List<PlaceholderStationaryObject> stationaryObjects)
         {
-            var orderdedTextures = textures.OrderBy(o => o.ZIndex);
+           
 
             bool Ctrl = false;
             bool Alt = false;
@@ -115,9 +117,14 @@ namespace Majorsilence.Games.Learning
                 SDL.SDL_RenderClear(_renderer);
 
 
-                foreach(var texture in orderdedTextures)
+                foreach(var obj in stationaryObjects)
                 {
-                    texture.Render(x, y);
+                    obj.Render();
+                }
+
+                foreach (var obj in movingObjects)
+                {
+                    obj.Render(x, y);
                 }
 
                 //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
