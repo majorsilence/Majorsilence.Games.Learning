@@ -122,18 +122,19 @@ while (!quit)
     //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, IntPtr.Zero);
     //SDL.SDL_RenderPresent(renderer);
 
-    SDL.SDL_Rect dstrect = new SDL.SDL_Rect { x = x, y = y, w = 64, h = 64 };
+    //SDL.SDL_Rect dstrect = new SDL.SDL_Rect { x = x, y = y, w = 64, h = 64 };
 
-
-    int texW = 0;
-    int texH = 0;
-    SDL.SDL_QueryTexture(textTexture, out uint format, out int access, out texW, out texH);
-    SDL.SDL_Rect dstrect2 = new SDL.SDL_Rect { x = 0, y = 0, w = texW, h = texH };
 
     SDL.SDL_RenderClear(renderer);
-    SDL.SDL_RenderCopy(renderer, textTexture, IntPtr.Zero, ref dstrect2);
-    SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
-    SDL.SDL_RenderPresent(renderer);
+
+
+    textTexture.Render(0, 0);
+    texture.Render(x, y);
+
+
+    //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
+    renderer.Present();
+    
 
 }
 

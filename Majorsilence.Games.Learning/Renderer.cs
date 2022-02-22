@@ -20,6 +20,11 @@ namespace Majorsilence.Games.Learning
             return ap._renderer;
         }
 
+        public void Present()
+        {
+            SDL.SDL_RenderPresent(_renderer);
+        }
+
         public void Dispose()
         {
             Dispose(true);
