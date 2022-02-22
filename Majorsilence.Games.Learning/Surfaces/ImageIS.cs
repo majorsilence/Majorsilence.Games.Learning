@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using SDL2;
 using SixLabors.ImageSharp;
 
-namespace Majorsilence.Games.Learning
+namespace Majorsilence.Games.Learning.Surfaces
 {
 
     public class ImageIS : Surface, IDisposable

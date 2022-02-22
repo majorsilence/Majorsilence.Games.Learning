@@ -3,27 +3,27 @@ using SDL2;
 
 namespace Majorsilence.Games.Learning
 {
-    public class Texture : IDisposable
-    {
-        IntPtr _texture;
+	public class Fonts : IDisposable
+	{
+        IntPtr font;
+		public Fonts(string fontPath, int size)
+		{
 
-        public SDL2.SDL.SDL_Rect Rect { get; set; }
+			font = SDL_ttf.TTF_OpenFont(fontPath, size);
+		}
 
-        public Texture(Renderer renderer, Surfaces.Surface surface)
-        {
-            _texture = SDL.SDL_CreateTextureFromSurface(renderer, surface);
-            this.Rect = surface.Rect;
-        }
-        public static implicit operator IntPtr(Texture ap)
+        public static implicit operator IntPtr(Fonts ap)
         {
             if (ap._disposed) return IntPtr.Zero;
-            return ap._texture;
+            return ap.font;
         }
+
 
         public void Dispose()
         {
             Dispose(true);
         }
+
 
         bool _disposed;
         public void Dispose(bool disposing)
@@ -33,12 +33,17 @@ namespace Majorsilence.Games.Learning
                 return;
             }
 
+            if (disposing)
+            {
+                // TODO: dispose managed state (managed objects).
+                
+            }
+
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
             // TODO: set large fields to null.
 
 
-            SDL.SDL_DestroyTexture(_texture);
-
+            SDL_ttf.TTF_CloseFont(font);
 
             _disposed = true;
         }

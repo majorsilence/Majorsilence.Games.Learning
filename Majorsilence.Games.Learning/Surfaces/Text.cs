@@ -1,30 +1,15 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using SDL2;
-using SixLabors.ImageSharp;
 
-namespace Majorsilence.Games.Learning
+namespace Majorsilence.Games.Learning.Surfaces
 {
-
-    public class ImageSDL : Surface, IDisposable
-    {
-
-        public ImageSDL(string path)
-        {
-            _surface = SDL_image.IMG_Load(path);
-            SetRect();
-        }
-
-        private void SetRect()
-        {
-            var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
-            var rect = this.Rect;
-            rect.h = sur.h;
-            rect.w = sur.w;
-            rect.x = 0;
-            rect.y = 0;
-            this.Rect = rect;
-        }
+	public class Text : Surface
+	{
+		public Text(Fonts font, SDL2.SDL.SDL_Color color, string input)
+		{
+            _surface = SDL_ttf.TTF_RenderText_Solid(font,
+             input, color);
+		}
 
         public override void Dispose()
         {
@@ -42,7 +27,7 @@ namespace Majorsilence.Games.Learning
             if (disposing)
             {
                 // TODO: dispose managed state (managed objects).
-
+                
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -50,7 +35,6 @@ namespace Majorsilence.Games.Learning
 
 
             SDL.SDL_FreeSurface(_surface);
-
 
             _disposed = true;
         }

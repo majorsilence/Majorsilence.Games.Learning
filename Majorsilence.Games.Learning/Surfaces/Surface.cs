@@ -1,4 +1,4 @@
-﻿namespace Majorsilence.Games.Learning
+﻿namespace Majorsilence.Games.Learning.Surfaces
 {
     public abstract class Surface : IDisposable
     {

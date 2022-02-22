@@ -17,11 +17,24 @@
     <None Remove="sdl2_mixer.nuget" />
     <None Remove="sdl2_image.nuget" />
     <None Remove="sdl2_ttf.nuget" />
+    <None Remove="Surfaces\" />
+    <None Remove="assets\" />
+    <None Remove="assets\fonts\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Surfaces\" />
+    <Folder Include="assets\" />
+    <Folder Include="assets\fonts\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="assets\fonts\Gidole-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
