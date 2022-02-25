@@ -1,4 +1,7 @@
-﻿namespace Majorsilence.Games.Learning.Surfaces
+﻿using System.Runtime.InteropServices;
+using SDL2;
+
+namespace Majorsilence.Games.Learning.Surfaces
 {
     public abstract class Surface : IDisposable
     {
@@ -12,6 +15,19 @@
         }
 
         public  SDL2.SDL.SDL_Rect Rect { get; set; } = new SDL2.SDL.SDL_Rect();
+
+        public void ColorAsTransparent(int r, int g, int b)
+        {
+
+            var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
+
+            var rgb = SDL2.SDL.SDL_MapRGB(sur.format,
+                Convert.ToByte(r),
+                Convert.ToByte(g),
+                Convert.ToByte(b));
+            SDL2.SDL.SDL_SetColorKey(_surface, (int)SDL2.SDL.SDL_bool.SDL_TRUE,
+                rgb);
+        }
     }
 }
 
