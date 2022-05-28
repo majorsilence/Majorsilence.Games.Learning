@@ -11,6 +11,11 @@ namespace Majorsilence.Games.Learning.Surfaces
 
         public ImageSDL(string path)
         {
+            if (!System.IO.File.Exists(path))
+            {
+                throw new MajorsilenceException($"Image not found: {path}");
+            }
+
             _surface = SDL_image.IMG_Load(path);
             SetRect();
         }
