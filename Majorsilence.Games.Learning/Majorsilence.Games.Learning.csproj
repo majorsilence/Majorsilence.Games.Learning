@@ -23,10 +23,9 @@
     <None Remove="Textures\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" Version="2.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj" />
+    <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj">
+      <ReferenceSourceTarget></ReferenceSourceTarget>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Surfaces\" />
@@ -35,7 +34,10 @@
     <Folder Include="Textures\" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="assets\fonts\Gidole-Regular.ttf">
+    <None Update="assets\fonts\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="assets\artwork\z-like\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

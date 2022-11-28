@@ -19,7 +19,7 @@ using var renderer = new Renderer(window);
 
 //var image = new Majorsilence.Games.Learning.Image("/Users/petergill/Downloads/stick_people.png");
 
-using var image = new ImageSDL("/Users/petergill/Downloads/spaceship.png");
+using var image = new ImageSDL("assets/artwork/z-like/character.png");
 image.ColorAsTransparent(255, 255, 255);
 
 using var texture = new Texture(renderer, image);

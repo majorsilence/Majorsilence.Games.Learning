@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using SDL2;
-using SixLabors.ImageSharp;
 
 namespace Majorsilence.Games.Learning.Surfaces
 {
