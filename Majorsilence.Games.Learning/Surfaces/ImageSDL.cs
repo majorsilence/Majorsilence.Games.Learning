@@ -29,8 +29,7 @@ public class ImageSDL : Surface, IDisposable
     {
         Dispose(true);
     }
-
-
+    
     public void Dispose(bool disposing)
     {
         if (_disposed) return;
@@ -42,11 +41,7 @@ public class ImageSDL : Surface, IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-
-
         SDL.SDL_FreeSurface(_surface);
-
-
         _disposed = true;
     }
 }

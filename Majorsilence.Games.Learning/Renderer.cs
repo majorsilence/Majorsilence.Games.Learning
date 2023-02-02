@@ -39,11 +39,7 @@ public class Renderer : IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-
-
         SDL.SDL_DestroyRenderer(_renderer);
-
-
         _disposed = true;
     }
 
@@ -67,8 +63,7 @@ public class Renderer : IDisposable
             w = width,
             h = height
         };
-
-
+        
         var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(surface);
 
         SDL.SDL_RenderReadPixels(_renderer, ref rect, format, sur.pixels, sur.pitch);

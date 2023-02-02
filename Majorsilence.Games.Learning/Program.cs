@@ -4,17 +4,7 @@ using Majorsilence.Games.Learning;
 using Majorsilence.Games.Learning.Surfaces;
 using Majorsilence.Games.Learning.Textures;
 
-SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
-SDL_ttf.TTF_Init();
-
-//var screen = SDL.SDL_CreateWindow("My SDL Empty Window",
-//    SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
-
-
-var window = SDL.SDL_CreateWindow("SDL2 Displaying Image",
-    SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, 640, 480,
-    SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL);
-
+using var window = new Window("SDL2 Displaying Image", 640, 480);
 using var renderer = new Renderer(window);
 
 //var image = new Majorsilence.Games.Learning.Image("/Users/petergill/Downloads/stick_people.png");
@@ -48,7 +38,4 @@ var movingObjects = new List<PlaceholderMovingObject>()
 
 loop.Start(movingObjects, stationaryObjects);
 
-SDL.SDL_DestroyWindow(window);
-
 //SDL_ttf.TTF_Quit();
-SDL.SDL_Quit();

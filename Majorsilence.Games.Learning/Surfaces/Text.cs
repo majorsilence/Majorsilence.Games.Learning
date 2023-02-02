@@ -15,8 +15,7 @@ public class Text : Surface
     {
         Dispose(true);
     }
-
-
+    
     public void Dispose(bool disposing)
     {
         if (_disposed) return;
@@ -28,10 +27,7 @@ public class Text : Surface
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-
-
         SDL.SDL_FreeSurface(_surface);
-
         _disposed = true;
     }
 }

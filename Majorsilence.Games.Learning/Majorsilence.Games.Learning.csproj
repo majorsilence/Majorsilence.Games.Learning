@@ -11,16 +11,16 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
-        <None Remove="ppy.SDL2-CS"/>
-        <None Remove="SixLabors.ImageSharp"/>
-        <None Remove="sdl2.nuget"/>
-        <None Remove="sdl2_mixer.nuget"/>
-        <None Remove="sdl2_image.nuget"/>
-        <None Remove="sdl2_ttf.nuget"/>
-        <None Remove="Surfaces\"/>
-        <None Remove="assets\"/>
-        <None Remove="assets\fonts\"/>
-        <None Remove="Textures\"/>
+        <None Remove="ppy.SDL2-CS" />
+        <None Remove="SixLabors.ImageSharp" />
+        <None Remove="sdl2.nuget" />
+        <None Remove="sdl2_mixer.nuget" />
+        <None Remove="sdl2_image.nuget" />
+        <None Remove="sdl2_ttf.nuget" />
+        <None Remove="Surfaces\" />
+        <None Remove="assets\" />
+        <None Remove="assets\fonts\" />
+        <None Remove="Textures\" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj">
@@ -28,10 +28,10 @@
         </ProjectReference>
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Surfaces\"/>
-        <Folder Include="assets\"/>
-        <Folder Include="assets\fonts\"/>
-        <Folder Include="Textures\"/>
+        <Folder Include="Surfaces\" />
+        <Folder Include="assets\" />
+        <Folder Include="assets\fonts\" />
+        <Folder Include="Textures\" />
     </ItemGroup>
     <ItemGroup>
         <None Update="assets\fonts\*">

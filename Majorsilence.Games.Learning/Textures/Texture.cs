@@ -46,11 +46,7 @@ public class Texture : IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-
-
         SDL.SDL_DestroyTexture(_texture);
-
-
         _disposed = true;
     }
 }

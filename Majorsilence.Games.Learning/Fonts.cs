@@ -17,14 +17,12 @@ public class Fonts : IDisposable
         if (ap._disposed) return IntPtr.Zero;
         return ap.font;
     }
-
-
+    
     public void Dispose()
     {
         Dispose(true);
     }
-
-
+    
     private bool _disposed;
 
     public void Dispose(bool disposing)
@@ -38,10 +36,7 @@ public class Fonts : IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-
-
         SDL_ttf.TTF_CloseFont(font);
-
         _disposed = true;
     }
 }
