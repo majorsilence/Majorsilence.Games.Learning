@@ -1,52 +1,47 @@
 ﻿using System;
 using SDL2;
 
-namespace Majorsilence.Games.Learning
+namespace Majorsilence.Games.Learning;
+
+public class Fonts : IDisposable
 {
-	public class Fonts : IDisposable
-	{
-        IntPtr font;
-		public Fonts(string fontPath, int size)
-		{
+    private IntPtr font;
 
-			font = SDL_ttf.TTF_OpenFont(fontPath, size);
-		}
+    public Fonts(string fontPath, int size)
+    {
+        font = SDL_ttf.TTF_OpenFont(fontPath, size);
+    }
 
-        public static implicit operator IntPtr(Fonts ap)
+    public static implicit operator IntPtr(Fonts ap)
+    {
+        if (ap._disposed) return IntPtr.Zero;
+        return ap.font;
+    }
+
+
+    public void Dispose()
+    {
+        Dispose(true);
+    }
+
+
+    private bool _disposed;
+
+    public void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+
+        if (disposing)
         {
-            if (ap._disposed) return IntPtr.Zero;
-            return ap.font;
+            // TODO: dispose managed state (managed objects).
         }
 
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
+        // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+        // TODO: set large fields to null.
 
 
-        bool _disposed;
-        public void Dispose(bool disposing)
-        {
-            if (_disposed)
-            {
-                return;
-            }
+        SDL_ttf.TTF_CloseFont(font);
 
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects).
-                
-            }
-
-            // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-            // TODO: set large fields to null.
-
-
-            SDL_ttf.TTF_CloseFont(font);
-
-            _disposed = true;
-        }
+        _disposed = true;
     }
 }
-

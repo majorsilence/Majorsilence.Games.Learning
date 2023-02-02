@@ -37,10 +37,14 @@ SDL.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
 var loop = new EventLoop(renderer);
 
-var stationaryObjects = new List<PlaceholderStationaryObject>() {
-    stationary1 }.OrderBy(o => o.ZIndex).ToList();
-var movingObjects = new List<PlaceholderMovingObject>() {
-    moving1 }.OrderBy(o => o.ZIndex).ToList();
+var stationaryObjects = new List<PlaceholderStationaryObject>()
+{
+    stationary1
+}.OrderBy(o => o.ZIndex).ToList();
+var movingObjects = new List<PlaceholderMovingObject>()
+{
+    moving1
+}.OrderBy(o => o.ZIndex).ToList();
 
 loop.Start(movingObjects, stationaryObjects);
 
