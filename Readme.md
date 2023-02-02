@@ -1,5 +1,13 @@
 
 
+# Design - class hierarchy
+
+Window -> (Renderer && Surface) -> Texture
+
+Surface types:
+1. ImageSDL
+2. Text
+
 # Tutorials
 
 A list of tutorials to work through.
@@ -12,7 +20,6 @@ A list of tutorials to work through.
 # Art work
 
 https://opengameart.org
-
 
 # Setup
 
@@ -28,4 +35,6 @@ DYLD_LIBRARY_PATH=/opt/homebrew/lib
 
 
 ## Ubuntu
+
+
 
