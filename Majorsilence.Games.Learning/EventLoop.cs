@@ -59,19 +59,22 @@ public class EventLoop
                     case SDL.SDL_EventType.SDL_QUIT:
                         quit = true;
                         break;
+                    case SDL.SDL_EventType.SDL_KEYDOWN:
+                        SDL.SDL_Keycode kc = sdlEvent.key.keysym.sym;
+                        if (kc == SDL.SDL_Keycode.SDLK_ESCAPE || kc == SDL.SDL_Keycode.SDLK_q)
+                        {
+                            quit = true;
+                        }
+                        if ((kc == SDL.SDL_Keycode.SDLK_LCTRL) || (kc == SDL.SDL_Keycode.SDLK_RCTRL))
+                            Ctrl = true;
+                        if ((kc == SDL.SDL_Keycode.SDLK_LALT) || (kc == SDL.SDL_Keycode.SDLK_RALT))
+                            Alt = true;
+                        if ((kc == SDL.SDL_Keycode.SDLK_LSHIFT) || (kc == SDL.SDL_Keycode.SDLK_RSHIFT))
+                            Shift = true;
+                        break;
                     /*
                 case SDL.SDL_EventType.SDL_KEYDOWN:
                     SDL.SDL_Keycode kc = sdlEvent.key.keysym.sym;
-
-                    if ((kc == SDL.SDL_Keycode.SDLK_LCTRL) || (kc == SDL.SDL_Keycode.SDLK_RCTRL))
-                        Ctrl = true;
-                    if ((kc == SDL.SDL_Keycode.SDLK_LALT) || (kc == SDL.SDL_Keycode.SDLK_RALT))
-                        Alt = true;
-                    if ((kc == SDL.SDL_Keycode.SDLK_LSHIFT) || (kc == SDL.SDL_Keycode.SDLK_RSHIFT))
-                        Shift = true;
-
-
-
                     switch (kc)
                     {
                         case SDL.SDL_Keycode.SDLK_LEFT: x = x - 1; break;
