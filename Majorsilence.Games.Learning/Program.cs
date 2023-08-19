@@ -22,7 +22,7 @@ using var textTexture = new Texture(renderer, text);
 var stationary1 = new PlaceholderStationaryObject(textTexture, 0, 0);
 var moving1 = new PlaceholderMovingObject(texture);
 
-SDL.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+renderer.DrawColor(255, 255, 255, 255);
 
 
 var loop = new EventLoop(renderer);

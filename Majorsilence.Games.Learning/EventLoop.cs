@@ -92,7 +92,7 @@ public class EventLoop
             //SDL.SDL_Rect dstrect = new SDL.SDL_Rect { x = x, y = y, w = 64, h = 64 };
 
 
-            SDL.SDL_RenderClear(_renderer);
+            _renderer.Clear();
 
 
             foreach (var obj in stationaryObjects) obj.Render();

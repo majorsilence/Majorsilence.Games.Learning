@@ -21,9 +21,14 @@ public class Renderer : IDisposable
         return ap._renderer;
     }
 
+    public void Clear()
+    {
+        SDL.SDL_RenderClear(this);
+    }
+    
     public void Present()
     {
-        SDL.SDL_RenderPresent(_renderer);
+        SDL.SDL_RenderPresent(this);
     }
 
     public void Dispose()
@@ -77,5 +82,10 @@ public class Renderer : IDisposable
             throw new MajorsilenceException("Only bmp, jpg, png file formats are supported.");
 
         SDL.SDL_FreeSurface(surface);
+    }
+
+    public void DrawColor(byte r, byte g, byte b, byte a)
+    {
+        SDL.SDL_SetRenderDrawColor(this, r, g, b, a);
     }
 }
