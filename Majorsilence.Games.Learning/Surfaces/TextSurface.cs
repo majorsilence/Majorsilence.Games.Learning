@@ -3,9 +3,9 @@ using SDL2;
 
 namespace Majorsilence.Games.Learning.Surfaces;
 
-public class Text : Surface
+public class TextSurface : Surface
 {
-    public Text(Fonts font, SDL2.SDL.SDL_Color color, string input)
+    public TextSurface(Fonts font, SDL2.SDL.SDL_Color color, string input)
     {
         _surface = SDL_ttf.TTF_RenderText_Solid(font,
             input, color);

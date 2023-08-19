@@ -4,9 +4,9 @@ using SDL2;
 
 namespace Majorsilence.Games.Learning.Surfaces;
 
-public class ImageSDL : Surface, IDisposable
+public class ImageSurface : Surface, IDisposable
 {
-    public ImageSDL(string path)
+    public ImageSurface(string path)
     {
         if (!File.Exists(path)) throw new MajorsilenceException($"Image not found: {path}");
 
