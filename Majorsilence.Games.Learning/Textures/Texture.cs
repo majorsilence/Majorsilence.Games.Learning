@@ -1,4 +1,5 @@
 ﻿using System;
+using Majorsilence.Games.Learning.Surfaces;
 using SDL2;
 
 namespace Majorsilence.Games.Learning.Textures;
@@ -6,10 +7,10 @@ namespace Majorsilence.Games.Learning.Textures;
 public class Texture : IDisposable
 {
     private IntPtr _texture;
-    private readonly Renderer _renderer;
+    readonly Renderer _renderer;
 
     public SDL2.SDL.SDL_Rect Rect { get; set; }
-
+    
     public Texture(Renderer renderer, Surfaces.Surface surface)
     {
         _texture = SDL.SDL_CreateTextureFromSurface(renderer, surface);
@@ -38,9 +39,9 @@ public class Texture : IDisposable
         Dispose(true);
     }
 
-    private bool _disposed;
+    protected bool _disposed;
 
-    private void Dispose(bool disposing)
+    protected void Dispose(bool disposing)
     {
         if (_disposed) return;
 
@@ -48,5 +49,28 @@ public class Texture : IDisposable
         // TODO: set large fields to null.
         SDL.SDL_DestroyTexture(_texture);
         _disposed = true;
+    }
+
+    public static Texture CreateImageTexture(Renderer renderer, string filepath)
+    {
+        using var image = new ImageSurface(filepath);
+
+        return new Texture(renderer, image);
+    }
+    public static Texture CreateImageTexture(Renderer renderer, string filepath,
+        SDL2.SDL.SDL_Color transparentColor)
+    {
+        using var image = new ImageSurface(filepath);
+        image.ColorAsTransparent(transparentColor.r, transparentColor.g, transparentColor.b);
+
+        return new Texture(renderer, image);
+    }
+    
+    public static Texture CreateTextTexture(Renderer renderer, string fontPath, int size,
+        SDL2.SDL.SDL_Color color, string textValue)
+    {
+        using var font = new Fonts(fontPath, size);
+        using var text = new TextSurface(font, color, textValue);
+        return new Texture(renderer, text);
     }
 }
