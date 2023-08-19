@@ -23,11 +23,6 @@
         <None Remove="Textures\" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj">
-            <ReferenceSourceTarget></ReferenceSourceTarget>
-        </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
         <Folder Include="Surfaces\" />
         <Folder Include="assets\" />
         <Folder Include="assets\fonts\" />
@@ -40,5 +35,8 @@
         <None Update="assets\artwork\z-like\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj" />
     </ItemGroup>
 </Project>
