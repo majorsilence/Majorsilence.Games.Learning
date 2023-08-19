@@ -23,12 +23,6 @@
         <None Remove="Textures\" />
     </ItemGroup>
     <ItemGroup>
-        <Folder Include="Surfaces\" />
-        <Folder Include="assets\" />
-        <Folder Include="assets\fonts\" />
-        <Folder Include="Textures\" />
-    </ItemGroup>
-    <ItemGroup>
         <None Update="assets\fonts\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
