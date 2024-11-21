@@ -14,7 +14,7 @@ public class Window : IDisposable
         SDL_ttf.TTF_Init();
         _window = SDL.SDL_CreateWindow(title,
             SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, width, height,
-            SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL);
+            SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);
     }
 
     public static implicit operator IntPtr(Window ap)
