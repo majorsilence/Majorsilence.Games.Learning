@@ -7,8 +7,8 @@ namespace Majorsilence.Games.Learning;
 public class Renderer : IDisposable
 {
     private IntPtr _renderer;
-
-    public Renderer(IntPtr window)
+    
+    public Renderer(Window window)
     {
         _renderer = SDL.SDL_CreateRenderer(window, -1,
             SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
