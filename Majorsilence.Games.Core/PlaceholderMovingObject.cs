@@ -1,8 +1,7 @@
 ﻿using System;
-using Majorsilence.Games.Learning.Surfaces;
-using Majorsilence.Games.Learning.Textures;
+using Majorsilence.Games.Core.Textures;
 
-namespace Majorsilence.Games.Learning;
+namespace Majorsilence.Games.Core;
 
 public class PlaceholderMovingObject
 {

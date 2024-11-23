@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Majorsilence.Games.Learning.Textures;
+using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.Textures;
 using SDL2;
 
 namespace Majorsilence.Games.Learning;
@@ -72,6 +73,14 @@ public class EventLoop
                         if ((kc == SDL.SDL_Keycode.SDLK_LSHIFT) || (kc == SDL.SDL_Keycode.SDLK_RSHIFT))
                             Shift = true;
                         break;
+                    case SDL.SDL_EventType.SDL_WINDOWEVENT:
+
+                        if (sdlEvent.window.windowEvent ==  SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED) {
+  
+                           // resizeWindow(m_event.window.data1, m_event.window.data2);
+                         }
+                        break;
+
                     /*
                 case SDL.SDL_EventType.SDL_KEYDOWN:
                     SDL.SDL_Keycode kc = sdlEvent.key.keysym.sym;

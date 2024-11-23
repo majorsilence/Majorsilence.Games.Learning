@@ -31,6 +31,7 @@
         </None>
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\Majorsilence.Games.Core\Majorsilence.Games.Core.csproj" />
       <ProjectReference Include="..\SDL2-CS\SDL2-CS.Core.csproj" />
     </ItemGroup>
 </Project>

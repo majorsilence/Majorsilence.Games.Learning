@@ -1,8 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using SDL2;
 using Majorsilence.Games.Learning;
-using Majorsilence.Games.Learning.Surfaces;
-using Majorsilence.Games.Learning.Textures;
+using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.Surfaces;
+using Majorsilence.Games.Core.Textures;
 
 using var window = new Window("SDL2 Displaying Image", 640, 480);
 using var renderer = new Renderer(window);

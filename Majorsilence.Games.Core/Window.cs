@@ -1,6 +1,6 @@
 using SDL2;
 
-namespace Majorsilence.Games.Learning;
+namespace Majorsilence.Games.Core;
 
 public class Window : IDisposable
 {

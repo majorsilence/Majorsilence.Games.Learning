@@ -1,21 +1,30 @@
 ﻿using System;
 using SDL2;
 
-namespace Majorsilence.Games.Learning.Surfaces;
+namespace Majorsilence.Games.Core;
 
-public class TextSurface : Surface
+public class Fonts : IDisposable
 {
-    public TextSurface(Fonts font, SDL2.SDL.SDL_Color color, string input)
+    private IntPtr font;
+
+    public Fonts(string fontPath, int size)
     {
-        _surface = SDL_ttf.TTF_RenderText_Solid(font,
-            input, color);
+        font = SDL_ttf.TTF_OpenFont(fontPath, size);
     }
 
-    public override void Dispose()
+    public static implicit operator IntPtr(Fonts ap)
+    {
+        if (ap._disposed) return IntPtr.Zero;
+        return ap.font;
+    }
+    
+    public void Dispose()
     {
         Dispose(true);
     }
     
+    private bool _disposed;
+
     public void Dispose(bool disposing)
     {
         if (_disposed) return;
@@ -27,7 +36,7 @@ public class TextSurface : Surface
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-        SDL.SDL_FreeSurface(_surface);
+        SDL_ttf.TTF_CloseFont(font);
         _disposed = true;
     }
 }

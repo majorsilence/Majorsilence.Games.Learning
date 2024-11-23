@@ -1,8 +1,8 @@
 ﻿using System;
-using Majorsilence.Games.Learning.Surfaces;
+using Majorsilence.Games.Core.Surfaces;
 using SDL2;
 
-namespace Majorsilence.Games.Learning.Textures;
+namespace Majorsilence.Games.Core.Textures;
 
 public class Texture : IDisposable
 {

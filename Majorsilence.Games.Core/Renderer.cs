@@ -2,12 +2,12 @@
 using System.Runtime.InteropServices;
 using SDL2;
 
-namespace Majorsilence.Games.Learning;
+namespace Majorsilence.Games.Core;
 
 public class Renderer : IDisposable
 {
     private IntPtr _renderer;
-    
+
     public Renderer(Window window)
     {
         _renderer = SDL.SDL_CreateRenderer(window, -1,
@@ -25,7 +25,7 @@ public class Renderer : IDisposable
     {
         SDL.SDL_RenderClear(this);
     }
-    
+
     public void Present()
     {
         SDL.SDL_RenderPresent(this);
@@ -34,6 +34,15 @@ public class Renderer : IDisposable
     public void Dispose()
     {
         Dispose(true);
+    }
+
+    public (int Width, int Height) Size
+    {
+        get
+        {
+            SDL.SDL_GetRendererOutputSize(_renderer, out int width, out int height);
+            return (width, height);
+        }
     }
 
     private bool _disposed;
@@ -68,7 +77,7 @@ public class Renderer : IDisposable
             w = width,
             h = height
         };
-        
+
         var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(surface);
 
         SDL.SDL_RenderReadPixels(_renderer, ref rect, format, sur.pixels, sur.pitch);

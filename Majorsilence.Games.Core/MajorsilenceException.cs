@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Majorsilence.Games.Learning;
+namespace Majorsilence.Games.Core;
 
 public class MajorsilenceException : Exception
 {

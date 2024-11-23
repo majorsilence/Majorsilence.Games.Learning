@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using SDL2;
 
-namespace Majorsilence.Games.Learning.Surfaces;
+namespace Majorsilence.Games.Core.Surfaces;
 
 public abstract class Surface : IDisposable
 {
