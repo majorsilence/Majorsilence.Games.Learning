@@ -109,7 +109,11 @@ public class EventLoop
 
             foreach (var obj in stationaryObjects) obj.Render();
 
-            foreach (var obj in movingObjects) obj.Render(x, y);
+            foreach (var obj in movingObjects)
+            {
+                obj.SetPosition(x, y);
+                obj.Render();
+            }
 
             //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
             _renderer.Present();
