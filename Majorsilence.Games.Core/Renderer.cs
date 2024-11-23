@@ -7,12 +7,14 @@ namespace Majorsilence.Games.Core;
 public class Renderer : IDisposable
 {
     private IntPtr _renderer;
-
+    private readonly Window _window;
+    
     public Renderer(Window window)
     {
         _renderer = SDL.SDL_CreateRenderer(window, -1,
             SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
             SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
+        _window = window;
     }
 
     public static implicit operator IntPtr(Renderer ap)
@@ -43,6 +45,12 @@ public class Renderer : IDisposable
             SDL.SDL_GetRendererOutputSize(_renderer, out int width, out int height);
             return (width, height);
         }
+    }
+    
+    public bool IsFullscreen => (SDL.SDL_GetWindowFlags(_window) & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
+    public void SetFullscreen(bool fullscreen)
+    {
+        SDL.SDL_SetWindowFullscreen(_window, fullscreen ? (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
     }
 
     private bool _disposed;

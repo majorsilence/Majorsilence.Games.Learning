@@ -31,5 +31,11 @@ public class RenderTest
         
         System.Diagnostics.Debug.Assert(size.Height == 480);
         System.Diagnostics.Debug.Assert(size.Width == 640);
+        
+        System.Diagnostics.Debug.Assert(renderer.IsFullscreen == false);
+        renderer.SetFullscreen(true);
+        System.Diagnostics.Debug.Assert(renderer.IsFullscreen == true);
+        renderer.SetFullscreen(false);
+        System.Diagnostics.Debug.Assert(renderer.IsFullscreen == false);
     }
 }
