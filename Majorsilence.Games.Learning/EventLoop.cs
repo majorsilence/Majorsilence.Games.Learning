@@ -41,7 +41,7 @@ public class EventLoop
 
             //SDL.SDL_WaitEvent(out sdlEvent);
 
-            if (InputManager.IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_Q))
+            if (InputManager.IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_Q) || InputManager.IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE))
             {
                 quit = true;
             }
