@@ -2,6 +2,7 @@
 using SDL2;
 using Majorsilence.Games.Learning;
 using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Surfaces;
 using Majorsilence.Games.Core.Textures;
 
@@ -29,23 +30,24 @@ using var textTexture = Texture.CreateTextTexture(renderer,
     "Hello World"
 );
 
-var stationary1 = new PlaceholderStationaryObject(textTexture, 0, 0);
-var moving1 = new PlaceholderMovingObject(spriteTexture);
+var stationary1 = new StationaryObject(textTexture);
+var moving1 = new Player(spriteTexture)
+{
+ Speed = 2
+};
 
 renderer.DrawColor(255, 255, 255, 255);
 
 
 var loop = new EventLoop(renderer);
 
-var stationaryObjects = new List<PlaceholderStationaryObject>()
+var gameObjects = new List<GameObject>()
 {
-    stationary1
-}.OrderBy(o => o.ZIndex).ToList();
-var movingObjects = new List<PlaceholderMovingObject>()
-{
+    stationary1,
     moving1
 }.OrderBy(o => o.ZIndex).ToList();
 
-loop.Start(movingObjects, stationaryObjects);
+
+loop.Start(gameObjects);
 
 //SDL_ttf.TTF_Quit();

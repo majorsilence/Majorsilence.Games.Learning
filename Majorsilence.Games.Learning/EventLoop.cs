@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.GameObjects;
+using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Textures;
 using SDL2;
 
@@ -15,12 +17,8 @@ public class EventLoop
         _renderer = renderer;
     }
 
-    public void Start(List<PlaceholderMovingObject> movingObjects,
-        List<PlaceholderStationaryObject> stationaryObjects)
+    public void Start(List<GameObject> gameObjects)
     {
-        var Ctrl = false;
-        var Alt = false;
-        var Shift = false;
         var quit = false;
         SDL.SDL_Event sdlEvent;
         var x = 288;
@@ -34,102 +32,49 @@ public class EventLoop
         {
             // main game loop
 
+
+            InputManager.Update();
+
             // see https://github.com/libsdl-org/SDL/issues/4376#issuecomment-841654449
             // event loop is done this way because SDL_PollEvent was extremely slow
             // when developing on mac book air
 
             //SDL.SDL_WaitEvent(out sdlEvent);
 
-
-            int numkey;
-            var keystate = SDL2.SDL.SDL_GetKeyboardState(out numkey);
-            //var sur = Marshal.PtrToStructure<SDL.key>(_surface);
-
-
-            //continuous-response keys
-            if (GetKey(SDL.SDL_Keycode.SDLK_LEFT)) x = x - 2;
-            if (GetKey(SDL.SDL_Keycode.SDLK_RIGHT)) x = x + 2;
-            if (GetKey(SDL.SDL_Keycode.SDLK_UP)) y = y - 2;
-            if (GetKey(SDL.SDL_Keycode.SDLK_DOWN)) y = y + 2;
-
-            //single-hit keys, mouse, and other general SDL events (eg. windowing)
-
-            while (SDL.SDL_PollEvent(out sdlEvent) == 1)
-                switch (sdlEvent.type)
-                {
-                    case SDL.SDL_EventType.SDL_QUIT:
-                        quit = true;
-                        break;
-                    case SDL.SDL_EventType.SDL_KEYDOWN:
-                        SDL.SDL_Keycode kc = sdlEvent.key.keysym.sym;
-                        if (kc == SDL.SDL_Keycode.SDLK_ESCAPE || kc == SDL.SDL_Keycode.SDLK_q)
-                        {
-                            quit = true;
-                        }
-                        if ((kc == SDL.SDL_Keycode.SDLK_LCTRL) || (kc == SDL.SDL_Keycode.SDLK_RCTRL))
-                            Ctrl = true;
-                        if ((kc == SDL.SDL_Keycode.SDLK_LALT) || (kc == SDL.SDL_Keycode.SDLK_RALT))
-                            Alt = true;
-                        if ((kc == SDL.SDL_Keycode.SDLK_LSHIFT) || (kc == SDL.SDL_Keycode.SDLK_RSHIFT))
-                            Shift = true;
-                        break;
-                    case SDL.SDL_EventType.SDL_WINDOWEVENT:
-
-                        if (sdlEvent.window.windowEvent ==  SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED) {
-  
-                           // resizeWindow(m_event.window.data1, m_event.window.data2);
-                         }
-                        break;
-
-                    /*
-                case SDL.SDL_EventType.SDL_KEYDOWN:
-                    SDL.SDL_Keycode kc = sdlEvent.key.keysym.sym;
-                    switch (kc)
-                    {
-                        case SDL.SDL_Keycode.SDLK_LEFT: x = x - 1; break;
-                        case SDL.SDL_Keycode.SDLK_RIGHT: x = x + 1; break;
-                        case SDL.SDL_Keycode.SDLK_UP: y = y - 1; break;
-                        case SDL.SDL_Keycode.SDLK_DOWN: y = y + 1; break;
-                    }
-
-                    break;
-                    */
-                }
-
-            //SDL.SDL_Rect dstrect = new SDL.SDL_Rect { x= 5, y = 5, w = 320, h= 240 };
-            //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
-            //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, IntPtr.Zero);
-            //SDL.SDL_RenderPresent(renderer);
-
-            //SDL.SDL_Rect dstrect = new SDL.SDL_Rect { x = x, y = y, w = 64, h = 64 };
-
-
-            _renderer.Clear();
-
-
-            foreach (var obj in stationaryObjects) obj.Render();
-
-            foreach (var obj in movingObjects)
+            if (InputManager.IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_Q))
             {
-                obj.SetPosition(x, y);
-                obj.Render();
+                quit = true;
             }
 
-            //SDL.SDL_RenderCopy(renderer, texture, IntPtr.Zero, ref dstrect);
+            if (InputManager.IsKeyJustReleased(SDL.SDL_Scancode.SDL_SCANCODE_F))
+            {
+                _renderer.SetFullscreen(!_renderer.IsFullscreen);
+            }
+
+            if (InputManager.IsCtrlPressed())
+            {
+                // Handle Ctrl key pressed
+            }
+
+            if (InputManager.IsAltPressed())
+            {
+                // Handle Alt key pressed
+            }
+
+            if (InputManager.IsShiftPressed())
+            {
+                // Handle Shift key pressed
+            }
+
+            
+            _renderer.Clear();
+
+            foreach (var obj in gameObjects)
+            {
+                obj.Update();
+                obj.Render();
+            }
             _renderer.Present();
         }
-    }
-
-    private bool GetKey(SDL.SDL_Keycode _keycode)
-    {
-        // https://stackoverflow.com/questions/63808884/sdl2-cs-getkeyboardstate-intptr-to-byte-array
-        int arraySize;
-        var isKeyPressed = false;
-        IntPtr origArray = SDL.SDL_GetKeyboardState(out arraySize);
-        var keys = new byte[arraySize];
-        var keycode = (byte)SDL.SDL_GetScancodeFromKey(_keycode);
-        Marshal.Copy(origArray, keys, 0, arraySize);
-        isKeyPressed = keys[keycode] == 1;
-        return isKeyPressed;
     }
 }
