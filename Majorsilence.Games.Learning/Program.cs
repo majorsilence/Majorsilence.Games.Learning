@@ -33,7 +33,10 @@ using var textTexture = Texture.CreateTextTexture(renderer,
 var stationary1 = new StationaryObject(textTexture);
 var moving1 = new Player(spriteTexture)
 {
- Speed = 2
+    Speed = 2,
+    X = 100,
+    Y = 100,
+    ZIndex = 1
 };
 
 renderer.DrawColor(255, 255, 255, 255);
