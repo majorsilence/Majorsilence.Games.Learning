@@ -40,11 +40,11 @@ var moving1 = new Player(spriteTexture)
     ZIndex = 1
 };
 
-var characterSheet = new SpriteSheet(spriteTexture, frameWidth: 16, frameHeight: 16);
+var characterSheet = new SpriteSheet(spriteTexture, frameWidth: 16, frameHeight: 32);
 var walkCycle = new Sprite(characterSheet)
 {
     X = 300,
-    Y = 100,
+    Y = 50,
     ZIndex = 1
 };
 walkCycle.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
