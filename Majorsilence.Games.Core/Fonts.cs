@@ -1,5 +1,5 @@
 ﻿using System;
-using SDL2;
+using SDL3;
 
 namespace Majorsilence.Games.Core;
 
@@ -9,7 +9,7 @@ public class Fonts : IDisposable
 
     public Fonts(string fontPath, int size)
     {
-        font = SDL_ttf.TTF_OpenFont(fontPath, size);
+        font = TTF.OpenFont(fontPath, size);
     }
 
     public static implicit operator IntPtr(Fonts ap)
@@ -36,7 +36,7 @@ public class Fonts : IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-        SDL_ttf.TTF_CloseFont(font);
+        TTF.CloseFont(font);
         _disposed = true;
     }
 }

@@ -1,4 +1,4 @@
-using SDL2;
+using SDL3;
 
 namespace Majorsilence.Games.Core;
 
@@ -8,13 +8,13 @@ public class Window : IDisposable
 
     public Window(string title, int width, int height)
     {
-        //var screen = SDL.SDL_CreateWindow("My SDL Empty Window",
-        //    SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
-        SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
-        SDL_ttf.TTF_Init();
-        _window = SDL.SDL_CreateWindow(title,
-            SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, width, height,
-            SDL.SDL_WindowFlags.SDL_WINDOW_OPENGL | SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE);
+        if (!SDL.Init(SDL.InitFlags.Video))
+        {
+            throw new MajorsilenceException("SDL could not initialize! SDL_Error: " + SDL.GetError());
+        }
+        TTF.Init();
+        _window = SDL.CreateWindow(title, width, height,
+            SDL.WindowFlags.OpenGL | SDL.WindowFlags.Resizable);
     }
 
     public static implicit operator IntPtr(Window ap)
@@ -41,8 +41,8 @@ public class Window : IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-        SDL.SDL_DestroyWindow(_window);
-        SDL.SDL_Quit();
+        SDL.DestroyWindow(_window);
+        SDL.Quit();
 
         _disposed = true;
     }

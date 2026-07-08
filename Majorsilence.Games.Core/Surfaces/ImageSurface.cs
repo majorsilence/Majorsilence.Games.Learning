@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
-using SDL2;
+using SDL3;
 
 namespace Majorsilence.Games.Core.Surfaces;
 
@@ -10,18 +10,18 @@ public class ImageSurface : Surface, IDisposable
     {
         if (!File.Exists(path)) throw new MajorsilenceException($"Image not found: {path}");
 
-        _surface = SDL_image.IMG_Load(path);
+        _surface = Image.Load(path);
         SetRect();
     }
 
     private void SetRect()
     {
-        var sur = Marshal.PtrToStructure<SDL.SDL_Surface>(_surface);
+        var sur = Marshal.PtrToStructure<SDL.Surface>(_surface);
         var rect = Rect;
-        rect.h = sur.h;
-        rect.w = sur.w;
-        rect.x = 0;
-        rect.y = 0;
+        rect.H = sur.Height;
+        rect.W = sur.Width;
+        rect.X = 0;
+        rect.Y = 0;
         Rect = rect;
     }
 
@@ -41,7 +41,7 @@ public class ImageSurface : Surface, IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-        SDL.SDL_FreeSurface(_surface);
+        SDL.DestroySurface(_surface);
         _disposed = true;
     }
 }

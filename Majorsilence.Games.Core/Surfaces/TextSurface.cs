@@ -1,21 +1,20 @@
-﻿using System;
-using SDL2;
+using System;
+using SDL3;
 
 namespace Majorsilence.Games.Core.Surfaces;
 
 public class TextSurface : Surface
 {
-    public TextSurface(Fonts font, SDL2.SDL.SDL_Color color, string input)
+    public TextSurface(Fonts font, SDL.Color color, string input)
     {
-        _surface = SDL_ttf.TTF_RenderText_Solid(font,
-            input, color);
+        _surface = TTF.RenderTextSolid(font, input, (UIntPtr)0, color);
     }
 
     public override void Dispose()
     {
         Dispose(true);
     }
-    
+
     public void Dispose(bool disposing)
     {
         if (_disposed) return;
@@ -27,7 +26,7 @@ public class TextSurface : Surface
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-        SDL.SDL_FreeSurface(_surface);
+        SDL.DestroySurface(_surface);
         _disposed = true;
     }
 }

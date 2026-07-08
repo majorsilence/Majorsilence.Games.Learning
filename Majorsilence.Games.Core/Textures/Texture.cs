@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using Majorsilence.Games.Core.Surfaces;
-using SDL2;
+using SDL3;
 
 namespace Majorsilence.Games.Core.Textures;
 
@@ -9,11 +9,11 @@ public class Texture : IDisposable
     private IntPtr _texture;
     readonly Renderer _renderer;
 
-    public SDL2.SDL.SDL_Rect Rect { get; set; }
-    
+    public SDL.Rect Rect { get; set; }
+
     public Texture(Renderer renderer, Surfaces.Surface surface)
     {
-        _texture = SDL.SDL_CreateTextureFromSurface(renderer, surface);
+        _texture = SDL.CreateTextureFromSurface(renderer, surface);
         _renderer = renderer;
         Rect = surface.Rect;
     }
@@ -26,12 +26,30 @@ public class Texture : IDisposable
 
     public virtual void Render(int x, int y)
     {
-        var texW = 0;
-        var texH = 0;
-        SDL.SDL_QueryTexture(_texture, out uint format, out int access, out texW, out texH);
-        SDL.SDL_Rect dstrect2 = new SDL.SDL_Rect { x = x, y = y, w = texW, h = texH };
+        SDL.GetTextureSize(_texture, out float texW, out float texH);
+        SDL.FRect dstrect2 = new SDL.FRect { X = x, Y = y, W = texW, H = texH };
 
-        SDL.SDL_RenderCopy(_renderer, _texture, IntPtr.Zero, ref dstrect2);
+        SDL.RenderTexture(_renderer, _texture, IntPtr.Zero, dstrect2);
+    }
+
+    /// <summary>
+    /// Render a sub-region of the texture (e.g. a single frame of a sprite sheet or tileset)
+    /// at its native size.
+    /// </summary>
+    public virtual void Render(int x, int y, SDL.Rect srcRect)
+    {
+        Render(x, y, srcRect, srcRect.W, srcRect.H);
+    }
+
+    /// <summary>
+    /// Render a sub-region of the texture (e.g. a single frame of a sprite sheet or tileset)
+    /// scaled to the given destination size.
+    /// </summary>
+    public virtual void Render(int x, int y, SDL.Rect srcRect, int destWidth, int destHeight)
+    {
+        SDL.FRect srcFRect = new SDL.FRect { X = srcRect.X, Y = srcRect.Y, W = srcRect.W, H = srcRect.H };
+        SDL.FRect dstRect = new SDL.FRect { X = x, Y = y, W = destWidth, H = destHeight };
+        SDL.RenderTexture(_renderer, _texture, srcFRect, dstRect);
     }
 
     public void Dispose()
@@ -47,7 +65,7 @@ public class Texture : IDisposable
 
         // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
         // TODO: set large fields to null.
-        SDL.SDL_DestroyTexture(_texture);
+        SDL.DestroyTexture(_texture);
         _disposed = true;
     }
 
@@ -58,16 +76,16 @@ public class Texture : IDisposable
         return new Texture(renderer, image);
     }
     public static Texture CreateImageTexture(Renderer renderer, string filepath,
-        SDL2.SDL.SDL_Color transparentColor)
+        SDL.Color transparentColor)
     {
         using var image = new ImageSurface(filepath);
-        image.ColorAsTransparent(transparentColor.r, transparentColor.g, transparentColor.b);
+        image.ColorAsTransparent(transparentColor.R, transparentColor.G, transparentColor.B);
 
         return new Texture(renderer, image);
     }
-    
+
     public static Texture CreateTextTexture(Renderer renderer, string fontPath, int size,
-        SDL2.SDL.SDL_Color color, string textValue)
+        SDL.Color color, string textValue)
     {
         using var font = new Fonts(fontPath, size);
         using var text = new TextSurface(font, color, textValue);
