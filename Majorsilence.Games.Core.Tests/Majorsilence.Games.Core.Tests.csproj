@@ -39,6 +39,9 @@
         <None Include="$(MSBuildProjectDirectory)/../Majorsilence.Games.Learning/assets/fonts/*.ttf" Link="assets/fonts/%(Filename)%(Extension)">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Include="$(MSBuildProjectDirectory)/../Majorsilence.Games.Learning/assets/audio/*.mp3" Link="assets/audio/%(Filename)%(Extension)">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

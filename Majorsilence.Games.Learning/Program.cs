@@ -2,6 +2,7 @@
 using SDL3;
 using Majorsilence.Games.Learning;
 using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.Audio;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Isometric;
 using Majorsilence.Games.Core.Surfaces;
@@ -9,6 +10,10 @@ using Majorsilence.Games.Core.Textures;
 
 using var window = new Window("SDL3 Displaying Image", 640, 480);
 using var renderer = new Renderer(window);
+
+using var audioDevice = new AudioDevice();
+using var gameStartSound = new Sound(audioDevice, "assets/audio/game-start.mp3");
+gameStartSound.Play();
 
 //var image = new Majorsilence.Games.Learning.Image("/Users/petergill/Downloads/stick_people.png");
 
