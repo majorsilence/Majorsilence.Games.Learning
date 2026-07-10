@@ -7,7 +7,7 @@ public class Player : DynamicObject
 {
     public int Health { get; set; }
 
-    public Player(Texture texture) : base(texture)
+    public Player(SpriteSheet spriteSheet) : base(spriteSheet)
     {
     }
 
