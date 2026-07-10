@@ -30,9 +30,9 @@ public class Sprite : GameObject
         _frameIndex = frameIndex;
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
-        _animation?.Update();
+        _animation?.Update(deltaTime);
     }
 
     public override void Render()

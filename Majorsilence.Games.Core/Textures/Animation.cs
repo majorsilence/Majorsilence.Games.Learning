@@ -2,7 +2,7 @@ namespace Majorsilence.Games.Core.Textures;
 
 /// <summary>
 /// Advances through a sequence of sprite sheet frame indices over time.
-/// Tracks wall-clock time internally since the engine's Update() has no delta-time parameter.
+/// Driven by the same per-frame delta-time as the rest of the engine.
 /// </summary>
 public class Animation
 {
@@ -10,7 +10,6 @@ public class Animation
     private readonly double _frameDurationMs;
     private double _elapsedMs;
     private int _currentFrame;
-    private long _lastTick;
 
     public bool Loop { get; set; }
     public bool IsFinished { get; private set; }
@@ -25,18 +24,15 @@ public class Animation
         _frames = frames;
         _frameDurationMs = frameDurationMs;
         Loop = loop;
-        _lastTick = Environment.TickCount64;
     }
 
     public int CurrentFrame => _frames[_currentFrame];
 
-    public void Update()
+    public void Update(float deltaTimeSeconds)
     {
         if (IsFinished) return;
 
-        var now = Environment.TickCount64;
-        _elapsedMs += now - _lastTick;
-        _lastTick = now;
+        _elapsedMs += deltaTimeSeconds * 1000.0;
 
         while (_elapsedMs >= _frameDurationMs && !IsFinished)
         {
@@ -66,6 +62,5 @@ public class Animation
         _currentFrame = 0;
         _elapsedMs = 0;
         IsFinished = false;
-        _lastTick = Environment.TickCount64;
     }
 }

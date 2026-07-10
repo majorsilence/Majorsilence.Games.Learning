@@ -7,6 +7,8 @@ public static class InputManager
     private static bool[] previousKeyStates;
     private static int keyCount;
 
+    public static event Action? WindowResized;
+
     static InputManager()
     {
         // Initialize SDL's video subsystem (required for input handling)
@@ -47,7 +49,7 @@ public static class InputManager
             }
             else if (e.Type == (uint)SDL.EventType.WindowResized)
             {
-                // Handle window resize event
+                WindowResized?.Invoke();
             }
         }
     }

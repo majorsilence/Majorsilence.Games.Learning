@@ -37,13 +37,33 @@ public class Renderer : IDisposable
         Dispose(true);
     }
 
+    /// <summary>
+    /// Current logical (point) render size - i.e. the coordinate space game code
+    /// should reason in, adjusted for active logical presentation.
+    /// </summary>
     public (int Width, int Height) Size
     {
         get
         {
-            SDL.GetRenderOutputSize(_renderer, out int width, out int height);
+            SDL.GetCurrentRenderOutputSize(_renderer, out int width, out int height);
             return (width, height);
         }
+    }
+
+    /// <summary>
+    /// Keeps the renderer's logical presentation matching the window's current
+    /// point-size, so the visible world adapts to the window's aspect ratio
+    /// (more world on a tall/mobile-shaped window, more on a wide/desktop one)
+    /// instead of being pinned to one fixed design resolution with letterbox bars.
+    /// Since source and destination aspect are always kept identical, Stretch mode
+    /// never actually distorts anything - it only absorbs the points-to-physical-pixel
+    /// HiDPI scale factor.
+    /// </summary>
+    public void SyncLogicalPresentationToWindow()
+    {
+        var (w, h) = _window.Size;
+        if (!SDL.SetRenderLogicalPresentation(_renderer, w, h, SDL.RendererLogicalPresentation.Stretch))
+            throw new MajorsilenceException("Failed to set logical presentation: " + SDL.GetError());
     }
 
     public bool IsFullscreen => (SDL.GetWindowFlags(_window) & SDL.WindowFlags.Fullscreen) != 0;

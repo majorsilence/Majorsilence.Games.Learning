@@ -12,7 +12,7 @@ public class StationaryObject : GameObject
         _texture = texture;
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
         // Stationary objects do not need to update position or state
     }

@@ -22,7 +22,7 @@ public class IsometricTilemap : GameObject
         _grid = grid;
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
         // Tile layout is static; nothing to update.
     }
@@ -41,6 +41,34 @@ public class IsometricTilemap : GameObject
 
                 var (screenX, screenY) = _grid.TileToScreen(column, row);
                 _tileset.Render(X + screenX, Y + screenY, tileIndex);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Exposes each tile as an individually depth-sortable render item, so a
+    /// RenderQueue can interleave moving GameObjects with individual tiles
+    /// (e.g. a character passing behind a tall tile) instead of only being
+    /// globally in front of or behind the whole tilemap. Uses the same tile
+    /// iteration and TileToScreen math as Render(), which is kept as-is for
+    /// standalone/non-sorted use.
+    /// </summary>
+    public IEnumerable<(float SortY, Action Render)> EnumerateRenderItems()
+    {
+        var rows = _tiles.GetLength(0);
+        var columns = _tiles.GetLength(1);
+
+        for (var row = 0; row < rows; row++)
+        {
+            for (var column = 0; column < columns; column++)
+            {
+                var tileIndex = _tiles[row, column];
+                if (tileIndex < 0) continue;
+
+                var (screenX, screenY) = _grid.TileToScreen(column, row);
+                var drawX = X + screenX;
+                var drawY = Y + screenY;
+                yield return (drawY + _grid.TileHeight, () => _tileset.Render(drawX, drawY, tileIndex));
             }
         }
     }

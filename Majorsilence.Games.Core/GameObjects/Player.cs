@@ -1,6 +1,5 @@
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Textures;
-using SDL3;
 
 namespace Majorsilence.Games.Core.GameObjects;
 
@@ -12,14 +11,14 @@ public class Player : DynamicObject
     {
     }
 
-    public override void Update()
+    public override void Update(float deltaTime)
     {
         // Handle user input to update direction
-        if (InputManager.IsKeyPressed(SDL.Scancode.Left))
+        if (InputActions.IsPressed(InputAction.MoveLeft))
         {
             DirectionX = HorizontalDirection.Left;
         }
-        else if (InputManager.IsKeyPressed(SDL.Scancode.Right))
+        else if (InputActions.IsPressed(InputAction.MoveRight))
         {
             DirectionX = HorizontalDirection.Right;
         }
@@ -28,11 +27,11 @@ public class Player : DynamicObject
             DirectionX =  HorizontalDirection.None;
         }
 
-        if (InputManager.IsKeyPressed(SDL.Scancode.Up))
+        if (InputActions.IsPressed(InputAction.MoveUp))
         {
             DirectionY = VerticalDirection.Up;
         }
-        else if (InputManager.IsKeyPressed(SDL.Scancode.Down))
+        else if (InputActions.IsPressed(InputAction.MoveDown))
         {
             DirectionY = VerticalDirection.Down;
         }
@@ -42,7 +41,7 @@ public class Player : DynamicObject
         }
 
         // Update position based on speed and direction
-        base.Update();
+        base.Update(deltaTime);
     }
-    
+
 }

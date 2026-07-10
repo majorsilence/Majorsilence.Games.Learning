@@ -9,6 +9,7 @@ public class RenderTest
     {
         using var window = new Window("SDL3 Displaying Image", 640, 480);
         using var renderer = new Renderer(window);
+        renderer.SyncLogicalPresentationToWindow();
 
         using var spriteTexture = Texture.CreateImageTexture(renderer,
             "assets/artwork/z-like/character.png",

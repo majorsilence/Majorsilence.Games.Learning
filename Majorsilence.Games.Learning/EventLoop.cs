@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Majorsilence.Games.Core;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
+using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Core.Textures;
 using SDL3;
 
@@ -20,11 +21,17 @@ public class EventLoop
     public void Start(List<GameObject> gameObjects)
     {
         var quit = false;
+        var frequency = SDL.GetPerformanceFrequency();
+        var previousCounter = SDL.GetPerformanceCounter();
 
         while (!quit)
         {
             // main game loop
 
+            var currentCounter = SDL.GetPerformanceCounter();
+            // clamp to avoid a runaway delta after a debugger pause or window-drag stall
+            var deltaTime = Math.Min((float)(currentCounter - previousCounter) / frequency, 0.25f);
+            previousCounter = currentCounter;
 
             InputManager.Update();
 
@@ -32,12 +39,12 @@ public class EventLoop
             // event loop is done this way because SDL_PollEvent was extremely slow
             // when developing on mac book air
 
-            if (InputManager.IsKeyPressed(SDL.Scancode.Q) || InputManager.IsKeyPressed(SDL.Scancode.Escape))
+            if (InputActions.IsPressed(InputAction.Quit))
             {
                 quit = true;
             }
 
-            if (InputManager.IsKeyJustReleased(SDL.Scancode.F))
+            if (InputActions.IsJustReleased(InputAction.ToggleFullscreen))
             {
                 _renderer.SetFullscreen(!_renderer.IsFullscreen);
             }
@@ -58,13 +65,13 @@ public class EventLoop
             }
 
 
-            _renderer.Clear();
-
             foreach (var obj in gameObjects)
             {
-                obj.Update();
-                obj.Render();
+                obj.Update(deltaTime);
             }
+
+            _renderer.Clear();
+            RenderQueue.RenderSorted(gameObjects);
             _renderer.Present();
         }
     }
