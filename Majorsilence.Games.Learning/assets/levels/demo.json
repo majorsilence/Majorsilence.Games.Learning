@@ -1,0 +1,24 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "legend": {
+    "G": "grass",
+    "D": "dirt",
+    "W": "water",
+    "S": "stone",
+    "A": "sand"
+  },
+  "tiles": [
+    "GGDGGA",
+    "GDDGAA",
+    "WWDGGG",
+    "WWGGSS",
+    "GGGSSG",
+    "GGGGGG"
+  ],
+  "entities": [
+    { "type": "tree", "column": 3, "row": 1 },
+    { "type": "tree", "column": 1, "row": 4 },
+    { "type": "playerStart", "column": 3, "row": 2 }
+  ]
+}

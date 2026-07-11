@@ -6,6 +6,7 @@ using Majorsilence.Games.Core.Audio;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Isometric;
+using Majorsilence.Games.Core.Levels;
 using Majorsilence.Games.Core.Surfaces;
 using Majorsilence.Games.Core.Textures;
 
@@ -24,21 +25,23 @@ using var titleTexture = Texture.CreateTextTexture(renderer,
 );
 var title = new StationaryObject(titleTexture);
 
-// Tile types, in tileset.png frame order: grass, dirt path, water, stone, sand.
-const int Grass = 0, Dirt = 1, Water = 2, Stone = 3, Sand = 4;
-var tiles = new[,]
-{
-    { Grass, Grass, Dirt,  Grass, Grass, Sand },
-    { Grass, Dirt,  Dirt,  Grass, Sand,  Sand },
-    { Water, Water, Dirt,  Grass, Grass, Grass },
-    { Water, Water, Grass, Grass, Stone, Stone },
-    { Grass, Grass, Grass, Stone, Stone, Grass },
-    { Grass, Grass, Grass, Grass, Grass, Grass },
-};
+var level = LevelLoader.Load("assets/levels/demo.json");
 
 using var tilesetTexture = Texture.CreateImageTexture(renderer, "assets/artwork/isometric-demo/tileset.png");
 var tileset = new SpriteSheet(tilesetTexture, frameWidth: 32, frameHeight: 16);
-var isoGrid = new IsometricGrid(tileWidth: 32, tileHeight: 16);
+
+// Maps this level's semantic tile-type names (from its legend) to tileset.png's
+// frame order, decoupling level data from any one tileset image's layout.
+var tileFrameIndex = new Dictionary<string, int>
+{
+    ["grass"] = 0,
+    ["dirt"] = 1,
+    ["water"] = 2,
+    ["stone"] = 3,
+    ["sand"] = 4
+};
+var tiles = LevelLoader.ResolveTileIndices(level, tileFrameIndex);
+var isoGrid = new IsometricGrid(level.TileWidth, level.TileHeight);
 
 var isoMap = new IsometricTilemap(tiles, tileset, isoGrid)
 {
@@ -85,9 +88,12 @@ SyncViewport(); // establishes the initial origin before placing tile-anchored o
     return (tileX + (isoGrid.TileWidth - width) / 2, tileY + isoGrid.TileHeight - height);
 }
 
+var playerStart = level.Entities.FirstOrDefault(e => e.Type == "playerStart")
+    ?? throw new MajorsilenceException("Level has no 'playerStart' entity.");
+
 using var playerTexture = Texture.CreateImageTexture(renderer, "assets/artwork/isometric-demo/character.png");
 var playerSheet = new SpriteSheet(playerTexture, frameWidth: 16, frameHeight: 32);
-var (playerStartX, playerStartY) = StandOnTile(column: 3, row: 2, width: 16, height: 32);
+var (playerStartX, playerStartY) = StandOnTile(playerStart.Column, playerStart.Row, width: 16, height: 32);
 var player = new Player(playerSheet)
 {
     Speed = 120f,
@@ -107,25 +113,20 @@ Sprite MakeTree(int column, int row)
     return new Sprite(treeSheet) { X = x, Y = y, ZIndex = 1, SortOffsetY = 48 };
 }
 
-var tree1 = MakeTree(column: 3, row: 1);
-var tree2 = MakeTree(column: 1, row: 4);
-
+var gameObjects = new List<GameObject> { title, isoMap, player };
 worldObjects.Add(player);
-worldObjects.Add(tree1);
-worldObjects.Add(tree2);
+
+foreach (var entity in level.Entities.Where(e => e.Type == "tree"))
+{
+    var tree = MakeTree(entity.Column, entity.Row);
+    gameObjects.Add(tree);
+    worldObjects.Add(tree);
+}
+
 InputManager.WindowResized += SyncViewport;
 
 renderer.DrawColor(30, 30, 35, 255);
 
 var loop = new EventLoop(renderer);
-
-var gameObjects = new List<GameObject>()
-{
-    title,
-    isoMap,
-    player,
-    tree1,
-    tree2
-};
 
 loop.Start(gameObjects);
