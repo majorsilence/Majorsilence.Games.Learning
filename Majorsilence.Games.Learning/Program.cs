@@ -12,10 +12,47 @@ using Majorsilence.Games.Core.Surfaces;
 using Majorsilence.Games.Core.Textures;
 using Majorsilence.Games.Core.Tilemaps;
 
-// Which level to run - defaults to the isometric demo; pass a side-scroll level
-// path (e.g. assets/levels/sidescroll-forward.json) as the first CLI argument
-// to try one of the other perspectives/scroll modes.
-var levelPath = args.Length > 0 ? args[0] : "assets/levels/demo.json";
+// Which level to run - pass a level path as the first CLI argument to skip the
+// prompt (e.g. for scripted/automated runs), otherwise pick interactively.
+string ChooseLevelPath()
+{
+    var files = Directory.GetFiles("assets/levels", "*.json").OrderBy(f => f).ToArray();
+    if (files.Length == 0)
+        throw new MajorsilenceException("No level files found in assets/levels.");
+    if (files.Length == 1)
+        return files[0];
+
+    Console.WriteLine("Select a level to run:");
+    for (var i = 0; i < files.Length; i++)
+    {
+        var name = Path.GetFileNameWithoutExtension(files[i]);
+        try
+        {
+            var preview = LevelLoader.Load(files[i]);
+            var description = preview.Perspective.Equals("sidescroll", StringComparison.OrdinalIgnoreCase)
+                ? $"sidescroll, {preview.ScrollMode}"
+                : "isometric";
+            Console.WriteLine($"  {i + 1}. {name} ({description})");
+        }
+        catch (MajorsilenceException)
+        {
+            Console.WriteLine($"  {i + 1}. {name}");
+        }
+    }
+
+    while (true)
+    {
+        Console.Write($"Enter a number (1-{files.Length}, default 1): ");
+        var input = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(input))
+            return files[0];
+        if (int.TryParse(input, out var choice) && choice >= 1 && choice <= files.Length)
+            return files[choice - 1];
+        Console.WriteLine("Invalid choice, try again.");
+    }
+}
+
+var levelPath = args.Length > 0 ? args[0] : ChooseLevelPath();
 var level = LevelLoader.Load(levelPath);
 var isSideScroll = level.Perspective.Equals("sidescroll", StringComparison.OrdinalIgnoreCase);
 
