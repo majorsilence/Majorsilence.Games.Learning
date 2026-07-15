@@ -1,3 +1,5 @@
+using Majorsilence.Games.Core.Rendering;
+
 namespace Majorsilence.Games.Core.GameObjects;
 
 public abstract class GameObject
@@ -18,9 +20,24 @@ public abstract class GameObject
 
     /// <summary>
     /// Screen-Y used for per-frame isometric depth-sorting (painter's algorithm).
+    /// Deliberately ground-based (ignores Z) so an object that's jumping/elevated
+    /// still sorts against tiles/objects at its footprint, not its airborne height.
     /// </summary>
     public virtual float SortY => Y + SortOffsetY;
 
+    /// <summary>
+    /// Height above this object's ground position, in world pixels (isometric
+    /// verticality / jump height). Lifts the rendered sprite upward without
+    /// affecting X/Y or SortY. Defaults to 0.
+    /// </summary>
+    public float Z { get; set; } = 0f;
+
     public abstract void Update(float deltaTime);
-    public abstract void Render();
+
+    /// <summary>
+    /// X/Y are world-space position; Camera resolves the final screen draw
+    /// position via Camera.WorldToScreen. Screen-space/UI objects (see
+    /// StationaryObject) may choose to ignore the camera and draw at X/Y directly.
+    /// </summary>
+    public abstract void Render(Camera camera);
 }

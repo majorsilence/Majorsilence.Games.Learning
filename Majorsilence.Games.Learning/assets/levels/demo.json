@@ -16,6 +16,15 @@
     "GGGSSG",
     "GGGGGG"
   ],
+  "elevationStep": 16,
+  "heights": [
+    "000000",
+    "000000",
+    "000011",
+    "000011",
+    "000000",
+    "000000"
+  ],
   "entities": [
     { "type": "tree", "column": 3, "row": 1 },
     { "type": "tree", "column": 1, "row": 4 },

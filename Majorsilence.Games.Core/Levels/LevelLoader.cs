@@ -8,6 +8,9 @@ namespace Majorsilence.Games.Core.Levels;
 /// </summary>
 public static class LevelLoader
 {
+    private static readonly string[] ValidPerspectives = { "isometric", "sidescroll" };
+    private static readonly string[] ValidScrollModes = { "horizontal", "forwardOnly", "vertical" };
+
     // Mirrors the JSON shape. Legend keys are single-character strings here (JSON
     // object keys are always strings) and get validated/converted to char in Build.
     private class LevelMapJson
@@ -17,6 +20,10 @@ public static class LevelLoader
         public Dictionary<string, string> Legend { get; set; } = new();
         public string[] Tiles { get; set; } = Array.Empty<string>();
         public List<LevelEntity> Entities { get; set; } = new();
+        public string Perspective { get; set; } = "isometric";
+        public string ScrollMode { get; set; } = "horizontal";
+        public int ElevationStep { get; set; }
+        public string[]? Heights { get; set; }
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -65,6 +72,14 @@ public static class LevelLoader
         if (raw.TileWidth <= 0 || raw.TileHeight <= 0)
             throw new MajorsilenceException($"Level '{sourceName}': tileWidth/tileHeight must be greater than zero.");
 
+        if (!ValidPerspectives.Contains(raw.Perspective, StringComparer.OrdinalIgnoreCase))
+            throw new MajorsilenceException(
+                $"Level '{sourceName}': perspective '{raw.Perspective}' must be one of: {string.Join(", ", ValidPerspectives)}.");
+
+        if (!ValidScrollModes.Contains(raw.ScrollMode, StringComparer.OrdinalIgnoreCase))
+            throw new MajorsilenceException(
+                $"Level '{sourceName}': scrollMode '{raw.ScrollMode}' must be one of: {string.Join(", ", ValidScrollModes)}.");
+
         var legend = new Dictionary<char, string>();
         foreach (var (key, value) in raw.Legend)
         {
@@ -90,13 +105,38 @@ public static class LevelLoader
             }
         }
 
+        if (raw.Heights is not null)
+        {
+            if (raw.Heights.Length != raw.Tiles.Length)
+                throw new MajorsilenceException(
+                    $"Level '{sourceName}': heights has {raw.Heights.Length} rows, expected {raw.Tiles.Length} (must match tiles).");
+
+            for (var row = 0; row < raw.Heights.Length; row++)
+            {
+                if (raw.Heights[row].Length != width)
+                    throw new MajorsilenceException(
+                        $"Level '{sourceName}': heights row {row} has length {raw.Heights[row].Length}, expected {width} (must match tiles).");
+
+                foreach (var c in raw.Heights[row])
+                {
+                    if (c < '0' || c > '9')
+                        throw new MajorsilenceException(
+                            $"Level '{sourceName}': heights row {row} contains '{c}', expected a digit '0'-'9'.");
+                }
+            }
+        }
+
         return new LevelMap
         {
             TileWidth = raw.TileWidth,
             TileHeight = raw.TileHeight,
             Legend = legend,
             Tiles = raw.Tiles,
-            Entities = raw.Entities
+            Entities = raw.Entities,
+            Perspective = raw.Perspective,
+            ScrollMode = raw.ScrollMode,
+            ElevationStep = raw.ElevationStep,
+            Heights = raw.Heights
         };
     }
 
@@ -120,6 +160,30 @@ public static class LevelLoader
                 if (!tileTypeToFrameIndex.TryGetValue(typeName, out var frameIndex))
                     throw new MajorsilenceException($"No frame index mapping provided for tile type '{typeName}' (character '{c}').");
                 result[row, column] = frameIndex;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Converts a level's optional Heights ASCII grid into world-pixel elevations
+    /// (digit * ElevationStep) for IsometricTilemap. Returns an all-zero grid if
+    /// Heights was omitted, so flat levels need no special-casing by callers.
+    /// </summary>
+    public static int[,] ResolveElevations(LevelMap level)
+    {
+        var rows = level.Tiles.Length;
+        var columns = rows == 0 ? 0 : level.Tiles[0].Length;
+        var result = new int[rows, columns];
+
+        if (level.Heights is null) return result;
+
+        for (var row = 0; row < rows; row++)
+        {
+            for (var column = 0; column < columns; column++)
+            {
+                result[row, column] = (level.Heights[row][column] - '0') * level.ElevationStep;
             }
         }
 

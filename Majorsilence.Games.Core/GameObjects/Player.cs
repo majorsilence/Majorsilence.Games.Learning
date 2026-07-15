@@ -40,6 +40,11 @@ public class Player : DynamicObject
             DirectionY = VerticalDirection.None;
         }
 
+        if (InputActions.IsJustPressed(InputAction.Jump))
+        {
+            Jump();
+        }
+
         // Update position based on speed and direction
         base.Update(deltaTime);
     }

@@ -18,7 +18,13 @@ public class EventLoop
         _renderer = renderer;
     }
 
-    public void Start(List<GameObject> gameObjects)
+    /// <summary>
+    /// beforeUpdate runs once per frame, before any GameObject.Update - e.g. to sync
+    /// a player's GroundZ from whichever tile they're currently over. Kept as a plain
+    /// hook rather than baking tilemap-awareness into EventLoop itself, since EventLoop
+    /// has no reason to know about any particular Tilemap/projection.
+    /// </summary>
+    public void Start(List<GameObject> gameObjects, Camera camera, Action? beforeUpdate = null)
     {
         var quit = false;
         var frequency = SDL.GetPerformanceFrequency();
@@ -65,13 +71,15 @@ public class EventLoop
             }
 
 
+            beforeUpdate?.Invoke();
             foreach (var obj in gameObjects)
             {
                 obj.Update(deltaTime);
             }
+            camera.Update();
 
             _renderer.Clear();
-            RenderQueue.RenderSorted(gameObjects);
+            RenderQueue.RenderSorted(gameObjects, camera);
             _renderer.Present();
         }
     }

@@ -1,0 +1,50 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "perspective": "sidescroll",
+  "scrollMode": "vertical",
+  "legend": {
+    ".": "empty",
+    "G": "ground",
+    "B": "brick"
+  },
+  "tiles": [
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "G......G",
+    "GGGGGGGG"
+  ],
+  "entities": [
+    {
+      "type": "playerStart",
+      "column": 3,
+      "row": 28
+    }
+  ]
+}

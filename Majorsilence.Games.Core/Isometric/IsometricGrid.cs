@@ -1,15 +1,17 @@
 namespace Majorsilence.Games.Core.Isometric;
 
 /// <summary>
-/// Converts between tile (column, row) coordinates and screen pixel coordinates
-/// for a 2:1 diamond isometric projection.
+/// Converts between tile (column, row) coordinates and world pixel coordinates
+/// for a 2:1 diamond isometric projection. Origin is a fixed world-space offset
+/// for this grid, set once at construction - panning/following/recentering on
+/// screen is Camera's job, not this class's.
 /// </summary>
 public class IsometricGrid
 {
     public int TileWidth { get; }
     public int TileHeight { get; }
-    public int OriginX { get; set; }
-    public int OriginY { get; set; }
+    public int OriginX { get; }
+    public int OriginY { get; }
 
     public IsometricGrid(int tileWidth, int tileHeight, int originX = 0, int originY = 0)
     {
@@ -23,9 +25,9 @@ public class IsometricGrid
     }
 
     /// <summary>
-    /// Top-left screen pixel position at which a tile's texture frame should be drawn.
+    /// Top-left world pixel position at which a tile's texture frame should be drawn.
     /// </summary>
-    public (int X, int Y) TileToScreen(int column, int row)
+    public (int X, int Y) TileToWorld(int column, int row)
     {
         var x = OriginX + (column - row) * (TileWidth / 2);
         var y = OriginY + (column + row) * (TileHeight / 2);
@@ -33,12 +35,12 @@ public class IsometricGrid
     }
 
     /// <summary>
-    /// Tile (column, row) that contains the given screen pixel position.
+    /// Tile (column, row) that contains the given world pixel position.
     /// </summary>
-    public (int Column, int Row) ScreenToTile(int screenX, int screenY)
+    public (int Column, int Row) WorldToTile(int worldX, int worldY)
     {
-        var x = screenX - OriginX;
-        var y = screenY - OriginY;
+        var x = worldX - OriginX;
+        var y = worldY - OriginY;
 
         var halfW = TileWidth / 2.0;
         var halfH = TileHeight / 2.0;

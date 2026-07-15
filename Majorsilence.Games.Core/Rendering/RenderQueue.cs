@@ -11,7 +11,7 @@ namespace Majorsilence.Games.Core.Rendering;
 /// </summary>
 public static class RenderQueue
 {
-    public static void RenderSorted(IEnumerable<GameObject> gameObjects)
+    public static void RenderSorted(IEnumerable<GameObject> gameObjects, Camera camera)
     {
         var items = new List<(float SortY, int ZIndex, Action Render)>();
 
@@ -19,12 +19,12 @@ public static class RenderQueue
         {
             if (obj is IsometricTilemap tilemap)
             {
-                foreach (var (sortY, render) in tilemap.EnumerateRenderItems())
+                foreach (var (sortY, render) in tilemap.EnumerateRenderItems(camera))
                     items.Add((sortY, obj.ZIndex, render));
             }
             else
             {
-                items.Add((obj.SortY, obj.ZIndex, obj.Render));
+                items.Add((obj.SortY, obj.ZIndex, () => obj.Render(camera)));
             }
         }
 

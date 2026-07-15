@@ -1,3 +1,4 @@
+using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Core.Textures;
 
 namespace Majorsilence.Games.Core.GameObjects;
@@ -35,9 +36,10 @@ public class Sprite : GameObject
         _animation?.Update(deltaTime);
     }
 
-    public override void Render()
+    public override void Render(Camera camera)
     {
         var frame = _animation?.CurrentFrame ?? _frameIndex;
-        _spriteSheet.Render(X, Y, frame);
+        var (screenX, screenY) = camera.WorldToScreen(X, Y - Z);
+        _spriteSheet.Render(screenX, screenY, frame);
     }
 }

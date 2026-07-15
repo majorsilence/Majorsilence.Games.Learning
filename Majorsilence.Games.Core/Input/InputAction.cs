@@ -6,6 +6,7 @@ public enum InputAction
     MoveDown,
     MoveLeft,
     MoveRight,
+    Jump,
     Confirm,
     Cancel,
     ToggleFullscreen,
