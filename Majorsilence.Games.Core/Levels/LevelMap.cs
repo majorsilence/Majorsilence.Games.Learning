@@ -34,4 +34,19 @@ public class LevelMap
     /// field keep working unchanged.
     /// </summary>
     public string[]? Heights { get; set; }
+
+    /// <summary>
+    /// Path to this level's tileset image. Empty means "use the caller's default"
+    /// (e.g. Program.cs falls back to the original isometric-demo tileset) - lets
+    /// existing levels that predate this field keep working unchanged, while new
+    /// levels with their own art (e.g. a different theme) can be self-contained.
+    /// </summary>
+    public string TilesetPath { get; set; } = "";
+
+    /// <summary>
+    /// Maps this level's semantic tile-type names (from its legend) to TilesetPath's
+    /// frame order. Empty means "use the caller's default" mapping, same fallback
+    /// rule as TilesetPath.
+    /// </summary>
+    public Dictionary<string, int> TileFrames { get; set; } = new();
 }

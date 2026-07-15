@@ -32,6 +32,9 @@
         <None Update="assets\artwork\isometric-demo\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="assets\artwork\titanic-demo\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="assets\audio\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

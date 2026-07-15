@@ -80,6 +80,18 @@ public class LevelLoaderTest
     }
     """;
 
+    private const string CustomTilesetJson = """
+    {
+      "tileWidth": 32,
+      "tileHeight": 16,
+      "tilesetPath": "assets/artwork/titanic-demo/tileset.png",
+      "tileFrames": { "deck": 0, "water": 1 },
+      "legend": { "D": "deck", "W": "water" },
+      "tiles": ["DW"],
+      "entities": []
+    }
+    """;
+
     public void Test1()
     {
         var level = LevelLoader.Parse(ValidJson, "valid-fixture");
@@ -127,6 +139,18 @@ public class LevelLoaderTest
 
         AssertThrows(() => LevelLoader.Parse(BadHeightsCharJson, "bad-heights-char-fixture"));
         AssertThrows(() => LevelLoader.Parse(BadPerspectiveJson, "bad-perspective-fixture"));
+
+        // backward compatibility: no tilesetPath/tileFrames means "caller decides"
+        System.Diagnostics.Debug.Assert(level.TilesetPath == "");
+        System.Diagnostics.Debug.Assert(level.TileFrames.Count == 0);
+
+        var customTileset = LevelLoader.Parse(CustomTilesetJson, "custom-tileset-fixture");
+        System.Diagnostics.Debug.Assert(customTileset.TilesetPath == "assets/artwork/titanic-demo/tileset.png");
+        System.Diagnostics.Debug.Assert(customTileset.TileFrames["deck"] == 0);
+        System.Diagnostics.Debug.Assert(customTileset.TileFrames["water"] == 1);
+        var customTiles = LevelLoader.ResolveTileIndices(customTileset, customTileset.TileFrames);
+        System.Diagnostics.Debug.Assert(customTiles[0, 0] == 0); // D
+        System.Diagnostics.Debug.Assert(customTiles[0, 1] == 1); // W
     }
 
     private static void AssertThrows(Action action)

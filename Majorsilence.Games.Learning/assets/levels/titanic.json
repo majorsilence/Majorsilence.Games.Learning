@@ -1,0 +1,25 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/tileset.png",
+  "tileFrames": { "deck": 0, "water": 1 },
+  "legend": {
+    "D": "deck",
+    "W": "water"
+  },
+  "tiles": [
+    "WWWWWWW",
+    "WDDDDDW",
+    "WDDDDDW",
+    "WDDDDDW",
+    "WDDDDDW",
+    "WWWWWWW"
+  ],
+  "entities": [
+    { "type": "funnel", "column": 2, "row": 2 },
+    { "type": "funnel", "column": 4, "row": 2 },
+    { "type": "iceberg", "column": 3, "row": 0 },
+    { "type": "playerStart", "column": 3, "row": 4 }
+  ]
+}

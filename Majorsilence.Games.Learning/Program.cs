@@ -133,19 +133,17 @@ if (isSideScroll)
 }
 else
 {
-    var tilesetTexture = Texture.CreateImageTexture(renderer, "assets/artwork/isometric-demo/tileset.png");
+    // A level can bring its own tileset/frame mapping (TilesetPath/TileFrames);
+    // levels that predate that field fall back to the original demo tileset.
+    var tilesetPath = string.IsNullOrEmpty(level.TilesetPath)
+        ? "assets/artwork/isometric-demo/tileset.png"
+        : level.TilesetPath;
+    var tilesetTexture = Texture.CreateImageTexture(renderer, tilesetPath);
     var tileset = new SpriteSheet(tilesetTexture, frameWidth: 32, frameHeight: 16);
 
-    // Maps this level's semantic tile-type names (from its legend) to tileset.png's
-    // frame order, decoupling level data from any one tileset image's layout.
-    var tileFrameIndex = new Dictionary<string, int>
-    {
-        ["grass"] = 0,
-        ["dirt"] = 1,
-        ["water"] = 2,
-        ["stone"] = 3,
-        ["sand"] = 4
-    };
+    var tileFrameIndex = level.TileFrames.Count > 0
+        ? level.TileFrames
+        : new Dictionary<string, int> { ["grass"] = 0, ["dirt"] = 1, ["water"] = 2, ["stone"] = 3, ["sand"] = 4 };
     var tiles = LevelLoader.ResolveTileIndices(level, tileFrameIndex);
     var elevations = LevelLoader.ResolveElevations(level);
     var isoGrid = new IsometricGrid(level.TileWidth, level.TileHeight);
@@ -183,19 +181,35 @@ else
     }
     beforeUpdate = SyncPlayerGroundZ;
 
-    var treeTexture = Texture.CreateImageTexture(renderer, "assets/artwork/isometric-demo/tree.png");
-    var treeSheet = new SpriteSheet(treeTexture, frameWidth: 32, frameHeight: 48);
-
-    Sprite MakeTree(int column, int row)
+    // Known static prop types a level's entities can reference by name. Each maps
+    // to its own sprite sheet (image path, frame size) - new prop types/themes just
+    // add an entry here rather than needing a new engine feature.
+    var propKinds = new Dictionary<string, (string ImagePath, int Width, int Height)>
     {
-        var (x, y) = StandOnTile(column, row, width: 32, height: 48);
-        return new Sprite(treeSheet) { X = x, Y = y, ZIndex = 1, SortOffsetY = 48 };
+        ["tree"] = ("assets/artwork/isometric-demo/tree.png", 32, 48),
+        ["funnel"] = ("assets/artwork/titanic-demo/funnel.png", 24, 56),
+        ["iceberg"] = ("assets/artwork/titanic-demo/iceberg.png", 40, 36),
+    };
+    var propSheets = new Dictionary<string, SpriteSheet>();
+
+    Sprite MakeProp(string kind, int column, int row)
+    {
+        var (imagePath, width, height) = propKinds[kind];
+        if (!propSheets.TryGetValue(kind, out var sheet))
+        {
+            var texture = Texture.CreateImageTexture(renderer, imagePath);
+            sheet = new SpriteSheet(texture, frameWidth: width, frameHeight: height);
+            propSheets[kind] = sheet;
+        }
+
+        var (x, y) = StandOnTile(column, row, width, height);
+        return new Sprite(sheet) { X = x, Y = y, ZIndex = 1, SortOffsetY = height };
     }
 
     gameObjects.Add(isoMap);
-    foreach (var entity in level.Entities.Where(e => e.Type == "tree"))
+    foreach (var entity in level.Entities.Where(e => propKinds.ContainsKey(e.Type)))
     {
-        gameObjects.Add(MakeTree(entity.Column, entity.Row));
+        gameObjects.Add(MakeProp(entity.Type, entity.Column, entity.Row));
     }
 }
 

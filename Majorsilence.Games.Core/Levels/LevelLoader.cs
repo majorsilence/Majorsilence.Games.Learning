@@ -24,6 +24,8 @@ public static class LevelLoader
         public string ScrollMode { get; set; } = "horizontal";
         public int ElevationStep { get; set; }
         public string[]? Heights { get; set; }
+        public string TilesetPath { get; set; } = "";
+        public Dictionary<string, int> TileFrames { get; set; } = new();
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -136,7 +138,9 @@ public static class LevelLoader
             Perspective = raw.Perspective,
             ScrollMode = raw.ScrollMode,
             ElevationStep = raw.ElevationStep,
-            Heights = raw.Heights
+            Heights = raw.Heights,
+            TilesetPath = raw.TilesetPath,
+            TileFrames = raw.TileFrames
         };
     }
 
