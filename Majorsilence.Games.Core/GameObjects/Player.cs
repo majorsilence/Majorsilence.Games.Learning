@@ -5,20 +5,47 @@ namespace Majorsilence.Games.Core.GameObjects;
 
 public class Player : DynamicObject
 {
+    private readonly IInputSource? _inputSource;
+
     public int Health { get; set; }
 
-    public Player(SpriteSheet spriteSheet) : base(spriteSheet)
+    /// <summary>
+    /// When false, this player's movement/jump input is ignored (direction reset
+    /// to none) while physics/animation still run - e.g. a brief freeze during a
+    /// death sequence.
+    /// </summary>
+    public bool InputEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Optional per-player input device. Null (the default) reads the shared
+    /// static InputActions facade, matching prior single-player behavior. Pass a
+    /// dedicated IInputSource (e.g. a second KeyboardInputSource with different
+    /// bindings) so multiple local players don't share one input state.
+    /// </summary>
+    public Player(SpriteSheet spriteSheet, IInputSource? inputSource = null) : base(spriteSheet)
     {
+        _inputSource = inputSource;
     }
+
+    private bool IsPressed(InputAction action) => _inputSource?.IsActionPressed(action) ?? InputActions.IsPressed(action);
+    private bool IsJustPressed(InputAction action) => _inputSource?.IsActionJustPressed(action) ?? InputActions.IsJustPressed(action);
 
     public override void Update(float deltaTime)
     {
+        if (!InputEnabled)
+        {
+            DirectionX = HorizontalDirection.None;
+            DirectionY = VerticalDirection.None;
+            base.Update(deltaTime);
+            return;
+        }
+
         // Handle user input to update direction
-        if (InputActions.IsPressed(InputAction.MoveLeft))
+        if (IsPressed(InputAction.MoveLeft))
         {
             DirectionX = HorizontalDirection.Left;
         }
-        else if (InputActions.IsPressed(InputAction.MoveRight))
+        else if (IsPressed(InputAction.MoveRight))
         {
             DirectionX = HorizontalDirection.Right;
         }
@@ -27,11 +54,11 @@ public class Player : DynamicObject
             DirectionX =  HorizontalDirection.None;
         }
 
-        if (InputActions.IsPressed(InputAction.MoveUp))
+        if (IsPressed(InputAction.MoveUp))
         {
             DirectionY = VerticalDirection.Up;
         }
-        else if (InputActions.IsPressed(InputAction.MoveDown))
+        else if (IsPressed(InputAction.MoveDown))
         {
             DirectionY = VerticalDirection.Down;
         }
@@ -40,7 +67,7 @@ public class Player : DynamicObject
             DirectionY = VerticalDirection.None;
         }
 
-        if (InputActions.IsJustPressed(InputAction.Jump))
+        if (IsJustPressed(InputAction.Jump))
         {
             Jump();
         }

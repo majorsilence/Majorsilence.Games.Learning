@@ -10,4 +10,11 @@ public class LevelEntity
     public string Type { get; set; } = "";
     public int Column { get; set; }
     public int Row { get; set; }
+
+    /// <summary>
+    /// Free-form per-entity data (e.g. a door's target room path/spawn name, an
+    /// NPC's role). Open-ended so new entity types can carry whatever they need
+    /// without a format version bump.
+    /// </summary>
+    public Dictionary<string, string> Properties { get; set; } = new();
 }

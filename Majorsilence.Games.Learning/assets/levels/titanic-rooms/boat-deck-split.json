@@ -21,7 +21,7 @@
     "WWRDDDDDDDDDDDDDDDDDDDDRWW",
     "WWRDDDDDDDDDDDDDDDDDDDDRWW",
     "WWRDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDRWW",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWW",
     "WWRDDDDDDDDDDDDDDDDDDDDRWW",
     "WWRDDDDDDDDDDDDDDDDDDDDRWW",
     "WWRDDDDDDDDDDDDDDDDDDDDRWW",
@@ -31,7 +31,6 @@
     "WWWWWWWWWWWWWWWWWWWWWWWWWW"
   ],
   "entities": [
-    { "type": "playerStart", "column": 12, "row": 9 },
     { "type": "iceberg", "column": 12, "row": 0 },
     { "type": "mast", "column": 12, "row": 3 },
     { "type": "funnel", "column": 8, "row": 6 },
@@ -53,6 +52,8 @@
     { "type": "door", "column": 12, "row": 10, "properties": { "target": "assets/levels/titanic-rooms/a-deck-corridor.json", "spawn": "fromBoatDeck" } },
     { "type": "spawnPoint", "column": 12, "row": 4, "properties": { "name": "fromBridge" } },
     { "type": "spawnPoint", "column": 14, "row": 4, "properties": { "name": "fromCrowsNest" } },
-    { "type": "spawnPoint", "column": 12, "row": 11, "properties": { "name": "fromADeck" } }
+    { "type": "spawnPoint", "column": 12, "row": 11, "properties": { "name": "fromADeck" } },
+    { "type": "spawnPoint", "column": 7, "row": 5, "properties": { "name": "forwardHalf" } },
+    { "type": "spawnPoint", "column": 18, "row": 11, "properties": { "name": "aftHalf" } }
   ]
 }

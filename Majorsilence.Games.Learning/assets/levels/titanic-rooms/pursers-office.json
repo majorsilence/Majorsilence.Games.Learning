@@ -1,0 +1,33 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": { "floor": 0, "wall": 1, "stair": 2, "floodwater": 3 },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": ["wall"],
+  "hazards": { "floodwater": "drown" },
+  "floodDelaySeconds": 25,
+  "tiles": [
+    "XXXXXXXXXX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XTFFFFFFTX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XXXXXXXXXX"
+  ],
+  "entities": [
+    { "type": "shopCounter", "column": 4, "row": 1 },
+    { "type": "shop", "column": 4, "row": 2 },
+    { "type": "tix", "column": 7, "row": 1 },
+    { "type": "door", "column": 1, "row": 3, "properties": { "target": "assets/levels/titanic-rooms/a-deck-corridor.json", "spawn": "fromPursersOffice" } },
+    { "type": "door", "column": 8, "row": 3, "properties": { "target": "assets/levels/titanic-rooms/engine-room.json", "spawn": "fromPursersOffice" } },
+    { "type": "spawnPoint", "column": 2, "row": 3, "properties": { "name": "fromADeck" } },
+    { "type": "spawnPoint", "column": 7, "row": 3, "properties": { "name": "fromEngineRoom" } }
+  ]
+}

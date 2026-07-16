@@ -20,11 +20,16 @@ public class EventLoop
 
     /// <summary>
     /// beforeUpdate runs once per frame, before any GameObject.Update - e.g. to sync
-    /// a player's GroundZ from whichever tile they're currently over. Kept as a plain
-    /// hook rather than baking tilemap-awareness into EventLoop itself, since EventLoop
-    /// has no reason to know about any particular Tilemap/projection.
+    /// a player's GroundZ from whichever tile they're currently over. afterUpdate runs
+    /// once per frame, after every GameObject.Update but before the camera/render pass -
+    /// e.g. to check the player's post-move tile for collision/hazards/doors, where the
+    /// check needs this frame's final position. Both receive this frame's deltaTime so
+    /// callers can drive their own timers (e.g. a scripted voyage clock) off the same
+    /// clamped time source as movement, rather than reading it independently. Both are
+    /// kept as plain hooks rather than baking tilemap-awareness into EventLoop itself,
+    /// since EventLoop has no reason to know about any particular Tilemap/projection.
     /// </summary>
-    public void Start(List<GameObject> gameObjects, Camera camera, Action? beforeUpdate = null)
+    public void Start(List<GameObject> gameObjects, Camera camera, Action<float>? beforeUpdate = null, Action<float>? afterUpdate = null)
     {
         var quit = false;
         var frequency = SDL.GetPerformanceFrequency();
@@ -71,11 +76,12 @@ public class EventLoop
             }
 
 
-            beforeUpdate?.Invoke();
+            beforeUpdate?.Invoke(deltaTime);
             foreach (var obj in gameObjects)
             {
                 obj.Update(deltaTime);
             }
+            afterUpdate?.Invoke(deltaTime);
             camera.Update();
 
             _renderer.Clear();

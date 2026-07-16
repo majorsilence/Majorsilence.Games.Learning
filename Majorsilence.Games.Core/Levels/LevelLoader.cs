@@ -26,6 +26,10 @@ public static class LevelLoader
         public string[]? Heights { get; set; }
         public string TilesetPath { get; set; } = "";
         public Dictionary<string, int> TileFrames { get; set; } = new();
+        public List<string> Solid { get; set; } = new();
+        public Dictionary<string, string> Hazards { get; set; } = new();
+        public float FloodDelaySeconds { get; set; } = -1f;
+        public bool Coop { get; set; }
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -140,7 +144,11 @@ public static class LevelLoader
             ElevationStep = raw.ElevationStep,
             Heights = raw.Heights,
             TilesetPath = raw.TilesetPath,
-            TileFrames = raw.TileFrames
+            TileFrames = raw.TileFrames,
+            Solid = raw.Solid,
+            Hazards = raw.Hazards,
+            FloodDelaySeconds = raw.FloodDelaySeconds,
+            Coop = raw.Coop
         };
     }
 

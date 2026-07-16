@@ -45,6 +45,18 @@ public class IsometricTilemap : GameObject
         return _elevations[row, column];
     }
 
+    /// <summary>Overwrites a single tile's frame index at runtime (e.g. flooding a floor tile).</summary>
+    public void SetTile(int column, int row, int frameIndex)
+    {
+        _tiles[row, column] = frameIndex;
+    }
+
+    /// <summary>Overwrites a single tile's elevation at runtime (e.g. a listing/sinking deck).</summary>
+    public void SetElevation(int column, int row, int elevationPixels)
+    {
+        _elevations[row, column] = elevationPixels;
+    }
+
     public override void Render(Camera camera)
     {
         var rows = _tiles.GetLength(0);

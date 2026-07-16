@@ -49,4 +49,26 @@ public class LevelMap
     /// rule as TilesetPath.
     /// </summary>
     public Dictionary<string, int> TileFrames { get; set; } = new();
+
+    /// <summary>Tile-type names (from the legend) that block movement. Empty means nothing is solid.</summary>
+    public List<string> Solid { get; set; } = new();
+
+    /// <summary>
+    /// Tile-type names that are lethal to stand on, mapped to a hazard kind
+    /// (e.g. "freeze", "drown") a game interprets. Empty means no hazards.
+    /// </summary>
+    public Dictionary<string, string> Hazards { get; set; } = new();
+
+    /// <summary>
+    /// Seconds after a scripted "collision" event before this room's floor floods
+    /// (converted to a hazard at runtime). Negative means this room never floods.
+    /// </summary>
+    public float FloodDelaySeconds { get; set; } = -1f;
+
+    /// <summary>
+    /// Whether this level's game session supports local 2-player co-op. Only
+    /// meaningful on the first level loaded in a session (the session-wide choice
+    /// is made once, from that level).
+    /// </summary>
+    public bool Coop { get; set; }
 }

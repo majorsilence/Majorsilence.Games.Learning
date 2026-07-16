@@ -1,0 +1,25 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": { "floor": 0, "wall": 1, "stair": 2, "floodwater": 3 },
+  "legend": {
+    "F": "floor",
+    "X": "wall"
+  },
+  "solid": ["wall"],
+  "tiles": [
+    "XXXXXX",
+    "XFFFFX",
+    "XFFFFX",
+    "XFFFFX",
+    "XFFFFX",
+    "XXFFXX"
+  ],
+  "entities": [
+    { "type": "npc", "column": 3, "row": 2, "properties": { "role": "watcher" } },
+    { "type": "door", "column": 2, "row": 5, "properties": { "target": "assets/levels/titanic.json", "spawn": "fromCrowsNest" } },
+    { "type": "spawnPoint", "column": 3, "row": 4, "properties": { "name": "fromBoatDeck" } }
+  ]
+}

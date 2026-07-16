@@ -17,6 +17,7 @@ public class KeyboardInputSource : IInputSource
             [InputAction.MoveLeft] = new[] { SDL.Scancode.Left, SDL.Scancode.A },
             [InputAction.MoveRight] = new[] { SDL.Scancode.Right, SDL.Scancode.D },
             [InputAction.Jump] = new[] { SDL.Scancode.Space },
+            [InputAction.Fire] = new[] { SDL.Scancode.E },
             [InputAction.Confirm] = new[] { SDL.Scancode.Return },
             [InputAction.Cancel] = new[] { SDL.Scancode.Escape },
             [InputAction.ToggleFullscreen] = new[] { SDL.Scancode.F },

@@ -1,0 +1,33 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": { "floor": 0, "wall": 1, "stair": 2, "floodwater": 3 },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": ["wall"],
+  "hazards": { "floodwater": "drown" },
+  "floodDelaySeconds": 40,
+  "tiles": [
+    "XXXXXXXXXXXXXXXX",
+    "XTFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFTX",
+    "XXXXXXFFFFXXXXXX",
+    "XXXXXXFFFFXXXXXX",
+    "XXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    { "type": "bed", "column": 7, "row": 4 },
+    { "type": "table", "column": 8, "row": 4 },
+    { "type": "tix", "column": 5, "row": 1 },
+    { "type": "tix", "column": 10, "row": 2 },
+    { "type": "door", "column": 1, "row": 1, "properties": { "target": "assets/levels/titanic.json", "spawn": "fromADeck" } },
+    { "type": "door", "column": 14, "row": 2, "properties": { "target": "assets/levels/titanic-rooms/pursers-office.json", "spawn": "fromADeck" } },
+    { "type": "spawnPoint", "column": 2, "row": 1, "properties": { "name": "fromBoatDeck" } },
+    { "type": "spawnPoint", "column": 13, "row": 2, "properties": { "name": "fromPursersOffice" } }
+  ]
+}

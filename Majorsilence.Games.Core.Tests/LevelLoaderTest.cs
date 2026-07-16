@@ -92,6 +92,22 @@ public class LevelLoaderTest
     }
     """;
 
+    private const string RoomFeaturesJson = """
+    {
+      "tileWidth": 32,
+      "tileHeight": 16,
+      "legend": { "D": "deck", "W": "water", "X": "wall" },
+      "tiles": ["DWX"],
+      "solid": ["wall"],
+      "hazards": { "water": "freeze" },
+      "floodDelaySeconds": 45.5,
+      "coop": true,
+      "entities": [
+        { "type": "door", "column": 0, "row": 0, "properties": { "target": "assets/levels/titanic-rooms/bridge.json", "spawn": "fromBoatDeck" } }
+      ]
+    }
+    """;
+
     public void Test1()
     {
         var level = LevelLoader.Parse(ValidJson, "valid-fixture");
@@ -151,6 +167,24 @@ public class LevelLoaderTest
         var customTiles = LevelLoader.ResolveTileIndices(customTileset, customTileset.TileFrames);
         System.Diagnostics.Debug.Assert(customTiles[0, 0] == 0); // D
         System.Diagnostics.Debug.Assert(customTiles[0, 1] == 1); // W
+
+        // backward compatibility: no solid/hazards/floodDelaySeconds/coop means
+        // "no collision, no hazards, never floods, single player"
+        System.Diagnostics.Debug.Assert(level.Solid.Count == 0);
+        System.Diagnostics.Debug.Assert(level.Hazards.Count == 0);
+        System.Diagnostics.Debug.Assert(level.FloodDelaySeconds < 0);
+        System.Diagnostics.Debug.Assert(level.Coop == false);
+        System.Diagnostics.Debug.Assert(level.Entities[0].Properties.Count == 0);
+
+        var roomFeatures = LevelLoader.Parse(RoomFeaturesJson, "room-features-fixture");
+        System.Diagnostics.Debug.Assert(roomFeatures.Solid.Contains("wall"));
+        System.Diagnostics.Debug.Assert(roomFeatures.Hazards["water"] == "freeze");
+        System.Diagnostics.Debug.Assert(Math.Abs(roomFeatures.FloodDelaySeconds - 45.5f) < 0.001f);
+        System.Diagnostics.Debug.Assert(roomFeatures.Coop);
+        var door = roomFeatures.Entities[0];
+        System.Diagnostics.Debug.Assert(door.Type == "door");
+        System.Diagnostics.Debug.Assert(door.Properties["target"] == "assets/levels/titanic-rooms/bridge.json");
+        System.Diagnostics.Debug.Assert(door.Properties["spawn"] == "fromBoatDeck");
     }
 
     private static void AssertThrows(Action action)
