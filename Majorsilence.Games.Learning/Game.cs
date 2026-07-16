@@ -28,7 +28,7 @@ public class Game
 {
     public const string BoatDeckPath = "assets/levels/titanic.json";
     public const string BoatDeckSplitPath = "assets/levels/titanic-rooms/boat-deck-split.json";
-    private const int BoatDeckSplitMidRow = 8;
+    private const int BoatDeckSplitMidRow = 12;
 
     private const float WarningAtSeconds = 20f;
     private const float BaseCollisionAtSeconds = 50f;
@@ -80,6 +80,14 @@ public class Game
     private float _doorCooldown;
     private string _transientMessage = "";
     private float _transientTimer;
+
+    // Ship drift accumulator - persists across LoadRoom (each visit to the boat
+    // deck builds a brand-new Room instance), so the sailed-distance total below
+    // is the single source of truth for "how far has the ship gone" this session.
+    private float _shipDriftAccumX;
+    private float _shipDriftAccumY;
+    private int _shipDriftAppliedX;
+    private int _shipDriftAppliedY;
 
     private class PlayerSession
     {
@@ -210,7 +218,14 @@ public class Game
             foreach (var obj in CurrentRoom.RoomObjects) GameObjects.Remove(obj);
         }
 
-        var room = new Room(targetPath, this);
+        // The ocean/boat-deck levels persist their sailed distance across room
+        // reloads (a fresh Room instance is built every time a door is used,
+        // including re-entering the boat deck) - other rooms never drift, so they
+        // always start at zero regardless of how far the ship has sailed.
+        var isDriftingLevel = targetPath == BoatDeckPath || targetPath == BoatDeckSplitPath;
+        var room = isDriftingLevel
+            ? new Room(targetPath, this, _shipDriftAppliedX, _shipDriftAppliedY)
+            : new Room(targetPath, this);
         CurrentRoom = room;
         GameObjects.AddRange(room.RoomObjects);
 
@@ -262,20 +277,59 @@ public class Game
     /// Player.X/Y is the sprite's top-left corner, positioned by StandOnTile so the
     /// sprite's feet sit at the tile's front vertex - not the same point WorldToTile
     /// expects. This inverts that anchor adjustment (for the standard 16x32 player
-    /// sprite) before resolving the tile the player is actually standing on.
+    /// sprite), and undoes the tilemap's own drift offset (a sailing ship's tiles
+    /// move in world space while tile coordinates themselves stay fixed), before
+    /// resolving the tile the player is actually standing on.
     /// </summary>
     private (int Column, int Row) TileUnderPlayer(Player player)
     {
         const int width = 16;
         const int height = 32;
-        var feetX = player.X + (width - CurrentRoom.Grid.TileWidth) / 2;
-        var feetY = player.Y + height - CurrentRoom.Grid.TileHeight;
+        var feetX = player.X + (width - CurrentRoom.Grid.TileWidth) / 2 - CurrentRoom.Tilemap.X;
+        var feetY = player.Y + height - CurrentRoom.Grid.TileHeight - CurrentRoom.Tilemap.Y;
         return CurrentRoom.Grid.WorldToTile(feetX, feetY);
     }
 
-    /// <summary>Syncs each player's GroundZ from the tile they're currently over - must run before GameObject.Update so gravity uses the right value.</summary>
+    /// <summary>
+    /// Advances the ship's persisted drift total (if the current room drifts) and
+    /// shifts the room plus every player by the incremental delta (position and
+    /// last-good-position alike, so collision keeps working relative to the moving
+    /// world) - tracked as a float accumulator so fractional per-frame movement
+    /// isn't lost to rounding, and as an integer "applied so far" so a fresh Room
+    /// instance for the same drifting level can pick up exactly where the last one left off.
+    /// </summary>
+    private void AdvanceShipDrift(float deltaTime)
+    {
+        if (CurrentRoom.Level.DriftSpeedX == 0f && CurrentRoom.Level.DriftSpeedY == 0f) return;
+
+        _shipDriftAccumX += CurrentRoom.Level.DriftSpeedX * deltaTime;
+        _shipDriftAccumY += CurrentRoom.Level.DriftSpeedY * deltaTime;
+        var targetX = (int)MathF.Round(_shipDriftAccumX);
+        var targetY = (int)MathF.Round(_shipDriftAccumY);
+        var deltaX = targetX - _shipDriftAppliedX;
+        var deltaY = targetY - _shipDriftAppliedY;
+        _shipDriftAppliedX = targetX;
+        _shipDriftAppliedY = targetY;
+        if (deltaX == 0 && deltaY == 0) return;
+
+        CurrentRoom.ShiftBy(deltaX, deltaY);
+        foreach (var session in _sessions)
+        {
+            session.Player.SnapTo(session.Player.X + deltaX, session.Player.Y + deltaY);
+            session.LastGoodX += deltaX;
+            session.LastGoodY += deltaY;
+        }
+    }
+
+    /// <summary>
+    /// Advances ship drift, then syncs each player's GroundZ from the tile they're
+    /// currently over - all of this must run before GameObject.Update so
+    /// movement/gravity this frame use the post-drift world.
+    /// </summary>
     public void BeforeFrame(float deltaTime)
     {
+        AdvanceShipDrift(deltaTime);
+
         foreach (var session in _sessions)
         {
             var (column, row) = TileUnderPlayer(session.Player);

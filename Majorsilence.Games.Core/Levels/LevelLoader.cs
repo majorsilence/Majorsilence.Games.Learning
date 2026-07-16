@@ -30,6 +30,13 @@ public static class LevelLoader
         public Dictionary<string, string> Hazards { get; set; } = new();
         public float FloodDelaySeconds { get; set; } = -1f;
         public bool Coop { get; set; }
+        public int WorldMinColumn { get; set; }
+        public int WorldMaxColumn { get; set; }
+        public int WorldMinRow { get; set; }
+        public int WorldMaxRow { get; set; }
+        public string FallbackTileType { get; set; } = "";
+        public float DriftSpeedX { get; set; }
+        public float DriftSpeedY { get; set; }
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -148,7 +155,14 @@ public static class LevelLoader
             Solid = raw.Solid,
             Hazards = raw.Hazards,
             FloodDelaySeconds = raw.FloodDelaySeconds,
-            Coop = raw.Coop
+            Coop = raw.Coop,
+            WorldMinColumn = raw.WorldMinColumn,
+            WorldMaxColumn = raw.WorldMaxColumn,
+            WorldMinRow = raw.WorldMinRow,
+            WorldMaxRow = raw.WorldMaxRow,
+            FallbackTileType = raw.FallbackTileType,
+            DriftSpeedX = raw.DriftSpeedX,
+            DriftSpeedY = raw.DriftSpeedY
         };
     }
 

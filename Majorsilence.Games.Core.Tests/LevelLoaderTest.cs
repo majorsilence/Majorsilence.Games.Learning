@@ -108,6 +108,23 @@ public class LevelLoaderTest
     }
     """;
 
+    private const string OceanWorldJson = """
+    {
+      "tileWidth": 32,
+      "tileHeight": 16,
+      "legend": { "D": "deck", "W": "water" },
+      "tiles": ["DW"],
+      "worldMinColumn": -1000,
+      "worldMaxColumn": 1000,
+      "worldMinRow": -1000,
+      "worldMaxRow": 1000,
+      "fallbackTileType": "water",
+      "driftSpeedX": 6,
+      "driftSpeedY": -3,
+      "entities": []
+    }
+    """;
+
     public void Test1()
     {
         var level = LevelLoader.Parse(ValidJson, "valid-fixture");
@@ -185,6 +202,19 @@ public class LevelLoaderTest
         System.Diagnostics.Debug.Assert(door.Type == "door");
         System.Diagnostics.Debug.Assert(door.Properties["target"] == "assets/levels/titanic-rooms/bridge.json");
         System.Diagnostics.Debug.Assert(door.Properties["spawn"] == "fromBoatDeck");
+
+        // backward compatibility: no world bounds/fallback/drift means "the level's
+        // world is exactly its Tiles array, stationary" - RoomFeaturesJson never sets them
+        System.Diagnostics.Debug.Assert(roomFeatures.WorldMinColumn == 0 && roomFeatures.WorldMaxColumn == 0);
+        System.Diagnostics.Debug.Assert(roomFeatures.FallbackTileType == "");
+        System.Diagnostics.Debug.Assert(roomFeatures.DriftSpeedX == 0f && roomFeatures.DriftSpeedY == 0f);
+
+        var ocean = LevelLoader.Parse(OceanWorldJson, "ocean-world-fixture");
+        System.Diagnostics.Debug.Assert(ocean.WorldMinColumn == -1000 && ocean.WorldMaxColumn == 1000);
+        System.Diagnostics.Debug.Assert(ocean.WorldMinRow == -1000 && ocean.WorldMaxRow == 1000);
+        System.Diagnostics.Debug.Assert(ocean.FallbackTileType == "water");
+        System.Diagnostics.Debug.Assert(Math.Abs(ocean.DriftSpeedX - 6f) < 0.001f);
+        System.Diagnostics.Debug.Assert(Math.Abs(ocean.DriftSpeedY - (-3f)) < 0.001f);
     }
 
     private static void AssertThrows(Action action)

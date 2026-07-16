@@ -31,8 +31,17 @@ public class Room
 
     private readonly string[,] _tileTypes;
     private readonly Dictionary<string, int> _tileFrameIndex;
+    private readonly bool _hasVirtualWorld;
 
-    public Room(string path, Game game)
+    /// <summary>
+    /// initialDriftX/Y seed the tilemap's starting world offset - Game persists the
+    /// ship's total sailed distance across room reloads (a fresh Room instance is
+    /// built every time a door is used, including re-entering the boat deck), and
+    /// passes the current total back in here so props/doors/spawn points (placed via
+    /// StandOnTile, which reads Tilemap.X/Y) land in the right spot immediately
+    /// rather than snapping in at the origin and jumping on the next drift tick.
+    /// </summary>
+    public Room(string path, Game game, int initialDriftX = 0, int initialDriftY = 0)
     {
         Path = path;
         Level = LevelLoader.Load(path);
@@ -41,10 +50,17 @@ public class Room
         var tileset = game.GetSheet(tilesetPath, 32, 16);
         _tileFrameIndex = Level.TileFrames.Count > 0 ? Level.TileFrames : game.DefaultTileFrameIndex;
 
+        _hasVirtualWorld = Level.WorldMaxColumn > Level.WorldMinColumn && Level.WorldMaxRow > Level.WorldMinRow;
+        var fallbackFrameIndex = !string.IsNullOrEmpty(Level.FallbackTileType) && _tileFrameIndex.TryGetValue(Level.FallbackTileType, out var fbFrame)
+            ? fbFrame
+            : -1;
+
         var tiles = LevelLoader.ResolveTileIndices(Level, _tileFrameIndex);
         var elevations = LevelLoader.ResolveElevations(Level);
         Grid = new IsometricGrid(Level.TileWidth, Level.TileHeight);
-        Tilemap = new IsometricTilemap(tiles, tileset, Grid, elevations) { X = 0, Y = 0, ZIndex = 0 };
+        Tilemap = new IsometricTilemap(tiles, tileset, Grid, elevations,
+            Level.WorldMinColumn, Level.WorldMaxColumn, Level.WorldMinRow, Level.WorldMaxRow, fallbackFrameIndex)
+        { X = initialDriftX, Y = initialDriftY, ZIndex = 0 };
         RoomObjects.Add(Tilemap);
 
         var rows = Level.Tiles.Length;
@@ -127,28 +143,49 @@ public class Room
     /// <summary>
     /// Places a GameObject's top-left so it stands upright with its base planted on
     /// the given tile's front (bottom) vertex, matching the anchor convention used
-    /// throughout the isometric demos.
+    /// throughout the isometric demos. Includes the tilemap's current drift offset,
+    /// so a freshly-placed object (room entry, respawn) lands in the right spot
+    /// even if the ship has already sailed some distance this session.
     /// </summary>
     public (int X, int Y) StandOnTile(int column, int row, int width, int height)
     {
         var (tileX, tileY) = Grid.TileToWorld(column, row);
-        return (tileX + (Grid.TileWidth - width) / 2, tileY + Grid.TileHeight - height);
+        return (Tilemap.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight - height);
     }
 
     public int GetElevationPixels(int column, int row) => Tilemap.GetElevationPixels(column, row);
 
-    /// <summary>Out-of-range tiles are treated as solid, since no room's ship layout should be walked off the edge of its own grid.</summary>
+    /// <summary>Out-of-range tiles are treated as solid, since no room's ship layout should be walked off the edge of its own grid (unless a virtual world extends it - see ResolveTileType).</summary>
     public bool IsSolid(int column, int row)
     {
-        if (!InBounds(column, row)) return true;
-        return Level.Solid.Contains(_tileTypes[row, column]);
+        var type = ResolveTileType(column, row);
+        return type is null || Level.Solid.Contains(type);
     }
 
     public bool TryGetHazard(int column, int row, out string hazard)
     {
         hazard = "";
-        if (!InBounds(column, row)) return false;
-        return Level.Hazards.TryGetValue(_tileTypes[row, column], out hazard!);
+        var type = ResolveTileType(column, row);
+        return type is not null && Level.Hazards.TryGetValue(type, out hazard!);
+    }
+
+    /// <summary>
+    /// Semantic tile-type name at (column, row): from the explicit grid if in
+    /// range, else the level's FallbackTileType if a virtual world is configured
+    /// and the coordinate falls within its bounds, else null (genuinely outside
+    /// the room's world - IsSolid treats this as a hard boundary).
+    /// </summary>
+    private string? ResolveTileType(int column, int row)
+    {
+        if (InBounds(column, row)) return _tileTypes[row, column];
+
+        if (_hasVirtualWorld && column >= Level.WorldMinColumn && column < Level.WorldMaxColumn &&
+            row >= Level.WorldMinRow && row < Level.WorldMaxRow)
+        {
+            return string.IsNullOrEmpty(Level.FallbackTileType) ? "" : Level.FallbackTileType;
+        }
+
+        return null;
     }
 
     private bool InBounds(int column, int row)
@@ -156,6 +193,21 @@ public class Room
         var rows = _tileTypes.GetLength(0);
         var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
         return row >= 0 && row < rows && column >= 0 && column < columns;
+    }
+
+    /// <summary>
+    /// Shifts the tilemap and every other room object (props/NPCs/tix) by the same
+    /// amount - used by Game to advance ship drift each frame, so everything stays
+    /// visually locked together while moving through the world.
+    /// </summary>
+    public void ShiftBy(int deltaX, int deltaY)
+    {
+        if (deltaX == 0 && deltaY == 0) return;
+        foreach (var obj in RoomObjects)
+        {
+            obj.X += deltaX;
+            obj.Y += deltaY;
+        }
     }
 
     /// <summary>

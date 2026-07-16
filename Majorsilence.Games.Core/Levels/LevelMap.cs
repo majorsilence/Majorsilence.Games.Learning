@@ -71,4 +71,30 @@ public class LevelMap
     /// is made once, from that level).
     /// </summary>
     public bool Coop { get; set; }
+
+    /// <summary>
+    /// Optional huge logical world bounds (tile coordinates) surrounding the small
+    /// explicit Tiles array - e.g. an open ocean thousands of tiles across around a
+    /// ship's hull. Disabled (WorldMaxColumn <= WorldMinColumn, the default) means
+    /// the level's world is exactly the Tiles array, as before. When enabled, any
+    /// tile within these bounds but outside the explicit array resolves to
+    /// FallbackTileType instead of being solid/undefined - so it renders and behaves
+    /// (walkable/hazardous/etc, per Solid/Hazards) exactly like a real tile, without
+    /// needing millions of explicit characters stored or rendered.
+    /// </summary>
+    public int WorldMinColumn { get; set; }
+    public int WorldMaxColumn { get; set; }
+    public int WorldMinRow { get; set; }
+    public int WorldMaxRow { get; set; }
+
+    /// <summary>Tile-type name (from the legend) used for the virtual world area outside the explicit Tiles array. Ignored unless the world bounds above are enabled.</summary>
+    public string FallbackTileType { get; set; } = "";
+
+    /// <summary>
+    /// World pixels/second this level's tilemap (and everything on it) drifts each
+    /// frame, simulating a ship sailing through open water. Zero (the default) means
+    /// stationary - existing levels are unaffected.
+    /// </summary>
+    public float DriftSpeedX { get; set; }
+    public float DriftSpeedY { get; set; }
 }
