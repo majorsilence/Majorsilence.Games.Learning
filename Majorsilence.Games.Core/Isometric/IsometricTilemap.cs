@@ -47,6 +47,38 @@ public class IsometricTilemap : GameObject
 
     private bool HasVirtualWorld => _worldMaxColumn > _worldMinColumn && _worldMaxRow > _worldMinRow;
 
+    private Dictionary<int, int[]>? _frameVariants;
+
+    /// <summary>
+    /// Advancing this (e.g. on a timer) cycles every varianted tile to its next
+    /// variant frame, animating them (water shimmer) without any per-tile state.
+    /// </summary>
+    public int AnimationPhase { get; set; }
+
+    /// <summary>
+    /// Registers alternate tileset frames for a base frame index: any tile that
+    /// resolves to the base frame (explicit or virtual-world fallback) instead
+    /// draws one of the variants, picked deterministically from its (column, row)
+    /// plus AnimationPhase. Gives large uniform areas (open ocean) spatial
+    /// variation and cheap animation - visibly scrolling past a moving ship -
+    /// without storing anything per tile.
+    /// </summary>
+    public void SetFrameVariants(Dictionary<int, int[]> frameVariants)
+    {
+        _frameVariants = frameVariants;
+    }
+
+    private int ResolveVariant(int frameIndex, int column, int row)
+    {
+        if (_frameVariants is null || !_frameVariants.TryGetValue(frameIndex, out var variants) || variants.Length == 0)
+            return frameIndex;
+
+        var spatialHash = unchecked(column * 73856093 ^ row * 19349663);
+        var pick = (spatialHash + AnimationPhase) % variants.Length;
+        if (pick < 0) pick += variants.Length;
+        return variants[pick];
+    }
+
     public override void Update(float deltaTime)
     {
         // Tile layout is static; nothing to update.
@@ -171,7 +203,7 @@ public class IsometricTilemap : GameObject
 
                 var (worldX, worldY) = _grid.TileToWorld(column, row);
                 var (screenX, screenY) = camera.WorldToScreen(X + worldX, Y + worldY - GetElevationPixels(column, row));
-                _tileset.Render(screenX, screenY, tileIndex);
+                _tileset.Render(screenX, screenY, ResolveVariant(tileIndex, column, row));
             }
         }
     }
@@ -202,10 +234,12 @@ public class IsometricTilemap : GameObject
                 var drawWorldX = X + worldX;
                 var drawWorldY = Y + worldY;
                 var elevation = GetElevationPixels(column, row);
+                var capturedColumn = column;
+                var capturedRow = row;
                 yield return (drawWorldY + _grid.TileHeight, () =>
                 {
                     var (screenX, screenY) = camera.WorldToScreen(drawWorldX, drawWorldY - elevation);
-                    _tileset.Render(screenX, screenY, tileIndex);
+                    _tileset.Render(screenX, screenY, ResolveVariant(tileIndex, capturedColumn, capturedRow));
                 });
             }
         }

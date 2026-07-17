@@ -55,6 +55,14 @@ public class Camera
     public float? MinY { get; set; }
     public float? MaxY { get; set; }
 
+    /// <summary>
+    /// Transient screen-space offset applied in WorldToScreen (e.g. impact shake).
+    /// Deliberately not part of X/Y so it never interacts with follow/clamp/ratchet
+    /// logic - game code sets it each frame and zero means no effect.
+    /// </summary>
+    public float ShakeX { get; set; }
+    public float ShakeY { get; set; }
+
     private float _maxReachedX = float.NegativeInfinity;
     private float _maxReachedY = float.NegativeInfinity;
 
@@ -116,8 +124,8 @@ public class Camera
     public (int ScreenX, int ScreenY) WorldToScreen(float worldX, float worldY)
     {
         return (
-            (int)MathF.Round(worldX - X + ViewportWidth / 2f),
-            (int)MathF.Round(worldY - Y + ViewportHeight / 2f)
+            (int)MathF.Round(worldX - X + ShakeX + ViewportWidth / 2f),
+            (int)MathF.Round(worldY - Y + ShakeY + ViewportHeight / 2f)
         );
     }
 }

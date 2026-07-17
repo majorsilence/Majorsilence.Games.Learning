@@ -121,6 +121,7 @@ public class LevelLoaderTest
       "fallbackTileType": "water",
       "driftSpeedX": 6,
       "driftSpeedY": -3,
+      "tileVariants": { "water": [1, 3, 4] },
       "entities": []
     }
     """;
@@ -215,6 +216,8 @@ public class LevelLoaderTest
         System.Diagnostics.Debug.Assert(ocean.FallbackTileType == "water");
         System.Diagnostics.Debug.Assert(Math.Abs(ocean.DriftSpeedX - 6f) < 0.001f);
         System.Diagnostics.Debug.Assert(Math.Abs(ocean.DriftSpeedY - (-3f)) < 0.001f);
+        System.Diagnostics.Debug.Assert(ocean.TileVariants["water"].SequenceEqual(new[] { 1, 3, 4 }));
+        System.Diagnostics.Debug.Assert(roomFeatures.TileVariants.Count == 0); // backward compatible default
     }
 
     private static void AssertThrows(Action action)

@@ -37,6 +37,7 @@ public static class LevelLoader
         public string FallbackTileType { get; set; } = "";
         public float DriftSpeedX { get; set; }
         public float DriftSpeedY { get; set; }
+        public Dictionary<string, int[]> TileVariants { get; set; } = new();
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -162,7 +163,8 @@ public static class LevelLoader
             WorldMaxRow = raw.WorldMaxRow,
             FallbackTileType = raw.FallbackTileType,
             DriftSpeedX = raw.DriftSpeedX,
-            DriftSpeedY = raw.DriftSpeedY
+            DriftSpeedY = raw.DriftSpeedY,
+            TileVariants = raw.TileVariants
         };
     }
 

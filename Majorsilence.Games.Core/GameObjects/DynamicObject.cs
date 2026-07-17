@@ -30,6 +30,13 @@ public class DynamicObject : GameObject
 
     public bool IsGrounded => Z <= GroundZ && _verticalVelocity <= 0f;
 
+    /// <summary>
+    /// When true, the assigned Animation only advances while this object is
+    /// actually moving (either direction non-zero), so a standing character
+    /// doesn't march in place. Off by default to preserve existing behavior.
+    /// </summary>
+    public bool AnimateOnlyWhenMoving { get; set; }
+
     public DynamicObject(SpriteSheet spriteSheet)
     {
         _spriteSheet = spriteSheet;
@@ -90,7 +97,10 @@ public class DynamicObject : GameObject
             _verticalVelocity = 0f;
         }
 
-        _animation?.Update(deltaTime);
+        if (!AnimateOnlyWhenMoving || DirectionX != HorizontalDirection.None || DirectionY != VerticalDirection.None)
+        {
+            _animation?.Update(deltaTime);
+        }
     }
 
 

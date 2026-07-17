@@ -97,4 +97,12 @@ public class LevelMap
     /// </summary>
     public float DriftSpeedX { get; set; }
     public float DriftSpeedY { get; set; }
+
+    /// <summary>
+    /// Optional alternate tileset frames per tile-type name (e.g. water wave
+    /// variants), for spatial variation and cheap shimmer animation across large
+    /// uniform areas. Empty (the default) means every tile of a type always draws
+    /// its single TileFrames frame, as before.
+    /// </summary>
+    public Dictionary<string, int[]> TileVariants { get; set; } = new();
 }

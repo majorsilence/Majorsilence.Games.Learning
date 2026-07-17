@@ -27,6 +27,16 @@ public class Room
     public List<TixPickup> TixPickups { get; } = new();
     public (int Column, int Row)? ShopTile { get; private set; }
 
+    /// <summary>
+    /// The iceberg prop, if this room has one - Game nudges its position each frame
+    /// (on top of the normal ship-relative drift every RoomObject gets) to make it
+    /// visibly approach from a distance as the voyage clock nears Collision.
+    /// </summary>
+    public Sprite? Iceberg { get; private set; }
+
+    /// <summary>Funnel props, if any - Game spawns smoke puffs from these while the ship is under way.</summary>
+    public List<Sprite> Funnels { get; } = new();
+
     public bool HasFlooded { get; private set; }
 
     private readonly string[,] _tileTypes;
@@ -62,6 +72,17 @@ public class Room
             Level.WorldMinColumn, Level.WorldMaxColumn, Level.WorldMinRow, Level.WorldMaxRow, fallbackFrameIndex)
         { X = initialDriftX, Y = initialDriftY, ZIndex = 0 };
         RoomObjects.Add(Tilemap);
+
+        if (Level.TileVariants.Count > 0)
+        {
+            var frameVariants = new Dictionary<int, int[]>();
+            foreach (var (typeName, variants) in Level.TileVariants)
+            {
+                if (_tileFrameIndex.TryGetValue(typeName, out var baseFrame) && variants.Length > 0)
+                    frameVariants[baseFrame] = variants;
+            }
+            if (frameVariants.Count > 0) Tilemap.SetFrameVariants(frameVariants);
+        }
 
         var rows = Level.Tiles.Length;
         var columns = rows == 0 ? 0 : Level.Tiles[0].Length;
@@ -127,12 +148,34 @@ public class Room
                     // Only meaningful for the very first room of a session - Game reads it directly.
                     break;
 
+                case "iceberg":
+                {
+                    var propKind = game.PropKinds[entity.Type];
+                    var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
+                    var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind.Height };
+                    Iceberg = sprite;
+                    RoomObjects.Add(sprite);
+                    break;
+                }
+
+                case "funnel":
+                {
+                    var propKind = game.PropKinds[entity.Type];
+                    var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
+                    var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind.Height };
+                    Funnels.Add(sprite);
+                    RoomObjects.Add(sprite);
+                    break;
+                }
+
                 default:
-                    if (game.PropKinds.TryGetValue(entity.Type, out var propKind))
+                    if (game.PropKinds.TryGetValue(entity.Type, out var propKind2))
                     {
-                        var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
-                        var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind.Width, propKind.Height);
-                        var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind.Height };
+                        var sheet = game.GetSheet(propKind2.ImagePath, propKind2.Width, propKind2.Height);
+                        var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind2.Width, propKind2.Height);
+                        var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind2.Height };
                         RoomObjects.Add(sprite);
                     }
                     break;
@@ -208,6 +251,36 @@ public class Room
             obj.X += deltaX;
             obj.Y += deltaY;
         }
+    }
+
+    private int _submergedThroughRow = -1;
+
+    /// <summary>
+    /// Converts every tile (deck, railings, everything) in rows 0..lastRowInclusive
+    /// of the explicit grid to the given water type - the bow slipping under as the
+    /// ship goes down. Idempotent per row: each call only converts newly submerged
+    /// rows, so a per-frame caller with a slowly advancing waterline is cheap.
+    /// </summary>
+    public void SubmergeRowsThrough(int lastRowInclusive, string waterType)
+    {
+        if (lastRowInclusive <= _submergedThroughRow) return;
+        if (!_tileFrameIndex.TryGetValue(waterType, out var waterFrame)) return;
+
+        var rows = _tileTypes.GetLength(0);
+        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        var through = Math.Min(lastRowInclusive, rows - 1);
+
+        for (var row = _submergedThroughRow + 1; row <= through; row++)
+        {
+            for (var column = 0; column < columns; column++)
+            {
+                if (_tileTypes[row, column] == waterType) continue;
+                _tileTypes[row, column] = waterType;
+                Tilemap.SetTile(column, row, waterFrame);
+            }
+        }
+
+        _submergedThroughRow = lastRowInclusive;
     }
 
     /// <summary>

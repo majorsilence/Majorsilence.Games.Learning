@@ -48,6 +48,40 @@ public class Game
     private const int LauncherFireCost = 100;
     private const int LauncherFireCount = 100;
 
+    // The iceberg starts this many world pixels ahead of the bow (in the ship's
+    // direction of travel) once it's sighted, and closes that distance as the
+    // voyage clock counts down the rest of the Warning phase - so it's visibly
+    // "out there" getting closer, not just an abstract timer.
+    private const float IcebergApproachDistance = 550f;
+
+    // Stern/bow tip tiles on the boat deck hull (see assets/levels/titanic.json) -
+    // where the wake trail and bow spray spawn from.
+    private const int SternColumn = 19;
+    private const int SternRow = 22;
+    private const int BowColumn = 19;
+    private const int BowRow = 1;
+
+    private const float WakeSpawnInterval = 0.5f;
+    private const float WakeLifespanSeconds = 5f;
+    private const float BowSprayInterval = 0.4f;
+    private const float BowSprayLifespanSeconds = 1.2f;
+    private const float SmokeSpawnInterval = 0.7f;
+    private const float SmokeLifespanSeconds = 2.5f;
+
+    // After striking the iceberg the engines stop and the ship coasts to
+    // dead-in-the-water over this many seconds (drift, wake, spray, and smoke all
+    // scale down together through the same factor).
+    private const float EngineStopSeconds = 4f;
+
+    private const float WaterShimmerInterval = 0.45f;
+
+    // How far down the hull (row index, bow at the top) the waterline reaches at
+    // key story beats: by the moment the ship splits, everything forward of the
+    // split row is awash; by Sunk, all but the last few stern rows are gone -
+    // the stern is the classic final refuge.
+    private const int WaterlineRowAtSplit = BoatDeckSplitMidRow - 1;
+    private const int WaterlineRowAtSunk = 19;
+
     public Camera Camera { get; } = new();
     public List<GameObject> GameObjects { get; } = new();
     public Hud Hud { get; }
@@ -60,6 +94,8 @@ public class Game
     public string DefaultTilesetPath { get; }
     public Dictionary<string, int> DefaultTileFrameIndex { get; }
     public string TixIconPath { get; }
+    public string WakeIconPath { get; }
+    public string SmokeIconPath { get; }
     public Dictionary<string, (string ImagePath, int Width, int Height)> PropKinds { get; }
     public Dictionary<string, (string ImagePath, int Width, int Height)> NpcKinds { get; }
 
@@ -89,6 +125,19 @@ public class Game
     private int _shipDriftAppliedX;
     private int _shipDriftAppliedY;
 
+    // Iceberg approach - reset to 0 whenever a drifting room is (re)constructed,
+    // since a fresh Iceberg sprite starts at its baseline (near-bow) position.
+    private int _icebergOffsetAppliedX;
+    private int _icebergOffsetAppliedY;
+
+    private readonly List<Particle> _particles = new();
+    private float _wakeSpawnTimer;
+    private float _bowSprayTimer;
+    private float _smokeSpawnTimer;
+    private float _shimmerTimer;
+    private float _shakeSecondsRemaining;
+    private float _shakeAmplitude;
+
     private class PlayerSession
     {
         public readonly Player Player;
@@ -115,6 +164,8 @@ public class Game
         DefaultTilesetPath = "assets/artwork/isometric-demo/tileset.png";
         DefaultTileFrameIndex = new Dictionary<string, int> { ["grass"] = 0, ["dirt"] = 1, ["water"] = 2, ["stone"] = 3, ["sand"] = 4 };
         TixIconPath = "assets/artwork/titanic-demo/tix-coin.png";
+        WakeIconPath = "assets/artwork/titanic-demo/wake-foam.png";
+        SmokeIconPath = "assets/artwork/titanic-demo/smoke-puff.png";
 
         PropKinds = new Dictionary<string, (string, int, int)>
         {
@@ -176,7 +227,7 @@ public class Game
     public void Begin(string entryLevelPath, bool coop)
     {
         var playerSheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
-        var player1 = new Player(playerSheet) { Speed = 120f, ZIndex = 1, SortOffsetY = 32 };
+        var player1 = new Player(playerSheet) { Speed = 120f, ZIndex = 1, SortOffsetY = 32, AnimateOnlyWhenMoving = true };
         player1.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
         _sessions.Add(new PlayerSession(player1, null));
         GameObjects.Add(player1);
@@ -196,7 +247,7 @@ public class Game
             };
             var input2 = new KeyboardInputSource(bindings);
             var player2Sheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
-            var player2 = new Player(player2Sheet, input2) { Speed = 120f, ZIndex = 1, SortOffsetY = 32 };
+            var player2 = new Player(player2Sheet, input2) { Speed = 120f, ZIndex = 1, SortOffsetY = 32, AnimateOnlyWhenMoving = true };
             player2.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
             _sessions.Add(new PlayerSession(player2, input2));
             GameObjects.Add(player2);
@@ -228,6 +279,11 @@ public class Game
             : new Room(targetPath, this);
         CurrentRoom = room;
         GameObjects.AddRange(room.RoomObjects);
+
+        // A freshly built Iceberg sprite starts unoffset at its baseline (near-bow)
+        // position - reset the tracker so UpdateIcebergApproach computes a clean delta.
+        _icebergOffsetAppliedX = 0;
+        _icebergOffsetAppliedY = 0;
 
         (int Column, int Row) spawnTile;
         if (spawnName != "" && room.SpawnPoints.TryGetValue(spawnName, out var found))
@@ -298,12 +354,28 @@ public class Game
     /// isn't lost to rounding, and as an integer "applied so far" so a fresh Room
     /// instance for the same drifting level can pick up exactly where the last one left off.
     /// </summary>
+    /// <summary>
+    /// 1 at full steam, easing to 0 over EngineStopSeconds once the iceberg is
+    /// struck - the ship coasts to dead-in-the-water instead of implausibly
+    /// steaming on while sinking. Everything speed-related (drift, wake, bow
+    /// spray, smoke) scales through this one factor.
+    /// </summary>
+    private float ShipSpeedFactor()
+    {
+        var sinceCollision = SecondsSinceCollision();
+        if (sinceCollision < 0f) return 1f;
+        return Math.Clamp(1f - sinceCollision / EngineStopSeconds, 0f, 1f);
+    }
+
     private void AdvanceShipDrift(float deltaTime)
     {
         if (CurrentRoom.Level.DriftSpeedX == 0f && CurrentRoom.Level.DriftSpeedY == 0f) return;
 
-        _shipDriftAccumX += CurrentRoom.Level.DriftSpeedX * deltaTime;
-        _shipDriftAccumY += CurrentRoom.Level.DriftSpeedY * deltaTime;
+        var speedFactor = ShipSpeedFactor();
+        if (speedFactor <= 0f) return;
+
+        _shipDriftAccumX += CurrentRoom.Level.DriftSpeedX * speedFactor * deltaTime;
+        _shipDriftAccumY += CurrentRoom.Level.DriftSpeedY * speedFactor * deltaTime;
         var targetX = (int)MathF.Round(_shipDriftAccumX);
         var targetY = (int)MathF.Round(_shipDriftAccumY);
         var deltaX = targetX - _shipDriftAppliedX;
@@ -322,18 +394,222 @@ public class Game
     }
 
     /// <summary>
-    /// Advances ship drift, then syncs each player's GroundZ from the tile they're
-    /// currently over - all of this must run before GameObject.Update so
-    /// movement/gravity this frame use the post-drift world.
+    /// Advances ship drift, the iceberg's approach, wake/smoke effects, water
+    /// shimmer, camera shake, and the sinking waterline, then syncs each player's
+    /// GroundZ from the tile they're currently over - all of this must run before
+    /// GameObject.Update so movement/gravity this frame use the post-drift world.
     /// </summary>
     public void BeforeFrame(float deltaTime)
     {
         AdvanceShipDrift(deltaTime);
+        UpdateIcebergApproach();
+        UpdateShipEffects(deltaTime);
+        UpdateWaterShimmer(deltaTime);
+        UpdateCameraShake(deltaTime);
+        UpdateSinkingWaterline();
 
         foreach (var session in _sessions)
         {
             var (column, row) = TileUnderPlayer(session.Player);
             session.Player.GroundZ = CurrentRoom.GetElevationPixels(column, row);
+        }
+    }
+
+    /// <summary>Cycles the tilemap's water variants on a timer so the whole ocean shimmers.</summary>
+    private void UpdateWaterShimmer(float deltaTime)
+    {
+        _shimmerTimer -= deltaTime;
+        if (_shimmerTimer > 0f) return;
+        _shimmerTimer = WaterShimmerInterval;
+        CurrentRoom.Tilemap.AnimationPhase++;
+    }
+
+    private void StartShake(float amplitude, float seconds)
+    {
+        _shakeAmplitude = amplitude;
+        _shakeSecondsRemaining = seconds;
+    }
+
+    /// <summary>Random jitter that decays to nothing - the physical punch of impact/split.</summary>
+    private void UpdateCameraShake(float deltaTime)
+    {
+        if (_shakeSecondsRemaining <= 0f)
+        {
+            Camera.ShakeX = 0f;
+            Camera.ShakeY = 0f;
+            return;
+        }
+
+        _shakeSecondsRemaining -= deltaTime;
+        var falloff = Math.Max(0f, _shakeSecondsRemaining);
+        Camera.ShakeX = ((float)_random.NextDouble() * 2f - 1f) * _shakeAmplitude * falloff;
+        Camera.ShakeY = ((float)_random.NextDouble() * 2f - 1f) * _shakeAmplitude * falloff;
+    }
+
+    /// <summary>
+    /// While sinking, marches the waterline aft over the exterior hull: by the
+    /// split, everything forward of the break is awash; by Sunk, only the last few
+    /// stern rows remain above water (the classic final refuge). Runs every frame
+    /// against the current room, so re-entering the deck mid-sinking immediately
+    /// shows the right waterline; interior rooms use the separate all-at-once
+    /// flooding and are untouched by this.
+    /// </summary>
+    private void UpdateSinkingWaterline()
+    {
+        if (CurrentRoom.Level.DriftSpeedX == 0f && CurrentRoom.Level.DriftSpeedY == 0f) return;
+
+        var sinceCollision = SecondsSinceCollision();
+        if (sinceCollision <= 0f) return;
+
+        int waterlineRow;
+        if (Phase == VoyagePhase.Collision || Phase == VoyagePhase.Sinking)
+        {
+            var progress = Math.Clamp(sinceCollision / SplitAfterCollisionSeconds, 0f, 1f);
+            waterlineRow = (int)(progress * WaterlineRowAtSplit);
+        }
+        else if (Phase == VoyagePhase.Split || Phase == VoyagePhase.Sunk)
+        {
+            var sinceSplit = sinceCollision - SplitAfterCollisionSeconds;
+            var span = SunkAfterCollisionSeconds - SplitAfterCollisionSeconds;
+            var progress = span > 0f ? Math.Clamp(sinceSplit / span, 0f, 1f) : 1f;
+            waterlineRow = WaterlineRowAtSplit + (int)(progress * (WaterlineRowAtSunk - WaterlineRowAtSplit));
+        }
+        else
+        {
+            return;
+        }
+
+        CurrentRoom.SubmergeRowsThrough(waterlineRow, "water");
+    }
+
+    /// <summary>
+    /// 1 when the iceberg should sit at its farthest point (not yet sighted, or
+    /// just sighted at the start of Warning), shrinking to 0 exactly as Collision
+    /// triggers. Deliberately keyed off the same CollisionAtSeconds the phase
+    /// transition itself uses, so a Watcher/Captain bonus that pushes Collision
+    /// back also visibly slows the iceberg's approach - one source of truth.
+    /// </summary>
+    private float IcebergRemainingFraction()
+    {
+        if (Phase == VoyagePhase.Cruising) return 1f;
+        if (Phase != VoyagePhase.Warning) return 0f;
+
+        var span = CollisionAtSeconds - WarningAtSeconds;
+        if (span <= 0f) return 0f;
+        return Math.Clamp((CollisionAtSeconds - _voyageClock) / span, 0f, 1f);
+    }
+
+    /// <summary>
+    /// Nudges the iceberg (on top of the normal ship-relative drift every
+    /// RoomObject already gets) so it visibly closes the distance from
+    /// IcebergApproachDistance away down to right at the bow as Collision nears.
+    /// </summary>
+    private void UpdateIcebergApproach()
+    {
+        var iceberg = CurrentRoom.Iceberg;
+        if (iceberg is null) return;
+
+        var driftSpeedX = CurrentRoom.Level.DriftSpeedX;
+        var driftSpeedY = CurrentRoom.Level.DriftSpeedY;
+        var speed = MathF.Sqrt(driftSpeedX * driftSpeedX + driftSpeedY * driftSpeedY);
+        if (speed <= 0f) return;
+
+        var directionX = driftSpeedX / speed;
+        var directionY = driftSpeedY / speed;
+        var fraction = IcebergRemainingFraction();
+
+        var targetX = (int)MathF.Round(directionX * IcebergApproachDistance * fraction);
+        var targetY = (int)MathF.Round(directionY * IcebergApproachDistance * fraction);
+        var deltaX = targetX - _icebergOffsetAppliedX;
+        var deltaY = targetY - _icebergOffsetAppliedY;
+        if (deltaX == 0 && deltaY == 0) return;
+
+        _icebergOffsetAppliedX = targetX;
+        _icebergOffsetAppliedY = targetY;
+        iceberg.X += deltaX;
+        iceberg.Y += deltaY;
+    }
+
+    /// <summary>
+    /// Spawns a fixed (non-drifting) wake-foam trail behind the stern, spray at the
+    /// bow, and backward-drifting smoke puffs from the funnels while under way, and
+    /// expires old particles - the visible "we are actually moving" cues to go with
+    /// the iceberg's approach. All gated on ShipSpeedFactor, so they die out
+    /// together as the ship coasts to a stop after impact. Only active on a
+    /// drifting level; clears out immediately otherwise (stepping inside
+    /// inherently stops them).
+    /// </summary>
+    private void UpdateShipEffects(float deltaTime)
+    {
+        var driftSpeedX = CurrentRoom.Level.DriftSpeedX;
+        var driftSpeedY = CurrentRoom.Level.DriftSpeedY;
+        var speedFactor = ShipSpeedFactor();
+        if (driftSpeedX == 0f && driftSpeedY == 0f)
+        {
+            foreach (var stale in _particles) GameObjects.Remove(stale);
+            _particles.Clear();
+        }
+        else if (speedFactor > 0.05f)
+        {
+            _wakeSpawnTimer -= deltaTime;
+            if (_wakeSpawnTimer <= 0f)
+            {
+                _wakeSpawnTimer = WakeSpawnInterval / speedFactor;
+                var (wakeX, wakeY) = CurrentRoom.StandOnTile(SternColumn, SternRow, 16, 8);
+                var wakeSheet = GetSheet(WakeIconPath, 16, 8);
+                var wake = new Particle(wakeSheet, WakeLifespanSeconds) { X = wakeX, Y = wakeY, ZIndex = 0, SortOffsetY = 4 };
+                _particles.Add(wake);
+                GameObjects.Add(wake);
+            }
+
+            _bowSprayTimer -= deltaTime;
+            if (_bowSprayTimer <= 0f)
+            {
+                _bowSprayTimer = BowSprayInterval / speedFactor;
+                var (sprayX, sprayY) = CurrentRoom.StandOnTile(BowColumn, BowRow, 16, 8);
+                var spraySheet = GetSheet(WakeIconPath, 16, 8);
+                // small sideways scatter so the spray reads as splashing off the bow, not a fixed dot
+                var spray = new Particle(spraySheet, BowSprayLifespanSeconds)
+                {
+                    X = sprayX + _random.Next(-10, 11),
+                    Y = sprayY + _random.Next(-4, 5),
+                    ZIndex = 0,
+                    SortOffsetY = 4
+                };
+                _particles.Add(spray);
+                GameObjects.Add(spray);
+            }
+
+            if (CurrentRoom.Funnels.Count > 0)
+            {
+                _smokeSpawnTimer -= deltaTime;
+                if (_smokeSpawnTimer <= 0f)
+                {
+                    _smokeSpawnTimer = SmokeSpawnInterval / speedFactor;
+                    var funnel = CurrentRoom.Funnels[_random.Next(CurrentRoom.Funnels.Count)];
+                    var smokeSheet = GetSheet(SmokeIconPath, 16, 16);
+                    var speed = MathF.Sqrt(driftSpeedX * driftSpeedX + driftSpeedY * driftSpeedY);
+                    var smoke = new Particle(smokeSheet, SmokeLifespanSeconds)
+                    {
+                        X = funnel.X,
+                        Y = funnel.Y - 8,
+                        ZIndex = 3,
+                        VelocityX = speed > 0f ? -driftSpeedX / speed * 12f : 0f,
+                        VelocityY = (speed > 0f ? -driftSpeedY / speed * 12f : 0f) - 14f
+                    };
+                    _particles.Add(smoke);
+                    GameObjects.Add(smoke);
+                }
+            }
+        }
+
+        for (var i = _particles.Count - 1; i >= 0; i--)
+        {
+            if (_particles[i].IsExpired)
+            {
+                GameObjects.Remove(_particles[i]);
+                _particles.RemoveAt(i);
+            }
         }
     }
 
@@ -398,6 +674,7 @@ public class Game
                 {
                     Phase = VoyagePhase.Collision;
                     ShowMessage("The ship has struck an iceberg!", 4f);
+                    StartShake(amplitude: 7f, seconds: 1.2f);
                 }
                 break;
 
@@ -413,6 +690,7 @@ public class Game
                 {
                     Phase = VoyagePhase.Split;
                     ShowMessage("The ship has split in two!", 4f);
+                    StartShake(amplitude: 9f, seconds: 1.6f);
                     TriggerSplit();
                 }
                 break;
@@ -437,9 +715,10 @@ public class Game
         _hasSplit = true;
         if (CurrentRoom.Path != BoatDeckPath) return;
 
-        var (_, row) = TileUnderPlayer(_sessions[0].Player);
-        var spawnName = row < BoatDeckSplitMidRow ? "forwardHalf" : "aftHalf";
-        LoadRoom(BoatDeckSplitPath, spawnName);
+        // Always the stern half: by the moment the ship breaks, the sinking
+        // waterline has already put the entire forward half awash, so anyone
+        // still alive scrambles aft with the upheaval.
+        LoadRoom(BoatDeckSplitPath, "aftHalf");
     }
 
     private void ApplyFloodIfDueForCurrentRoom()
@@ -677,16 +956,20 @@ public class Game
         Hud.SetText($"Tix: {TixBalance}{roleText}{launcherText}  |  {PhaseLabel()}");
     }
 
-    private string PhaseLabel() => Phase switch
+    private string PhaseLabel()
     {
-        VoyagePhase.Cruising => "Cruising the North Atlantic",
-        VoyagePhase.Warning => "ICEBERG WARNING",
-        VoyagePhase.Collision => "COLLISION",
-        VoyagePhase.Sinking => "SINKING",
-        VoyagePhase.Split => "THE SHIP HAS SPLIT",
-        VoyagePhase.Sunk => "SUNK",
-        _ => ""
-    };
+        var sinceCollision = SecondsSinceCollision();
+        return Phase switch
+        {
+            VoyagePhase.Cruising => "Cruising the North Atlantic",
+            VoyagePhase.Warning => "ICEBERG WARNING",
+            VoyagePhase.Collision => "COLLISION",
+            VoyagePhase.Sinking => $"SINKING - {sinceCollision:0}s since impact",
+            VoyagePhase.Split => $"THE SHIP HAS SPLIT - {sinceCollision:0}s since impact",
+            VoyagePhase.Sunk => $"SUNK - only the stern remains. Survived {sinceCollision:0}s",
+            _ => ""
+        };
+    }
 
     private bool SessionJustPressed(PlayerSession session, InputAction action) =>
         session.InputSource?.IsActionJustPressed(action) ?? InputActions.IsJustPressed(action);
