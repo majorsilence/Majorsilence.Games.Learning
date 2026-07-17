@@ -31,11 +31,17 @@ public class DynamicObject : GameObject
     public bool IsGrounded => Z <= GroundZ && _verticalVelocity <= 0f;
 
     /// <summary>
-    /// When true, the assigned Animation only advances while this object is
-    /// actually moving (either direction non-zero), so a standing character
-    /// doesn't march in place. Off by default to preserve existing behavior.
+    /// When true, the assigned Animation advances at full speed only while this
+    /// object is actually moving (either direction non-zero); while standing
+    /// still it advances at IdleAnimationRate instead of stopping outright, so a
+    /// standing character occasionally shifts its stance rather than either
+    /// marching in place or freezing like a statue. Off by default to preserve
+    /// existing behavior.
     /// </summary>
     public bool AnimateOnlyWhenMoving { get; set; }
+
+    /// <summary>Fraction of normal animation speed applied while idle (see AnimateOnlyWhenMoving). 0 would freeze completely; 1 would be indistinguishable from walking.</summary>
+    public float IdleAnimationRate { get; set; } = 0.12f;
 
     public DynamicObject(SpriteSheet spriteSheet)
     {
@@ -97,9 +103,14 @@ public class DynamicObject : GameObject
             _verticalVelocity = 0f;
         }
 
-        if (!AnimateOnlyWhenMoving || DirectionX != HorizontalDirection.None || DirectionY != VerticalDirection.None)
+        var isMoving = DirectionX != HorizontalDirection.None || DirectionY != VerticalDirection.None;
+        if (!AnimateOnlyWhenMoving || isMoving)
         {
             _animation?.Update(deltaTime);
+        }
+        else
+        {
+            _animation?.Update(deltaTime * IdleAnimationRate);
         }
     }
 

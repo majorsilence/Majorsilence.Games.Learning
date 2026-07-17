@@ -4,15 +4,32 @@
   "perspective": "isometric",
   "coop": true,
   "tilesetPath": "assets/artwork/titanic-demo/tileset.png",
-  "tileFrames": { "deck": 0, "water": 1, "railing": 2 },
-  "tileVariants": { "water": [1, 3, 4] },
+  "tileFrames": {
+    "deck": 0,
+    "water": 1,
+    "railing": 2
+  },
+  "tileVariants": {
+    "water": [
+      1,
+      3,
+      4
+    ]
+  },
+  "wallProps": {
+    "railing": "hullSide"
+  },
   "legend": {
     "D": "deck",
     "W": "water",
     "R": "railing"
   },
-  "solid": ["railing"],
-  "hazards": { "water": "freeze" },
+  "solid": [
+    "railing"
+  ],
+  "hazards": {
+    "water": "freeze"
+  },
   "worldMinColumn": -2000,
   "worldMaxColumn": 2000,
   "worldMinRow": -2000,
@@ -21,54 +38,233 @@
   "driftSpeedX": 6,
   "driftSpeedY": -3,
   "tiles": [
-    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
-    "WWWWWWWWWWWWWWWWWDDDDDDWWWWWWWWWWWWWWWWW",
-    "WWWWWWWWWWWWRDDDDDDDDDDDDDDRWWWWWWWWWWWW",
-    "WWWWWWWWRDDDDDDDDDDDDDDDDDDDDDDRWWWWWWWW",
-    "WWWWWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWWWWW",
-    "WWWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWW",
-    "WWWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWWW",
-    "WWWWWRDDDDDDDDDDDDDDDDDDDDDDDDDDDDRWWWWW",
-    "WWWWWWWWRDDDDDDDDDDDDDDDDDDDDDDRWWWWWWWW",
-    "WWWWWWWWWWWWRDDDDDDDDDDDDDDRWWWWWWWWWWWW",
-    "WWWWWWWWWWWWWWWWWDDDDDDWWWWWWWWWWWWWWWWW",
-    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWDDDDWWWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWWRDDDDDDDDDRWWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWWWDDDDWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWW"
   ],
   "entities": [
-    { "type": "playerStart", "column": 19, "row": 14 },
-    { "type": "iceberg", "column": 19, "row": 0 },
-    { "type": "mast", "column": 19, "row": 3 },
-    { "type": "funnel", "column": 12, "row": 9 },
-    { "type": "funnel", "column": 18, "row": 9 },
-    { "type": "funnel", "column": 24, "row": 9 },
-    { "type": "funnel", "column": 30, "row": 9 },
-    { "type": "lifeboat", "column": 4, "row": 7 },
-    { "type": "lifeboat", "column": 35, "row": 7 },
-    { "type": "lifeboat", "column": 4, "row": 16 },
-    { "type": "lifeboat", "column": 35, "row": 16 },
-    { "type": "tix", "column": 10, "row": 7 },
-    { "type": "tix", "column": 29, "row": 7 },
-    { "type": "tix", "column": 10, "row": 16 },
-    { "type": "tix", "column": 29, "row": 16 },
-    { "type": "tix", "column": 14, "row": 19 },
-    { "type": "tix", "column": 24, "row": 19 },
-    { "type": "door", "column": 19, "row": 2, "properties": { "target": "assets/levels/titanic-rooms/bridge.json", "spawn": "fromBoatDeck" } },
-    { "type": "door", "column": 22, "row": 3, "properties": { "target": "assets/levels/titanic-rooms/crows-nest.json", "spawn": "fromBoatDeck" } },
-    { "type": "door", "column": 19, "row": 15, "properties": { "target": "assets/levels/titanic-rooms/a-deck-corridor.json", "spawn": "fromBoatDeck" } },
-    { "type": "spawnPoint", "column": 19, "row": 4, "properties": { "name": "fromBridge" } },
-    { "type": "spawnPoint", "column": 22, "row": 4, "properties": { "name": "fromCrowsNest" } },
-    { "type": "spawnPoint", "column": 19, "row": 16, "properties": { "name": "fromADeck" } }
+    {
+      "type": "playerStart",
+      "column": 9,
+      "row": 35
+    },
+    {
+      "type": "iceberg",
+      "column": 9,
+      "row": 0
+    },
+    {
+      "type": "door",
+      "column": 9,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/bridge.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 12,
+      "row": 5,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/crows-nest.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 7,
+      "properties": {
+        "name": "fromBridge"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 12,
+      "row": 7,
+      "properties": {
+        "name": "fromCrowsNest"
+      }
+    },
+    {
+      "type": "mast",
+      "column": 9,
+      "row": 10
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 18
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 26
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 50
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 58
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 20
+    },
+    {
+      "type": "lifeboat",
+      "column": 16,
+      "row": 20
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 55
+    },
+    {
+      "type": "lifeboat",
+      "column": 16,
+      "row": 55
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 22
+    },
+    {
+      "type": "tix",
+      "column": 14,
+      "row": 22
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 33
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 45
+    },
+    {
+      "type": "tix",
+      "column": 14,
+      "row": 38
+    },
+    {
+      "type": "tix",
+      "column": 14,
+      "row": 45
+    },
+    {
+      "type": "tix",
+      "column": 7,
+      "row": 62
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 62
+    },
+    {
+      "type": "door",
+      "column": 9,
+      "row": 62,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/a-deck-corridor.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 64,
+      "properties": {
+        "name": "fromADeck"
+      }
+    }
   ]
 }

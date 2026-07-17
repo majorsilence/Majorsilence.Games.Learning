@@ -28,7 +28,7 @@ public class Game
 {
     public const string BoatDeckPath = "assets/levels/titanic.json";
     public const string BoatDeckSplitPath = "assets/levels/titanic-rooms/boat-deck-split.json";
-    private const int BoatDeckSplitMidRow = 12;
+    private const int BoatDeckSplitMidRow = 40;
 
     private const float WarningAtSeconds = 20f;
     private const float BaseCollisionAtSeconds = 50f;
@@ -56,10 +56,10 @@ public class Game
 
     // Stern/bow tip tiles on the boat deck hull (see assets/levels/titanic.json) -
     // where the wake trail and bow spray spawn from.
-    private const int SternColumn = 19;
-    private const int SternRow = 22;
-    private const int BowColumn = 19;
-    private const int BowRow = 1;
+    private const int SternColumn = 9;
+    private const int SternRow = 77;
+    private const int BowColumn = 9;
+    private const int BowRow = 2;
 
     private const float WakeSpawnInterval = 0.5f;
     private const float WakeLifespanSeconds = 5f;
@@ -80,7 +80,7 @@ public class Game
     // split row is awash; by Sunk, all but the last few stern rows are gone -
     // the stern is the classic final refuge.
     private const int WaterlineRowAtSplit = BoatDeckSplitMidRow - 1;
-    private const int WaterlineRowAtSunk = 19;
+    private const int WaterlineRowAtSunk = 65;
 
     public Camera Camera { get; } = new();
     public List<GameObject> GameObjects { get; } = new();
@@ -180,6 +180,7 @@ public class Game
             ["table"] = ("assets/artwork/titanic-demo/table.png", 32, 24),
             ["crate"] = ("assets/artwork/titanic-demo/crate.png", 24, 24),
             ["shopCounter"] = ("assets/artwork/titanic-demo/shop-counter.png", 32, 28),
+            ["hullSide"] = ("assets/artwork/titanic-demo/hull-side.png", 32, 32),
         };
 
         NpcKinds = new Dictionary<string, (string, int, int)>
@@ -479,7 +480,8 @@ public class Game
             return;
         }
 
-        CurrentRoom.SubmergeRowsThrough(waterlineRow, "water");
+        var removed = CurrentRoom.SubmergeRowsThrough(waterlineRow, "water");
+        foreach (var obj in removed) GameObjects.Remove(obj);
     }
 
     /// <summary>
@@ -557,7 +559,9 @@ public class Game
                 _wakeSpawnTimer = WakeSpawnInterval / speedFactor;
                 var (wakeX, wakeY) = CurrentRoom.StandOnTile(SternColumn, SternRow, 16, 8);
                 var wakeSheet = GetSheet(WakeIconPath, 16, 8);
-                var wake = new Particle(wakeSheet, WakeLifespanSeconds) { X = wakeX, Y = wakeY, ZIndex = 0, SortOffsetY = 4 };
+                // SortOffsetY must exceed a tile's own depth-sort height (TileHeight,
+                // see IsometricTilemap) or the tile this sits on always paints over it.
+                var wake = new Particle(wakeSheet, WakeLifespanSeconds) { X = wakeX, Y = wakeY, SortOffsetY = CurrentRoom.Grid.TileHeight };
                 _particles.Add(wake);
                 GameObjects.Add(wake);
             }
@@ -573,8 +577,7 @@ public class Game
                 {
                     X = sprayX + _random.Next(-10, 11),
                     Y = sprayY + _random.Next(-4, 5),
-                    ZIndex = 0,
-                    SortOffsetY = 4
+                    SortOffsetY = CurrentRoom.Grid.TileHeight
                 };
                 _particles.Add(spray);
                 GameObjects.Add(spray);
@@ -594,8 +597,15 @@ public class Game
                         X = funnel.X,
                         Y = funnel.Y - 8,
                         ZIndex = 3,
-                        VelocityX = speed > 0f ? -driftSpeedX / speed * 12f : 0f,
-                        VelocityY = (speed > 0f ? -driftSpeedY / speed * 12f : 0f) - 14f
+                        // Sorts alongside the funnel itself (SortOffsetY 64 = the
+                        // funnel's own 56 plus the 8px this spawns above it), so
+                        // nothing standing in front of the funnel can hide smoke
+                        // rising above it. Height is climbed via Z (RiseSpeed), not
+                        // world Y, so the rise never corrupts the depth sort either.
+                        SortOffsetY = 64,
+                        VelocityX = speed > 0f ? -driftSpeedX / speed * 10f : 0f,
+                        VelocityY = speed > 0f ? -driftSpeedY / speed * 10f : 0f,
+                        RiseSpeed = 16f
                     };
                     _particles.Add(smoke);
                     GameObjects.Add(smoke);

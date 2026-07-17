@@ -105,4 +105,13 @@ public class LevelMap
     /// its single TileFrames frame, as before.
     /// </summary>
     public Dictionary<string, int[]> TileVariants { get; set; } = new();
+
+    /// <summary>
+    /// Maps a tile-type name (e.g. "railing") to a prop-kind name (e.g.
+    /// "hullSide") automatically placed hanging below every tile of that type,
+    /// giving a flat diamond edge visible depth/thickness (the ship's hull side)
+    /// without needing one entity per tile. Empty (the default) adds nothing -
+    /// existing levels are unaffected.
+    /// </summary>
+    public Dictionary<string, string> WallProps { get; set; } = new();
 }

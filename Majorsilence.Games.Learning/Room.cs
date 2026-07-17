@@ -44,6 +44,14 @@ public class Room
     private readonly bool _hasVirtualWorld;
 
     /// <summary>
+    /// Every prop/NPC/tix tied to a specific hull row (everything except the
+    /// tilemap itself and the Iceberg, which is a fixed external landmark, not
+    /// part of the ship) - so SubmergeRowsThrough can remove them once their row
+    /// goes under, instead of leaving them floating over open water.
+    /// </summary>
+    private readonly List<(int Row, GameObject Object)> _rowAnchoredObjects = new();
+
+    /// <summary>
     /// initialDriftX/Y seed the tilemap's starting world offset - Game persists the
     /// ship's total sailed distance across room reloads (a fresh Room instance is
     /// built every time a door is used, including re-entering the boat deck), and
@@ -92,10 +100,38 @@ public class Room
             _tileTypes[row, column] = Level.Legend[Level.Tiles[row][column]];
 
         BuildEntities(game);
+        BuildWallProps(game);
 
         var effectiveDelay = game.EffectiveFloodDelaySeconds(path, Level.FloodDelaySeconds);
         if (effectiveDelay >= 0 && game.SecondsSinceCollision() >= effectiveDelay)
             ApplyFlood();
+    }
+
+    /// <summary>
+    /// Auto-places a prop hanging below every tile whose type has a WallProps
+    /// mapping (e.g. every "railing" tile gets a hull-side wall) - gives a flat
+    /// diamond edge visible depth without needing one entity per tile in the JSON.
+    /// </summary>
+    private void BuildWallProps(Game game)
+    {
+        if (Level.WallProps.Count == 0) return;
+
+        var rows = _tileTypes.GetLength(0);
+        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        for (var row = 0; row < rows; row++)
+        {
+            for (var column = 0; column < columns; column++)
+            {
+                if (!Level.WallProps.TryGetValue(_tileTypes[row, column], out var propKindName)) continue;
+                if (!game.PropKinds.TryGetValue(propKindName, out var propKind)) continue;
+
+                var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
+                var (wallX, wallY) = HangBelowTile(column, row, propKind.Width, propKind.Height);
+                var sprite = new Sprite(sheet) { X = wallX, Y = wallY, ZIndex = 1, SortOffsetY = propKind.Height };
+                RoomObjects.Add(sprite);
+                _rowAnchoredObjects.Add((row, sprite));
+            }
+        }
     }
 
     private void BuildEntities(Game game)
@@ -128,6 +164,7 @@ public class Room
                         var npc = new Npc(npcSheet, role) { X = npcX, Y = npcY, ZIndex = 1, SortOffsetY = npcKind.Height };
                         Npcs.Add(npc);
                         RoomObjects.Add(npc);
+                        _rowAnchoredObjects.Add((entity.Row, npc));
                     }
                     break;
 
@@ -138,6 +175,7 @@ public class Room
                     var tix = new TixPickup(tixSheet) { X = tixX, Y = tixY, ZIndex = 1, SortOffsetY = 16, Value = value };
                     TixPickups.Add(tix);
                     RoomObjects.Add(tix);
+                    _rowAnchoredObjects.Add((entity.Row, tix));
                     break;
 
                 case "shop":
@@ -167,6 +205,7 @@ public class Room
                     var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind.Height };
                     Funnels.Add(sprite);
                     RoomObjects.Add(sprite);
+                    _rowAnchoredObjects.Add((entity.Row, sprite));
                     break;
                 }
 
@@ -177,6 +216,7 @@ public class Room
                         var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind2.Width, propKind2.Height);
                         var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind2.Height };
                         RoomObjects.Add(sprite);
+                        _rowAnchoredObjects.Add((entity.Row, sprite));
                     }
                     break;
             }
@@ -194,6 +234,18 @@ public class Room
     {
         var (tileX, tileY) = Grid.TileToWorld(column, row);
         return (Tilemap.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight - height);
+    }
+
+    /// <summary>
+    /// The opposite anchor from StandOnTile: positions a sprite's top-left so it
+    /// hangs downward from the tile's front (bottom) vertex instead of standing
+    /// upward from it - used for wall props (a ship's hull side) that should
+    /// extend toward the viewer/water rather than rise off the deck.
+    /// </summary>
+    public (int X, int Y) HangBelowTile(int column, int row, int width, int height)
+    {
+        var (tileX, tileY) = Grid.TileToWorld(column, row);
+        return (Tilemap.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight);
     }
 
     public int GetElevationPixels(int column, int row) => Tilemap.GetElevationPixels(column, row);
@@ -258,29 +310,51 @@ public class Room
     /// <summary>
     /// Converts every tile (deck, railings, everything) in rows 0..lastRowInclusive
     /// of the explicit grid to the given water type - the bow slipping under as the
-    /// ship goes down. Idempotent per row: each call only converts newly submerged
-    /// rows, so a per-frame caller with a slowly advancing waterline is cheap.
+    /// ship goes down - and removes every row-anchored prop/NPC/tix in that range
+    /// (hull-side walls, funnels, mast, lifeboats, tix, crew), so nothing is left
+    /// floating over open water once its row goes under. Idempotent per row: each
+    /// call only processes newly submerged rows, so a per-frame caller with a
+    /// slowly advancing waterline is cheap. Returns the objects removed (if any)
+    /// so the caller (Game) can also drop them from its own render list and any
+    /// tracking of its own (e.g. a taken-over NPC role).
     /// </summary>
-    public void SubmergeRowsThrough(int lastRowInclusive, string waterType)
+    public List<GameObject> SubmergeRowsThrough(int lastRowInclusive, string waterType)
     {
-        if (lastRowInclusive <= _submergedThroughRow) return;
-        if (!_tileFrameIndex.TryGetValue(waterType, out var waterFrame)) return;
+        var removed = new List<GameObject>();
+        if (lastRowInclusive <= _submergedThroughRow) return removed;
 
-        var rows = _tileTypes.GetLength(0);
-        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
-        var through = Math.Min(lastRowInclusive, rows - 1);
-
-        for (var row = _submergedThroughRow + 1; row <= through; row++)
+        if (_tileFrameIndex.TryGetValue(waterType, out var waterFrame))
         {
-            for (var column = 0; column < columns; column++)
+            var rows = _tileTypes.GetLength(0);
+            var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+            var through = Math.Min(lastRowInclusive, rows - 1);
+
+            for (var row = _submergedThroughRow + 1; row <= through; row++)
             {
-                if (_tileTypes[row, column] == waterType) continue;
-                _tileTypes[row, column] = waterType;
-                Tilemap.SetTile(column, row, waterFrame);
+                for (var column = 0; column < columns; column++)
+                {
+                    if (_tileTypes[row, column] == waterType) continue;
+                    _tileTypes[row, column] = waterType;
+                    Tilemap.SetTile(column, row, waterFrame);
+                }
             }
         }
 
+        for (var i = _rowAnchoredObjects.Count - 1; i >= 0; i--)
+        {
+            var (row, obj) = _rowAnchoredObjects[i];
+            if (row > lastRowInclusive) continue;
+
+            _rowAnchoredObjects.RemoveAt(i);
+            RoomObjects.Remove(obj);
+            if (obj is Npc npc) Npcs.Remove(npc);
+            if (obj is TixPickup tix) TixPickups.Remove(tix);
+            if (obj is Sprite sprite) Funnels.Remove(sprite);
+            removed.Add(obj);
+        }
+
         _submergedThroughRow = lastRowInclusive;
+        return removed;
     }
 
     /// <summary>
