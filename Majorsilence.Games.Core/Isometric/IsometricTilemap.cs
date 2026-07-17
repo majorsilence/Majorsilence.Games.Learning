@@ -202,10 +202,31 @@ public class IsometricTilemap : GameObject
                 if (tileIndex < 0) continue;
 
                 var (worldX, worldY) = _grid.TileToWorld(column, row);
-                var (screenX, screenY) = camera.WorldToScreen(X + worldX, Y + worldY - GetElevationPixels(column, row));
-                _tileset.Render(screenX, screenY, ResolveVariant(tileIndex, column, row));
+                RenderTileStack(camera, X + worldX, Y + worldY, GetElevationPixels(column, row),
+                    ResolveVariant(tileIndex, column, row));
             }
         }
+    }
+
+    /// <summary>
+    /// Draws a tile at its elevation, with intermediate copies stacked every half
+    /// tile-height from ground level up (bottom first), so an elevated tile reads
+    /// as a solid block/terraced platform instead of a diamond floating over a
+    /// gap. Ground-level tiles (the overwhelmingly common case) are one draw, as
+    /// before. Intermediate layers only ever overlap tiles behind this one, which
+    /// sort earlier in both render paths, so stacking never breaks paint order.
+    /// </summary>
+    private void RenderTileStack(Camera camera, int drawWorldX, int drawWorldY, int elevation, int frameIndex)
+    {
+        var step = Math.Max(1, _grid.TileHeight / 2);
+        for (var layer = 0; layer < elevation; layer += step)
+        {
+            var (layerX, layerY) = camera.WorldToScreen(drawWorldX, drawWorldY - layer);
+            _tileset.Render(layerX, layerY, frameIndex);
+        }
+
+        var (screenX, screenY) = camera.WorldToScreen(drawWorldX, drawWorldY - elevation);
+        _tileset.Render(screenX, screenY, frameIndex);
     }
 
     /// <summary>
@@ -237,10 +258,8 @@ public class IsometricTilemap : GameObject
                 var capturedColumn = column;
                 var capturedRow = row;
                 yield return (drawWorldY + _grid.TileHeight, () =>
-                {
-                    var (screenX, screenY) = camera.WorldToScreen(drawWorldX, drawWorldY - elevation);
-                    _tileset.Render(screenX, screenY, ResolveVariant(tileIndex, capturedColumn, capturedRow));
-                });
+                    RenderTileStack(camera, drawWorldX, drawWorldY, elevation,
+                        ResolveVariant(tileIndex, capturedColumn, capturedRow)));
             }
         }
     }

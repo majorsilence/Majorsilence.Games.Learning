@@ -48,6 +48,17 @@ public class Game
     private const int LauncherFireCost = 100;
     private const int LauncherFireCount = 100;
 
+    // The endgame: once the collision has happened, any player can board a nearby
+    // lifeboat (Confirm) and row to safety for a modest bonus - or gamble on
+    // riding the stern all the way down, because RMS Carpathia arrives this many
+    // seconds after the ship sinks and pays out a much bigger one to whoever is
+    // still aboard. Either way every player ends the voyage alive; the choice is
+    // purely a risk/reward bet against the waterline.
+    private const float LifeboatRowSpeed = 28f;
+    private const int LifeboatEscapeBonusTix = 200;
+    private const int SternSurvivorBonusTix = 500;
+    private const float RescueAfterSunkSeconds = 40f;
+
     // The iceberg starts this many world pixels ahead of the bow (in the ship's
     // direction of travel) once it's sighted, and closes that distance as the
     // voyage clock counts down the rest of the Warning phase - so it's visibly
@@ -87,6 +98,7 @@ public class Game
     public Hud Hud { get; }
     public Room CurrentRoom { get; private set; } = null!;
     public VoyagePhase Phase { get; private set; } = VoyagePhase.Cruising;
+    public bool IsGameOver { get; private set; }
     public int TixBalance { get; private set; } = 300;
     public bool HasTixLauncher { get; private set; }
     public string? CurrentRole { get; private set; }
@@ -130,6 +142,9 @@ public class Game
     private int _icebergOffsetAppliedX;
     private int _icebergOffsetAppliedY;
 
+    private readonly List<LaunchedBoat> _launchedBoats = new();
+    private string _finalMessage = "";
+
     private readonly List<Particle> _particles = new();
     private float _wakeSpawnTimer;
     private float _bowSprayTimer;
@@ -147,11 +162,39 @@ public class Game
         public (int Column, int Row) EntrySpawnTile;
         public bool IsDying;
         public float DyingTimer;
+        public bool Escaped;
 
         public PlayerSession(Player player, IInputSource? inputSource)
         {
             Player = player;
             InputSource = inputSource;
+        }
+    }
+
+    /// <summary>
+    /// A boarded lifeboat rowing away from the wreck under its own power, carrying
+    /// its passenger with it. Detached from the Room (ReleaseFromShip) so ship
+    /// drift and row submersion leave it alone; Game moves it each frame instead.
+    /// Positions accumulate as floats since GameObject.X/Y are ints and per-frame
+    /// movement is fractional.
+    /// </summary>
+    private class LaunchedBoat
+    {
+        public readonly Sprite Boat;
+        public readonly Player Passenger;
+        public readonly float VelocityX;
+        public readonly float VelocityY;
+        public float PreciseX;
+        public float PreciseY;
+
+        public LaunchedBoat(Sprite boat, Player passenger, float velocityX, float velocityY)
+        {
+            Boat = boat;
+            Passenger = passenger;
+            VelocityX = velocityX;
+            VelocityY = velocityY;
+            PreciseX = boat.X;
+            PreciseY = boat.Y;
         }
     }
 
@@ -170,7 +213,7 @@ public class Game
         PropKinds = new Dictionary<string, (string, int, int)>
         {
             ["tree"] = ("assets/artwork/isometric-demo/tree.png", 32, 48),
-            ["funnel"] = ("assets/artwork/titanic-demo/funnel.png", 24, 56),
+            ["funnel"] = ("assets/artwork/titanic-demo/funnel.png", 32, 88),
             ["iceberg"] = ("assets/artwork/titanic-demo/iceberg.png", 40, 36),
             ["lifeboat"] = ("assets/artwork/titanic-demo/lifeboat.png", 32, 20),
             ["mast"] = ("assets/artwork/titanic-demo/mast.png", 16, 64),
@@ -275,6 +318,20 @@ public class Game
         // including re-entering the boat deck) - other rooms never drift, so they
         // always start at zero regardless of how far the ship has sailed.
         var isDriftingLevel = targetPath == BoatDeckPath || targetPath == BoatDeckSplitPath;
+
+        // Launched lifeboats (and their escaped passengers) live in the open-ocean
+        // world - they carry across boat-deck reloads (same world, e.g. the split),
+        // but not into interior rooms.
+        if (!isDriftingLevel)
+        {
+            foreach (var launched in _launchedBoats) GameObjects.Remove(launched.Boat);
+            _launchedBoats.Clear();
+            foreach (var session in _sessions)
+            {
+                if (session.Escaped) GameObjects.Remove(session.Player);
+            }
+        }
+
         var room = isDriftingLevel
             ? new Room(targetPath, this, _shipDriftAppliedX, _shipDriftAppliedY)
             : new Room(targetPath, this);
@@ -308,14 +365,19 @@ public class Game
 
     private void PlaceSessions((int Column, int Row) spawnTile)
     {
-        var (x, y) = CurrentRoom.StandOnTile(spawnTile.Column, spawnTile.Row, 16, 32);
-        _sessions[0].Player.SnapTo(x, y);
-        _sessions[0].Player.Z = 0;
-        _sessions[0].LastGoodX = x;
-        _sessions[0].LastGoodY = y;
-        _sessions[0].EntrySpawnTile = spawnTile;
+        // An escaped player is riding a launched lifeboat - never teleport them
+        // back onto the ship (e.g. when the split rebuilds the boat deck).
+        if (!_sessions[0].Escaped)
+        {
+            var (x, y) = CurrentRoom.StandOnTile(spawnTile.Column, spawnTile.Row, 16, 32);
+            _sessions[0].Player.SnapTo(x, y);
+            _sessions[0].Player.Z = 0;
+            _sessions[0].LastGoodX = x;
+            _sessions[0].LastGoodY = y;
+            _sessions[0].EntrySpawnTile = spawnTile;
+        }
 
-        if (_sessions.Count > 1)
+        if (_sessions.Count > 1 && !_sessions[1].Escaped)
         {
             var offsetColumn = spawnTile.Column + 1;
             var secondTile = !CurrentRoom.IsSolid(offsetColumn, spawnTile.Row)
@@ -408,11 +470,27 @@ public class Game
         UpdateWaterShimmer(deltaTime);
         UpdateCameraShake(deltaTime);
         UpdateSinkingWaterline();
+        UpdateLaunchedBoats(deltaTime);
 
         foreach (var session in _sessions)
         {
+            if (session.Escaped) continue;
             var (column, row) = TileUnderPlayer(session.Player);
             session.Player.GroundZ = CurrentRoom.GetElevationPixels(column, row);
+        }
+    }
+
+    /// <summary>Rows every launched lifeboat (and its passenger) steadily away from the wreck.</summary>
+    private void UpdateLaunchedBoats(float deltaTime)
+    {
+        foreach (var launched in _launchedBoats)
+        {
+            launched.PreciseX += launched.VelocityX * deltaTime;
+            launched.PreciseY += launched.VelocityY * deltaTime;
+            launched.Boat.X = (int)MathF.Round(launched.PreciseX);
+            launched.Boat.Y = (int)MathF.Round(launched.PreciseY);
+            // seated amidships: horizontally centered in the 32-wide boat, feet just above its stern seat
+            launched.Passenger.SnapTo(launched.Boat.X + 8, launched.Boat.Y - 12);
         }
     }
 
@@ -592,17 +670,19 @@ public class Game
                     var funnel = CurrentRoom.Funnels[_random.Next(CurrentRoom.Funnels.Count)];
                     var smokeSheet = GetSheet(SmokeIconPath, 16, 16);
                     var speed = MathF.Sqrt(driftSpeedX * driftSpeedX + driftSpeedY * driftSpeedY);
+                    var (_, funnelWidth, _) = PropKinds["funnel"];
                     var smoke = new Particle(smokeSheet, SmokeLifespanSeconds)
                     {
-                        X = funnel.X,
+                        X = funnel.X + (funnelWidth - 16) / 2,
                         Y = funnel.Y - 8,
                         ZIndex = 3,
-                        // Sorts alongside the funnel itself (SortOffsetY 64 = the
-                        // funnel's own 56 plus the 8px this spawns above it), so
-                        // nothing standing in front of the funnel can hide smoke
-                        // rising above it. Height is climbed via Z (RiseSpeed), not
-                        // world Y, so the rise never corrupts the depth sort either.
-                        SortOffsetY = 64,
+                        // Sorts alongside the funnel itself (its own SortOffsetY -
+                        // which includes any deck elevation it stands on - plus the
+                        // 8px this spawns above it), so nothing standing in front of
+                        // the funnel can hide smoke rising above it. Height is
+                        // climbed via Z (RiseSpeed), not world Y, so the rise never
+                        // corrupts the depth sort either.
+                        SortOffsetY = funnel.SortOffsetY + 8,
                         VelocityX = speed > 0f ? -driftSpeedX / speed * 10f : 0f,
                         VelocityY = speed > 0f ? -driftSpeedY / speed * 10f : 0f,
                         RiseSpeed = 16f
@@ -627,40 +707,48 @@ public class Game
     {
         UpdateVoyageClock(deltaTime);
 
-        foreach (var session in _sessions)
+        // After the game has been decided, the world keeps sinking/rowing for the
+        // final tableau, but nothing gameplay-relevant happens to anyone anymore.
+        if (!IsGameOver)
         {
-            if (session.IsDying)
+            foreach (var session in _sessions)
             {
-                session.DyingTimer -= deltaTime;
-                if (session.DyingTimer <= 0f) Respawn(session);
-                continue;
-            }
+                if (session.Escaped) continue;
 
-            var (column, row) = TileUnderPlayer(session.Player);
-
-            if (CurrentRoom.IsSolid(column, row))
-            {
-                session.Player.SnapTo(session.LastGoodX, session.LastGoodY);
-            }
-            else
-            {
-                session.LastGoodX = session.Player.X;
-                session.LastGoodY = session.Player.Y;
-
-                if (CurrentRoom.TryGetHazard(column, row, out var hazard) && session.Player.IsGrounded)
+                if (session.IsDying)
                 {
-                    TriggerDeath(session, hazard);
+                    session.DyingTimer -= deltaTime;
+                    if (session.DyingTimer <= 0f) Respawn(session);
+                    continue;
+                }
+
+                var (column, row) = TileUnderPlayer(session.Player);
+
+                if (CurrentRoom.IsSolid(column, row))
+                {
+                    session.Player.SnapTo(session.LastGoodX, session.LastGoodY);
+                }
+                else
+                {
+                    session.LastGoodX = session.Player.X;
+                    session.LastGoodY = session.Player.Y;
+
+                    if (CurrentRoom.TryGetHazard(column, row, out var hazard) && session.Player.IsGrounded)
+                    {
+                        TriggerDeath(session, hazard);
+                    }
                 }
             }
+
+            if (_doorCooldown > 0f) _doorCooldown -= deltaTime;
+            else CheckDoors();
+
+            CheckPickups();
+            CheckNpcInteractionAndRoleBonus();
+            CheckShop();
+            CheckLauncherFire();
+            CheckLifeboats();
         }
-
-        if (_doorCooldown > 0f) _doorCooldown -= deltaTime;
-        else CheckDoors();
-
-        CheckPickups();
-        CheckNpcInteractionAndRoleBonus();
-        CheckShop();
-        CheckLauncherFire();
 
         UpdateHudText(deltaTime);
     }
@@ -690,7 +778,7 @@ public class Game
 
             case VoyagePhase.Collision:
                 Phase = VoyagePhase.Sinking;
-                ShowMessage("Water is rising below decks...", 4f);
+                ShowMessage("Water is rising below decks - get to a lifeboat! (Enter to board)", 5f);
                 ApplyFloodIfDueForCurrentRoom();
                 break;
 
@@ -716,6 +804,12 @@ public class Game
 
             case VoyagePhase.Sunk:
                 ApplyFloodIfDueForCurrentRoom();
+                if (!IsGameOver && SecondsSinceCollision() >= SunkAfterCollisionSeconds + RescueAfterSunkSeconds)
+                {
+                    var survivors = _sessions.Count(s => !s.Escaped);
+                    TixBalance += SternSurvivorBonusTix * survivors;
+                    EndGame($"RMS Carpathia arrives! Stern survivors rescued (+{SternSurvivorBonusTix} tix each). Final tix: {TixBalance}.");
+                }
                 break;
         }
     }
@@ -743,6 +837,7 @@ public class Game
     {
         foreach (var session in _sessions)
         {
+            if (session.Escaped) continue;
             var (column, row) = TileUnderPlayer(session.Player);
             var door = CurrentRoom.Doors.FirstOrDefault(d => d.Column == column && d.Row == row);
             if (door is not null)
@@ -763,6 +858,7 @@ public class Game
 
             foreach (var session in _sessions)
             {
+                if (session.Escaped) continue;
                 if (Distance(session.Player, pickup) <= PickupRadius)
                 {
                     TixBalance += pickup.Value;
@@ -787,6 +883,7 @@ public class Game
         {
             foreach (var session in _sessions)
             {
+                if (session.Escaped) continue;
                 var npc = CurrentRoom.Npcs.FirstOrDefault(n => Distance(session.Player, n) <= InteractRadius);
                 if (npc is not null && SessionJustPressed(session, InputAction.Confirm))
                 {
@@ -804,6 +901,7 @@ public class Game
         {
             foreach (var session in _sessions)
             {
+                if (session.Escaped) continue;
                 if (SessionJustPressed(session, InputAction.Confirm) && TryApplyRoleBonus())
                     return;
             }
@@ -853,6 +951,7 @@ public class Game
 
         foreach (var session in _sessions)
         {
+            if (session.Escaped) continue;
             var dx = session.Player.X - shopX;
             var dy = session.Player.Y - shopY;
             if (MathF.Sqrt(dx * dx + dy * dy) > InteractRadius) continue;
@@ -882,6 +981,7 @@ public class Game
 
         foreach (var session in _sessions)
         {
+            if (session.Escaped) continue;
             if (!SessionJustPressed(session, InputAction.Fire)) continue;
 
             if (TixBalance < LauncherFireCost)
@@ -922,6 +1022,88 @@ public class Game
         }
     }
 
+    private void CheckLifeboats()
+    {
+        foreach (var session in _sessions)
+        {
+            if (session.Escaped || session.IsDying) continue;
+            if (!SessionJustPressed(session, InputAction.Confirm)) continue;
+            TryBoardLifeboat(session.Player);
+        }
+    }
+
+    /// <summary>
+    /// Boards the nearest lifeboat within reach, if the collision has happened: the
+    /// boat is released from the ship and rows away carrying this player, who is
+    /// out of the game (and out of danger) from then on, with a survival bonus
+    /// banked. Returns false if there's no boat in reach, it's too early to
+    /// launch, or this player can't board right now.
+    /// </summary>
+    public bool TryBoardLifeboat(Player player)
+    {
+        var session = _sessions.FirstOrDefault(s => s.Player == player);
+        if (session is null || session.Escaped || session.IsDying) return false;
+
+        var boat = CurrentRoom.Lifeboats.FirstOrDefault(b => Distance(player, b) <= InteractRadius);
+        if (boat is null) return false;
+
+        if (Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning)
+        {
+            ShowMessage("The crew won't launch the lifeboats before there's real danger.", 2.5f);
+            return false;
+        }
+
+        BoardLifeboat(session, boat);
+        return true;
+    }
+
+    private void BoardLifeboat(PlayerSession session, Sprite boat)
+    {
+        CurrentRoom.ReleaseFromShip(boat);
+
+        session.Escaped = true;
+        session.Player.InputEnabled = false;
+        session.Player.Z = 0f;
+        TixBalance += LifeboatEscapeBonusTix;
+
+        // Afloat on open water, the boat and its passenger must out-sort the flat
+        // water tiles around them (same rule as the wake particles): a tile's own
+        // depth-sort height is TileHeight, so anything floating on water needs its
+        // SortOffsetY pushed at least that far past its sprite height, or tiles
+        // "in front" clip the hull and the passenger's legs.
+        boat.SortOffsetY += CurrentRoom.Grid.TileHeight;
+        session.Player.SortOffsetY = 32 + CurrentRoom.Grid.TileHeight;
+
+        // Row straight away from the hull: out along the column (port/starboard)
+        // axis, on whichever side of the ship's centerline the boat hangs.
+        var (_, boatWidth, boatHeight) = PropKinds["lifeboat"];
+        var feetX = boat.X + (boatWidth - CurrentRoom.Grid.TileWidth) / 2 - CurrentRoom.Tilemap.X;
+        var feetY = boat.Y + boatHeight - CurrentRoom.Grid.TileHeight - CurrentRoom.Tilemap.Y;
+        var (boatColumn, _) = CurrentRoom.Grid.WorldToTile(feetX, feetY);
+        var centerColumn = CurrentRoom.Level.Tiles.Length > 0 ? (CurrentRoom.Level.Tiles[0].Length - 1) / 2f : 0f;
+        var side = boatColumn <= centerColumn ? -1f : 1f;
+
+        var (originX, originY) = CurrentRoom.Grid.TileToWorld(0, 0);
+        var (stepX, stepY) = CurrentRoom.Grid.TileToWorld(1, 0);
+        float axisX = stepX - originX, axisY = stepY - originY;
+        var axisLength = MathF.Sqrt(axisX * axisX + axisY * axisY);
+
+        _launchedBoats.Add(new LaunchedBoat(boat, session.Player,
+            axisX / axisLength * side * LifeboatRowSpeed,
+            axisY / axisLength * side * LifeboatRowSpeed));
+
+        ShowMessage($"Away in a lifeboat! +{LifeboatEscapeBonusTix} tix survival bonus.", 3f);
+
+        if (_sessions.All(s => s.Escaped))
+            EndGame($"Everyone escaped the wreck by lifeboat! Final tix: {TixBalance}.");
+    }
+
+    private void EndGame(string message)
+    {
+        IsGameOver = true;
+        _finalMessage = message;
+    }
+
     private void TriggerDeath(PlayerSession session, string hazard)
     {
         session.IsDying = true;
@@ -940,6 +1122,20 @@ public class Game
         session.Player.Z = 0f;
 
         var (column, row) = session.EntrySpawnTile;
+
+        // The sinking can put the original entry spawn underwater - respawning
+        // there would just kill the player again in an endless loop, so fall back
+        // to the safest remaining deck tile (sternmost, near the centerline).
+        if (CurrentRoom.IsSolid(column, row) || CurrentRoom.TryGetHazard(column, row, out _))
+        {
+            var safe = CurrentRoom.FindSafeTile();
+            if (safe is not null)
+            {
+                (column, row) = safe.Value;
+                session.EntrySpawnTile = safe.Value;
+            }
+        }
+
         var (x, y) = CurrentRoom.StandOnTile(column, row, 16, 32);
         session.Player.SnapTo(x, y);
         session.LastGoodX = x;
@@ -954,6 +1150,12 @@ public class Game
 
     private void UpdateHudText(float deltaTime)
     {
+        if (IsGameOver)
+        {
+            Hud.SetText(_finalMessage);
+            return;
+        }
+
         if (_transientTimer > 0f)
         {
             _transientTimer -= deltaTime;
@@ -976,7 +1178,7 @@ public class Game
             VoyagePhase.Collision => "COLLISION",
             VoyagePhase.Sinking => $"SINKING - {sinceCollision:0}s since impact",
             VoyagePhase.Split => $"THE SHIP HAS SPLIT - {sinceCollision:0}s since impact",
-            VoyagePhase.Sunk => $"SUNK - only the stern remains. Survived {sinceCollision:0}s",
+            VoyagePhase.Sunk => $"SUNK - cling to the stern! Carpathia in {Math.Max(0f, SunkAfterCollisionSeconds + RescueAfterSunkSeconds - sinceCollision):0}s",
             _ => ""
         };
     }

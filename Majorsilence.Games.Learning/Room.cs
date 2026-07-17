@@ -37,6 +37,14 @@ public class Room
     /// <summary>Funnel props, if any - Game spawns smoke puffs from these while the ship is under way.</summary>
     public List<Sprite> Funnels { get; } = new();
 
+    /// <summary>
+    /// Lifeboat props still hanging on the ship - boardable once the sinking has
+    /// begun (see Game.TryBoardLifeboat). A boarded boat is detached via
+    /// ReleaseFromShip; a boat whose row submerges before anyone reaches it is
+    /// lost with the ship.
+    /// </summary>
+    public List<Sprite> Lifeboats { get; } = new();
+
     public bool HasFlooded { get; private set; }
 
     private readonly string[,] _tileTypes;
@@ -160,8 +168,8 @@ public class Room
                     if (game.NpcKinds.TryGetValue(role, out var npcKind))
                     {
                         var npcSheet = game.GetSheet(npcKind.ImagePath, npcKind.Width, npcKind.Height);
-                        var (npcX, npcY) = StandOnTile(entity.Column, entity.Row, npcKind.Width, npcKind.Height);
-                        var npc = new Npc(npcSheet, role) { X = npcX, Y = npcY, ZIndex = 1, SortOffsetY = npcKind.Height };
+                        var (npcX, npcY, npcSortOffset) = StandOnTileElevated(entity.Column, entity.Row, npcKind.Width, npcKind.Height);
+                        var npc = new Npc(npcSheet, role) { X = npcX, Y = npcY, ZIndex = 1, SortOffsetY = npcSortOffset };
                         Npcs.Add(npc);
                         RoomObjects.Add(npc);
                         _rowAnchoredObjects.Add((entity.Row, npc));
@@ -171,8 +179,8 @@ public class Room
                 case "tix":
                     var value = int.TryParse(entity.Properties.GetValueOrDefault("value", ""), out var parsedValue) ? parsedValue : 10;
                     var tixSheet = game.GetSheet(game.TixIconPath, 16, 16);
-                    var (tixX, tixY) = StandOnTile(entity.Column, entity.Row, 16, 16);
-                    var tix = new TixPickup(tixSheet) { X = tixX, Y = tixY, ZIndex = 1, SortOffsetY = 16, Value = value };
+                    var (tixX, tixY, tixSortOffset) = StandOnTileElevated(entity.Column, entity.Row, 16, 16);
+                    var tix = new TixPickup(tixSheet) { X = tixX, Y = tixY, ZIndex = 1, SortOffsetY = tixSortOffset, Value = value };
                     TixPickups.Add(tix);
                     RoomObjects.Add(tix);
                     _rowAnchoredObjects.Add((entity.Row, tix));
@@ -201,9 +209,21 @@ public class Room
                 {
                     var propKind = game.PropKinds[entity.Type];
                     var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
-                    var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind.Width, propKind.Height);
-                    var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind.Height };
+                    var (propX, propY, sortOffset) = StandOnTileElevated(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = sortOffset };
                     Funnels.Add(sprite);
+                    RoomObjects.Add(sprite);
+                    _rowAnchoredObjects.Add((entity.Row, sprite));
+                    break;
+                }
+
+                case "lifeboat":
+                {
+                    var propKind = game.PropKinds[entity.Type];
+                    var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
+                    var (propX, propY, sortOffset) = StandOnTileElevated(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = sortOffset };
+                    Lifeboats.Add(sprite);
                     RoomObjects.Add(sprite);
                     _rowAnchoredObjects.Add((entity.Row, sprite));
                     break;
@@ -213,8 +233,8 @@ public class Room
                     if (game.PropKinds.TryGetValue(entity.Type, out var propKind2))
                     {
                         var sheet = game.GetSheet(propKind2.ImagePath, propKind2.Width, propKind2.Height);
-                        var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind2.Width, propKind2.Height);
-                        var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind2.Height };
+                        var (propX, propY, sortOffset) = StandOnTileElevated(entity.Column, entity.Row, propKind2.Width, propKind2.Height);
+                        var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = sortOffset };
                         RoomObjects.Add(sprite);
                         _rowAnchoredObjects.Add((entity.Row, sprite));
                     }
@@ -234,6 +254,20 @@ public class Room
     {
         var (tileX, tileY) = Grid.TileToWorld(column, row);
         return (Tilemap.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight - height);
+    }
+
+    /// <summary>
+    /// StandOnTile plus the tile's elevation: lifts the sprite by the tile's raised
+    /// height and inflates SortOffsetY by the same amount, so a prop standing on an
+    /// upper deck is drawn up there but still depth-sorts by its footprint row
+    /// (SortY = Y + SortOffsetY is unchanged by the lift). Players don't use this -
+    /// their GroundZ/Z physics apply the lift at render time instead.
+    /// </summary>
+    public (int X, int Y, float SortOffsetY) StandOnTileElevated(int column, int row, int width, int height)
+    {
+        var (x, y) = StandOnTile(column, row, width, height);
+        var elevation = Tilemap.GetElevationPixels(column, row);
+        return (x, y - elevation, height + elevation);
     }
 
     /// <summary>
@@ -305,6 +339,47 @@ public class Room
         }
     }
 
+    /// <summary>
+    /// Detaches an object from the ship entirely: it stops drifting with the hull,
+    /// stops being submerged with its row, and (if a lifeboat) is no longer
+    /// boardable - used when a lifeboat is launched and rows away under its own
+    /// power. The caller keeps rendering it (it stays in Game.GameObjects).
+    /// </summary>
+    public void ReleaseFromShip(GameObject obj)
+    {
+        RoomObjects.Remove(obj);
+        for (var i = _rowAnchoredObjects.Count - 1; i >= 0; i--)
+        {
+            if (ReferenceEquals(_rowAnchoredObjects[i].Object, obj)) _rowAnchoredObjects.RemoveAt(i);
+        }
+        if (obj is Sprite sprite) Lifeboats.Remove(sprite);
+    }
+
+    /// <summary>
+    /// The safest place left on deck: scanning from the stern forward (highest row
+    /// first) and the centerline outward, the first tile that's walkable and not a
+    /// hazard - used to relocate a respawn whose original spawn tile has gone
+    /// underwater during the sinking, instead of dropping the player straight back
+    /// into the sea for an endless death loop. Null once nothing walkable remains.
+    /// </summary>
+    public (int Column, int Row)? FindSafeTile()
+    {
+        var rows = _tileTypes.GetLength(0);
+        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        for (var row = rows - 1; row >= 0; row--)
+        {
+            for (var offset = 0; offset < columns; offset++)
+            {
+                var column = columns / 2 + (offset % 2 == 0 ? offset / 2 : -(offset / 2 + 1));
+                if (column < 0 || column >= columns) continue;
+                var type = _tileTypes[row, column];
+                if (Level.Solid.Contains(type) || Level.Hazards.ContainsKey(type)) continue;
+                return (column, row);
+            }
+        }
+        return null;
+    }
+
     private int _submergedThroughRow = -1;
 
     /// <summary>
@@ -333,6 +408,8 @@ public class Room
             {
                 for (var column = 0; column < columns; column++)
                 {
+                    // raised superstructure decks sink to sea level as they go under
+                    Tilemap.SetElevation(column, row, 0);
                     if (_tileTypes[row, column] == waterType) continue;
                     _tileTypes[row, column] = waterType;
                     Tilemap.SetTile(column, row, waterFrame);
@@ -349,7 +426,11 @@ public class Room
             RoomObjects.Remove(obj);
             if (obj is Npc npc) Npcs.Remove(npc);
             if (obj is TixPickup tix) TixPickups.Remove(tix);
-            if (obj is Sprite sprite) Funnels.Remove(sprite);
+            if (obj is Sprite sprite)
+            {
+                Funnels.Remove(sprite);
+                Lifeboats.Remove(sprite);
+            }
             removed.Add(obj);
         }
 
