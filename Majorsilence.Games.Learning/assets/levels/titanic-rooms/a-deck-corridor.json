@@ -3,31 +3,154 @@
   "tileHeight": 16,
   "perspective": "isometric",
   "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
-  "tileFrames": { "floor": 0, "wall": 1, "stair": 2, "floodwater": 3 },
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
   "legend": {
     "F": "floor",
-    "X": "wall",
-    "T": "stair"
+    "X": "wall"
   },
-  "solid": ["wall"],
-  "hazards": { "floodwater": "drown" },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
   "floodDelaySeconds": 40,
   "tiles": [
-    "XXXXXXXXXXXXXXXX",
-    "XTFFFFFFFFFFFFFX",
-    "XFFFFFFFFFFFFFTX",
-    "XXXXXXFFFFXXXXXX",
-    "XXXXXXFFFFXXXXXX",
-    "XXXXXXXXXXXXXXXX"
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFXFFFFFFFXFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFXFFFFFFFXFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   ],
   "entities": [
-    { "type": "bed", "column": 7, "row": 4 },
-    { "type": "table", "column": 8, "row": 4 },
-    { "type": "tix", "column": 5, "row": 1 },
-    { "type": "tix", "column": 10, "row": 2 },
-    { "type": "door", "column": 1, "row": 1, "properties": { "target": "assets/levels/titanic.json", "spawn": "fromADeck" } },
-    { "type": "door", "column": 14, "row": 2, "properties": { "target": "assets/levels/titanic-rooms/pursers-office.json", "spawn": "fromADeck" } },
-    { "type": "spawnPoint", "column": 2, "row": 1, "properties": { "name": "fromBoatDeck" } },
-    { "type": "spawnPoint", "column": 13, "row": 2, "properties": { "name": "fromPursersOffice" } }
+    {
+      "type": "door",
+      "column": 2,
+      "row": 2,
+      "properties": {
+        "target": "assets/levels/titanic.json",
+        "spawn": "fromADeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 2,
+      "properties": {
+        "name": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 37,
+      "row": 7,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/pursers-office.json",
+        "spawn": "fromADeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 35,
+      "row": 7,
+      "properties": {
+        "name": "fromPursersOffice"
+      }
+    },
+    {
+      "type": "door",
+      "column": 10,
+      "row": 12,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/first-class-quarters.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 10,
+      "row": 11,
+      "properties": {
+        "name": "fromFirstClass"
+      }
+    },
+    {
+      "type": "door",
+      "column": 20,
+      "row": 12,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/second-class-quarters.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 20,
+      "row": 11,
+      "properties": {
+        "name": "fromSecondClass"
+      }
+    },
+    {
+      "type": "door",
+      "column": 30,
+      "row": 12,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/third-class-berths.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 30,
+      "row": 11,
+      "properties": {
+        "name": "fromThirdClass"
+      }
+    },
+    {
+      "type": "table",
+      "column": 6,
+      "row": 6
+    },
+    {
+      "type": "table",
+      "column": 26,
+      "row": 6
+    },
+    {
+      "type": "crate",
+      "column": 34,
+      "row": 3
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 3
+    },
+    {
+      "type": "tix",
+      "column": 22,
+      "row": 9
+    },
+    {
+      "type": "tix",
+      "column": 36,
+      "row": 10
+    }
   ]
 }

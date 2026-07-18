@@ -56,6 +56,7 @@ public class Game
     // still aboard. Either way every player ends the voyage alive; the choice is
     // purely a risk/reward bet against the waterline.
     private const float LifeboatRowSpeed = 28f;
+    private const float LifeboatBoardRadius = 48f;
     private const int LifeboatEscapeBonusTix = 200;
     private const int SternSurvivorBonusTix = 500;
     private const float RescueAfterSunkSeconds = 40f;
@@ -1091,7 +1092,7 @@ public class Game
         var session = _sessions.FirstOrDefault(s => s.Player == player);
         if (session is null || session.Escaped || session.IsDying) return false;
 
-        var boat = CurrentRoom.Lifeboats.FirstOrDefault(b => Distance(player, b) <= InteractRadius);
+        var boat = LifeboatInReach(player);
         if (boat is null) return false;
 
         if (Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning)
@@ -1102,6 +1103,23 @@ public class Game
 
         BoardLifeboat(session, boat);
         return true;
+    }
+
+    /// <summary>
+    /// The nearest still-hanging lifeboat within boarding reach of this player,
+    /// measured sprite-center to sprite-center (top-left to top-left distance made
+    /// reach feel unfair on the boat's far side).
+    /// </summary>
+    private Sprite? LifeboatInReach(Player player)
+    {
+        var (_, boatWidth, boatHeight) = PropKinds["lifeboat"];
+        foreach (var boat in CurrentRoom.Lifeboats)
+        {
+            var dx = player.X + 8 - (boat.X + boatWidth / 2f);
+            var dy = player.Y + 16 - (boat.Y + boatHeight / 2f);
+            if (MathF.Sqrt(dx * dx + dy * dy) <= LifeboatBoardRadius) return boat;
+        }
+        return null;
     }
 
     private void BoardLifeboat(PlayerSession session, Sprite boat)
@@ -1212,7 +1230,26 @@ public class Game
 
         var roleText = CurrentRole is not null ? $"  |  Role: {Capitalize(CurrentRole)}" : "";
         var launcherText = HasTixLauncher ? "  |  Tix Launcher (E to fire)" : "";
-        Hud.SetText($"Tix: {TixBalance}{roleText}{launcherText}  |  {PhaseLabel()}");
+        Hud.SetText($"Tix: {TixBalance}{roleText}{launcherText}  |  {PhaseLabel()}{LifeboatHint()}");
+    }
+
+    /// <summary>
+    /// A persistent on-screen prompt whenever a player is standing within boarding
+    /// reach of a lifeboat - boarding is the game's most important action and
+    /// shouldn't rely on players guessing that a boat is interactive.
+    /// </summary>
+    private string LifeboatHint()
+    {
+        foreach (var session in _sessions)
+        {
+            if (session.Escaped || session.IsDying) continue;
+            if (LifeboatInReach(session.Player) is null) continue;
+
+            return Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning
+                ? "  |  Lifeboat (locked until danger)"
+                : "  |  Enter/P: BOARD LIFEBOAT";
+        }
+        return "";
     }
 
     private string PhaseLabel()

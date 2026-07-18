@@ -28,8 +28,12 @@ public class Hud : GameObject
         _color = color;
     }
 
+    /// <summary>The text currently shown - readable so game logic/tests can inspect what the player sees.</summary>
+    public string Text { get; private set; } = "";
+
     public void SetText(string text)
     {
+        Text = text;
         if (text == _lastText) return;
         _lastText = text;
         _texture?.Dispose();
