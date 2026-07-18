@@ -6,8 +6,16 @@ public static class InputManager
     private static bool[] currentKeyStates;
     private static bool[] previousKeyStates;
     private static int keyCount;
+    private static readonly Dictionary<ulong, (float X, float Y)> touches = new();
 
     public static event Action? WindowResized;
+
+    /// <summary>
+    /// Currently held touch points keyed by finger id, positions normalized 0..1
+    /// relative to the window (SDL finger-event convention). Empty on devices
+    /// without a touchscreen. Consumed by e.g. an on-screen touch control overlay.
+    /// </summary>
+    public static IReadOnlyDictionary<ulong, (float X, float Y)> Touches => touches;
 
     static InputManager()
     {
@@ -50,6 +58,14 @@ public static class InputManager
             else if (e.Type == (uint)SDL.EventType.WindowResized)
             {
                 WindowResized?.Invoke();
+            }
+            else if (e.Type == (uint)SDL.EventType.FingerDown || e.Type == (uint)SDL.EventType.FingerMotion)
+            {
+                touches[e.TFinger.FingerID] = (e.TFinger.X, e.TFinger.Y);
+            }
+            else if (e.Type == (uint)SDL.EventType.FingerUp || e.Type == (uint)SDL.EventType.FingerCanceled)
+            {
+                touches.Remove(e.TFinger.FingerID);
             }
         }
     }

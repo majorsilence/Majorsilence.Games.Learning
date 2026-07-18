@@ -40,6 +40,12 @@ internal static class AndroidGame
 
         game.Begin("assets/levels/titanic.json", coop: false);
 
+        // On-screen d-pad and buttons; registered as an extra InputActions
+        // source so the shared game code needs no touch awareness.
+        var touchControls = new TouchControls(renderer, window);
+        InputActions.RegisterSource(touchControls);
+        game.GameObjects.Add(touchControls);
+
         renderer.DrawColor(18, 28, 42, 255);
         var loop = new EventLoop(renderer);
         loop.Start(game.GameObjects, game.Camera, game.BeforeFrame, game.AfterFrame);

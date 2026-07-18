@@ -21,6 +21,15 @@ require the Android toolchain. Build it directly:
 dotnet build Majorsilence.Games.Learning.Android
 ```
 
+Or use the helper script from the repo root, which also checks prerequisites
+and can install to a connected device/emulator in one step:
+
+```bash
+./build-android.sh                    # Debug APK
+./build-android.sh Release            # Release APK (smaller, linked)
+./build-android.sh --install          # build + adb install -r
+```
+
 Output: `bin/Debug/net10.0-android/com.majorsilence.games.titanic-Signed.apk`
 (debug-signed, self-contained — assemblies are embedded, so plain sideloading
 works without an IDE).
@@ -59,10 +68,19 @@ bundled-library licenses.
 Portions of this software are copyright © The FreeType Project
 (https://www.freetype.org). All rights reserved.
 
+## Touch controls
+
+`TouchControls` draws an on-screen overlay — a virtual 8-way d-pad on the
+left, JUMP / ACT / TIX buttons on the right — and registers itself as an
+extra `IInputSource` with `InputActions`, so the shared game code keeps
+reading actions with no touch awareness. ACT is the Confirm action (talk to
+NPCs, claim role bonuses, board lifeboats); TIX is Fire (throw tix). Multi-
+touch works: you can steer and press buttons at the same time. A physical
+keyboard still works alongside it. Button artwork lives in
+`assets/artwork/touch/` (generated, semi-transparent, sized from the screen's
+shorter edge at runtime).
+
 ## Known limitations
 
-- **No touch controls yet** — the game is keyboard-driven (arrows/Space/Enter),
-  so on a device you'll need a bluetooth/USB keyboard for now. An on-screen
-  touch input source is the natural next step.
 - The camera viewport uses the full native resolution, so the view is far more
   zoomed out than the 640x480 desktop window.
