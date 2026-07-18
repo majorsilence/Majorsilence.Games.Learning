@@ -31,8 +31,13 @@ public class Game
     public const string BoatDeckSplitPath = "assets/levels/titanic-rooms/boat-deck-split.json";
     private const int BoatDeckSplitMidRow = 40;
 
-    private const float WarningAtSeconds = 20f;
-    private const float BaseCollisionAtSeconds = 50f;
+    // The voyage is different every time: the iceberg strikes somewhere between
+    // 1 and 10 minutes in, rolled once per session, with the lookout's warning
+    // always coming a fixed 30 seconds before impact (so the iceberg's visible
+    // approach is equally dramatic however long the cruise lasted).
+    private const float MinCollisionAtSeconds = 60f;
+    private const float MaxCollisionAtSeconds = 600f;
+    private const float WarningBeforeCollisionSeconds = 30f;
     private const float SplitAfterCollisionSeconds = 70f;
     private const float SunkAfterCollisionSeconds = 110f;
 
@@ -132,6 +137,7 @@ public class Game
     private readonly Random _random = new();
     private readonly Dictionary<string, float> _floodDelayBonusByPath = new();
 
+    private readonly float _baseCollisionAtSeconds;
     private string? _currentRoleRoomPath;
     private bool _watcherBonusUsed;
     private bool _captainBonusUsed;
@@ -218,6 +224,9 @@ public class Game
         Hud = hud;
         GameObjects.Add(Hud);
 
+        _baseCollisionAtSeconds = MinCollisionAtSeconds
+            + (float)_random.NextDouble() * (MaxCollisionAtSeconds - MinCollisionAtSeconds);
+
         if (audio is not null)
         {
             _doorSound = new Sound(audio, "assets/audio/door-enter.wav");
@@ -282,7 +291,8 @@ public class Game
     public float SecondsSinceCollision() =>
         Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning ? -1f : _voyageClock - CollisionAtSeconds;
 
-    private float CollisionAtSeconds => BaseCollisionAtSeconds + _collisionBonusSeconds;
+    private float CollisionAtSeconds => _baseCollisionAtSeconds + _collisionBonusSeconds;
+    private float WarningAtSeconds => CollisionAtSeconds - WarningBeforeCollisionSeconds;
 
     public float EffectiveFloodDelaySeconds(string path, float baseDelay)
     {
