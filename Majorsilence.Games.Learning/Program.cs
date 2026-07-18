@@ -91,7 +91,7 @@ void RunTitanicShip(string entryLevelPath)
     var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 18,
         new SDL.Color { A = 0, B = 210, G = 210, R = 210 }) { X = 8, Y = 8 };
 
-    var game = new Game(renderer, hud);
+    var game = new Game(renderer, hud, audioDevice);
 
     void SyncViewport()
     {

@@ -1,4 +1,5 @@
 using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.Audio;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Rendering;
@@ -86,6 +87,14 @@ public class Game
 
     private const float WaterShimmerInterval = 0.45f;
 
+    // The pre-split upheaval: over the last SplitBulgeSeconds before the ship
+    // breaks, the deck rows around the break line visibly hump upward (peaking at
+    // SplitBulgeMaxPixels right on the line) as the hull stresses - then the
+    // split room load drops both halves back flat, and the waterline eats them.
+    private const float SplitBulgeSeconds = 8f;
+    private const int SplitBulgeMaxPixels = 26;
+    private const int SplitBulgeHalfWidthRows = 9;
+
     // How far down the hull (row index, bow at the top) the waterline reaches at
     // key story beats: by the moment the ship splits, everything forward of the
     // split row is awash; by Sunk, all but the last few stern rows are gone -
@@ -112,6 +121,10 @@ public class Game
     public Dictionary<string, (string ImagePath, int Width, int Height)> NpcKinds { get; }
 
     private readonly Renderer _renderer;
+    private readonly Sound? _doorSound;
+    private readonly Sound? _tixSound;
+    private readonly Sound? _groanSound;
+    private readonly Music? _music;
     private readonly Dictionary<string, Texture> _textureCache = new();
     private readonly Dictionary<(string Path, int Width, int Height), SpriteSheet> _sheetCache = new();
     private readonly List<PlayerSession> _sessions = new();
@@ -198,11 +211,19 @@ public class Game
         }
     }
 
-    public Game(Renderer renderer, Hud hud)
+    public Game(Renderer renderer, Hud hud, AudioDevice? audio = null)
     {
         _renderer = renderer;
         Hud = hud;
         GameObjects.Add(Hud);
+
+        if (audio is not null)
+        {
+            _doorSound = new Sound(audio, "assets/audio/door-enter.wav");
+            _tixSound = new Sound(audio, "assets/audio/tix-pickup.wav") { Volume = 0.6f };
+            _groanSound = new Sound(audio, "assets/audio/hull-groan.wav");
+            _music = new Music(audio, "assets/audio/titanic-theme.wav") { Volume = 0.45f };
+        }
 
         DefaultTilesetPath = "assets/artwork/isometric-demo/tileset.png";
         DefaultTileFrameIndex = new Dictionary<string, int> { ["grass"] = 0, ["dirt"] = 1, ["water"] = 2, ["stone"] = 3, ["sand"] = 4 };
@@ -303,6 +324,7 @@ public class Game
         }
 
         LoadRoom(entryLevelPath, "");
+        _music?.Play();
     }
 
     public void LoadRoom(string targetPath, string spawnName)
@@ -471,6 +493,7 @@ public class Game
         UpdateWaterShimmer(deltaTime);
         UpdateCameraShake(deltaTime);
         UpdateSinkingWaterline();
+        UpdateSplitBulge();
         UpdateLaunchedBoats(deltaTime);
 
         foreach (var session in _sessions)
@@ -561,6 +584,25 @@ public class Game
 
         var removed = CurrentRoom.SubmergeRowsThrough(waterlineRow, "water");
         foreach (var obj in removed) GameObjects.Remove(obj);
+    }
+
+    /// <summary>
+    /// Ramps the pre-split deck bulge from nothing to full over the final
+    /// SplitBulgeSeconds of the Sinking phase - the hull visibly humping upward
+    /// around the coming break line before the ship snaps in two. Only the
+    /// drifting exterior deck participates; interior rooms never see this.
+    /// </summary>
+    private void UpdateSplitBulge()
+    {
+        if (CurrentRoom.Level.DriftSpeedX == 0f && CurrentRoom.Level.DriftSpeedY == 0f) return;
+        if (Phase != VoyagePhase.Sinking) return;
+
+        var start = SplitAfterCollisionSeconds - SplitBulgeSeconds;
+        var sinceCollision = SecondsSinceCollision();
+        if (sinceCollision <= start) return;
+
+        var strength = Math.Clamp((sinceCollision - start) / SplitBulgeSeconds, 0f, 1f);
+        CurrentRoom.ApplySplitBulge(BoatDeckSplitMidRow, SplitBulgeHalfWidthRows, SplitBulgeMaxPixels, strength);
     }
 
     /// <summary>
@@ -774,6 +816,7 @@ public class Game
                     Phase = VoyagePhase.Collision;
                     ShowMessage("The ship has struck an iceberg!", 4f);
                     StartShake(amplitude: 7f, seconds: 1.2f);
+                    _groanSound?.Play();
                 }
                 break;
 
@@ -790,6 +833,7 @@ public class Game
                     Phase = VoyagePhase.Split;
                     ShowMessage("The ship has split in two!", 4f);
                     StartShake(amplitude: 9f, seconds: 1.6f);
+                    _groanSound?.Play();
                     TriggerSplit();
                 }
                 break;
@@ -843,6 +887,7 @@ public class Game
             var door = CurrentRoom.Doors.FirstOrDefault(d => d.Column == column && d.Row == row);
             if (door is not null)
             {
+                _doorSound?.Play();
                 LoadRoom(door.Target, door.Spawn);
                 _doorCooldown = DoorCooldownSeconds;
                 return;
@@ -870,6 +915,7 @@ public class Game
         }
 
         if (collected is null) return;
+        _tixSound?.Play();
         foreach (var pickup in collected)
         {
             CurrentRoom.TixPickups.Remove(pickup);

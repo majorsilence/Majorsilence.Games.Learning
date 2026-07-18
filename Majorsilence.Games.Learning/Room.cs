@@ -391,6 +391,58 @@ public class Room
     }
 
     private int _submergedThroughRow = -1;
+    private int[]? _bulgeAppliedByRow;
+
+    /// <summary>
+    /// The pre-split upheaval: rows near midRow rise out of the water as the hull
+    /// stresses, peaking at maxBumpPixels right at the break line, scaled by
+    /// strength (0..1, ramped up by Game over the final seconds before the split).
+    /// Elevation deltas are applied incrementally per row, and every row-anchored
+    /// prop rises with its deck (Y up, SortOffsetY up by the same amount, so depth
+    /// sorting by footprint is unchanged). Open-water tiles (hazards) and already
+    /// submerged rows never bulge. Players follow automatically via GroundZ.
+    /// </summary>
+    public void ApplySplitBulge(int midRow, int halfWidthRows, int maxBumpPixels, float strength)
+    {
+        var rows = _tileTypes.GetLength(0);
+        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        _bulgeAppliedByRow ??= new int[rows];
+
+        var deltaByRow = new int[rows];
+        for (var row = 0; row < rows; row++)
+        {
+            if (row <= _submergedThroughRow)
+            {
+                // SubmergeRowsThrough already flattened this row to sea level -
+                // just forget any bulge it had, without touching the tiles again.
+                _bulgeAppliedByRow[row] = 0;
+                continue;
+            }
+
+            var proximity = halfWidthRows > 0 ? 1f - MathF.Abs(row - midRow) / halfWidthRows : 0f;
+            var target = proximity <= 0f ? 0 : (int)MathF.Round(maxBumpPixels * proximity * strength);
+            deltaByRow[row] = target - _bulgeAppliedByRow[row];
+            _bulgeAppliedByRow[row] = target;
+        }
+
+        for (var row = 0; row < rows; row++)
+        {
+            if (deltaByRow[row] == 0) continue;
+            for (var column = 0; column < columns; column++)
+            {
+                if (Level.Hazards.ContainsKey(_tileTypes[row, column])) continue;
+                Tilemap.SetElevation(column, row, Tilemap.GetElevationPixels(column, row) + deltaByRow[row]);
+            }
+        }
+
+        foreach (var (row, obj) in _rowAnchoredObjects)
+        {
+            var delta = deltaByRow[row];
+            if (delta == 0) continue;
+            obj.Y -= delta;
+            obj.SortOffsetY += delta;
+        }
+    }
 
     /// <summary>
     /// Converts every tile (deck, railings, everything) in rows 0..lastRowInclusive
