@@ -156,6 +156,16 @@ public class Room
                         Target = entity.Properties.GetValueOrDefault("target", ""),
                         Spawn = entity.Properties.GetValueOrDefault("spawn", "")
                     });
+
+                    // A visible doorway marks the tile - without it, doors are
+                    // indistinguishable from ordinary deck and players find them
+                    // only by accident.
+                    var doorKind = game.PropKinds["doorway"];
+                    var doorSheet = game.GetSheet(doorKind.ImagePath, doorKind.Width, doorKind.Height);
+                    var (doorX, doorY, doorSortOffset) = StandOnTileElevated(entity.Column, entity.Row, doorKind.Width, doorKind.Height);
+                    var doorSprite = new Sprite(doorSheet) { X = doorX, Y = doorY, ZIndex = 1, SortOffsetY = doorSortOffset };
+                    RoomObjects.Add(doorSprite);
+                    _rowAnchoredObjects.Add((entity.Row, doorSprite));
                     break;
 
                 case "spawnPoint":

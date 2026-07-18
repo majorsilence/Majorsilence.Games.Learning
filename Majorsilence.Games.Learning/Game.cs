@@ -224,6 +224,7 @@ public class Game
             ["crate"] = ("assets/artwork/titanic-demo/crate.png", 24, 24),
             ["shopCounter"] = ("assets/artwork/titanic-demo/shop-counter.png", 32, 28),
             ["hullSide"] = ("assets/artwork/titanic-demo/hull-side.png", 32, 32),
+            ["doorway"] = ("assets/artwork/titanic-demo/doorway.png", 24, 36),
         };
 
         NpcKinds = new Dictionary<string, (string, int, int)>
