@@ -1,0 +1,221 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "floodDelaySeconds": 18,
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 10,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/a-deck-corridor.json",
+        "spawn": "fromThirdClass"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 10,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "crate",
+      "column": 16,
+      "row": 2
+    },
+    {
+      "type": "crate",
+      "column": 16,
+      "row": 8
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 2
+    },
+    {
+      "type": "bed",
+      "column": 5,
+      "row": 2
+    },
+    {
+      "type": "bed",
+      "column": 8,
+      "row": 2
+    },
+    {
+      "type": "bed",
+      "column": 11,
+      "row": 2
+    },
+    {
+      "type": "bed",
+      "column": 14,
+      "row": 2
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 5
+    },
+    {
+      "type": "bed",
+      "column": 5,
+      "row": 5
+    },
+    {
+      "type": "bed",
+      "column": 8,
+      "row": 5
+    },
+    {
+      "type": "bed",
+      "column": 11,
+      "row": 5
+    },
+    {
+      "type": "bed",
+      "column": 14,
+      "row": 5
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 8
+    },
+    {
+      "type": "bed",
+      "column": 5,
+      "row": 8
+    },
+    {
+      "type": "bed",
+      "column": 8,
+      "row": 8
+    },
+    {
+      "type": "bed",
+      "column": 11,
+      "row": 8
+    },
+    {
+      "type": "bed",
+      "column": 14,
+      "row": 8
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 6,
+      "row": 3,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 3,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 3,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 3,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 9,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 6,
+      "row": 9,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 9,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 9,
+      "properties": {
+        "value": "5"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 9,
+      "properties": {
+        "value": "5"
+      }
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "floodDelaySeconds": 45,
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XXXXFXXXXXXXFXXXXXXXFXXXXX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXFXXXXXXXFXXXXXXXFXXXXX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XFFFFFFFXFFFFFFFXFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 7,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/a-deck-corridor.json",
+        "spawn": "fromSecondClass"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 8,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 2
+    },
+    {
+      "type": "table",
+      "column": 5,
+      "row": 3
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 12
+    },
+    {
+      "type": "table",
+      "column": 5,
+      "row": 13
+    },
+    {
+      "type": "bed",
+      "column": 10,
+      "row": 2
+    },
+    {
+      "type": "table",
+      "column": 13,
+      "row": 3
+    },
+    {
+      "type": "bed",
+      "column": 10,
+      "row": 12
+    },
+    {
+      "type": "table",
+      "column": 13,
+      "row": 13
+    },
+    {
+      "type": "bed",
+      "column": 18,
+      "row": 2
+    },
+    {
+      "type": "table",
+      "column": 21,
+      "row": 3
+    },
+    {
+      "type": "bed",
+      "column": 18,
+      "row": 12
+    },
+    {
+      "type": "table",
+      "column": 21,
+      "row": 13
+    },
+    {
+      "type": "tix",
+      "column": 6,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 14,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 22,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 6,
+      "row": 13,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 14,
+      "row": 13,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 22,
+      "row": 13,
+      "properties": {
+        "value": "20"
+      }
+    }
+  ]
+}
