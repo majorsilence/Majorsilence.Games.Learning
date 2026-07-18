@@ -1,0 +1,11 @@
+<!-- Binding fixups for SDL3-classes.jar: these protected static fields reference
+     package-private Java helper classes the binding generator (correctly) skips,
+     which would otherwise leave dangling type references in the generated C#.
+     Nothing on the C# side needs them - SDL uses them internally via Java. -->
+<metadata>
+    <remove-node path="/api/package[@name='org.libsdl.app']/class[@name='SDLControllerManager']/field[@name='mHapticHandler']" />
+    <remove-node path="/api/package[@name='org.libsdl.app']/class[@name='SDLControllerManager']/field[@name='mJoystickHandler']" />
+    <remove-node path="/api/package[@name='org.libsdl.app']/class[@name='SDLActivity']/field[@name='mClipboardHandler']" />
+    <remove-node path="/api/package[@name='org.libsdl.app']/class[@name='SDLActivity']/field[@name='mMotionListener']" />
+    <remove-node path="/api/package[@name='org.libsdl.app']/class[@name='SDLActivity']/method[@name='getMotionListener']" />
+</metadata>

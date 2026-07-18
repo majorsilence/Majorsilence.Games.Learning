@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <OutputType>Exe</OutputType>
+        <ApplicationId>com.majorsilence.games.titanic</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <!-- Deliberately NOT in the solution: building this head needs the android
+             workload + Android SDK, and desktop workflows shouldn't pay for it.
+             Build with: dotnet build Majorsilence.Games.Learning.Android -->
+        <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == '' and Exists('$(HOME)/Android/Sdk')">$(HOME)/Android/Sdk</AndroidSdkDirectory>
+        <!-- Always produce a self-contained APK that can be sideloaded with plain
+             "adb install" - Debug builds otherwise use Fast Deployment, which
+             leaves the assemblies out of the APK and aborts on launch unless an
+             IDE pushed them separately. -->
+        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- The whole game (Game, Room, EventLoop, ...) is shared with the desktop
+             project by linking its sources; only Program.cs (console bootstrap,
+             level chooser prompts) is desktop-specific and excluded. -->
+        <Compile Include="../Majorsilence.Games.Learning/*.cs" Exclude="../Majorsilence.Games.Learning/Program.cs" />
+        <ProjectReference Include="../Majorsilence.Games.Core/Majorsilence.Games.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- SDL's own Java side (SDLActivity and friends), bound so MainActivity
+             can subclass it in C#. Extracted from SDL3-3.4.10.aar (classes.jar). -->
+        <AndroidLibrary Include="android/SDL3-classes.jar" Bind="true" />
+        <TransformFile Include="Transforms/Metadata.xml" />
+
+        <!-- Native SDL libraries per ABI, extracted from the official SDL3/_image/
+             _ttf/_mixer Android .aar releases (their prefab layout isn't consumed
+             by .NET for Android, so they're vendored explicitly). Versions match
+             the SDL3-CS 3.4.10.x binding packages used on desktop. -->
+        <AndroidNativeLibrary Include="android/libs/arm64-v8a/*.so" Abi="arm64-v8a" />
+        <AndroidNativeLibrary Include="android/libs/x86_64/*.so" Abi="x86_64" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Same asset tree as the desktop build, packed into the APK; extracted
+             to the app's files dir on startup (see MainActivity) because the game
+             loads assets through ordinary file paths. -->
+        <AndroidAsset Include="../Majorsilence.Games.Learning/assets/**/*" LogicalName="assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+</Project>
