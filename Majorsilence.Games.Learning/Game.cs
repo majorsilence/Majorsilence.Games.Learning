@@ -108,6 +108,15 @@ public class Game
     private const int WaterlineRowAtSplit = BoatDeckSplitMidRow - 1;
     private const int WaterlineRowAtSunk = 65;
 
+    /// <summary>
+    /// How many world-pixels the window's shorter edge should show. With 32x16
+    /// tiles and a ~64px player this keeps the player around a sixth of the
+    /// screen's short side on every display, instead of mapping world pixels 1:1
+    /// (which made everything microscopic on HiDPI laptops and phones). Both the
+    /// desktop and Android heads feed this to SyncLogicalPresentationToWindow.
+    /// </summary>
+    public const int TargetViewShortSide = 360;
+
     public Camera Camera { get; } = new();
     public List<GameObject> GameObjects { get; } = new();
     public Hud Hud { get; }

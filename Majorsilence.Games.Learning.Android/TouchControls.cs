@@ -16,16 +16,16 @@ namespace Majorsilence.Games.Learning.Android;
 /// </summary>
 public class TouchControls : GameObject, IInputSource
 {
-    private readonly Window _window;
+    private readonly Renderer _renderer;
     private readonly Texture _dpad;
     private readonly Dictionary<InputAction, (Texture Idle, Texture Pressed)> _buttonArt = new();
 
     private HashSet<InputAction> _current = new();
     private HashSet<InputAction> _previous = new();
 
-    // Layout, recomputed each Update from the window's point size (touch
-    // coordinates are normalized to the window, and with logical presentation
-    // synced to the window the render space is window points too).
+    // Layout, recomputed each Update from the renderer's logical size (touch
+    // coordinates are normalized to the window, and logical presentation
+    // stretches over the whole window, so normalized * logical maps exactly).
     private (float X, float Y, float Radius) _dpadZone;
     private readonly Dictionary<InputAction, (float X, float Y, float Radius)> _buttonZones = new();
 
@@ -37,9 +37,9 @@ public class TouchControls : GameObject, IInputSource
     // sliding off mid-drag doesn't drop movement.
     private const float DpadGraceFraction = 1.6f;
 
-    public TouchControls(Renderer renderer, Window window)
+    public TouchControls(Renderer renderer)
     {
-        _window = window;
+        _renderer = renderer;
         SortOffsetY = 1_000_000f; // screen-space overlay: always on top
         _dpad = Texture.CreateImageTexture(renderer, "assets/artwork/touch/dpad.png");
         foreach (var (action, name) in new[]
@@ -66,7 +66,7 @@ public class TouchControls : GameObject, IInputSource
         (_previous, _current) = (_current, _previous);
         _current.Clear();
 
-        var (w, h) = _window.Size;
+        var (w, h) = _renderer.LogicalSize;
         foreach (var touch in InputManager.Touches.Values)
         {
             var x = touch.X * w;
@@ -100,7 +100,7 @@ public class TouchControls : GameObject, IInputSource
 
     private void LayoutForWindow()
     {
-        var (w, h) = _window.Size;
+        var (w, h) = _renderer.LogicalSize;
         var s = Math.Min(w, h);
         var margin = 0.05f * s;
 

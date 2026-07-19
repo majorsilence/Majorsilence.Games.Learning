@@ -80,7 +80,11 @@ keyboard still works alongside it. Button artwork lives in
 `assets/artwork/touch/` (generated, semi-transparent, sized from the screen's
 shorter edge at runtime).
 
-## Known limitations
+## Presentation
 
-- The camera viewport uses the full native resolution, so the view is far more
-  zoomed out than the 640x480 desktop window.
+The renderer zooms its logical presentation so the screen's shorter edge shows
+about `Game.TargetViewShortSide` (360) world-pixels — the same readable scale
+as the desktop build, instead of mapping 32px tiles 1:1 onto a 2340px screen.
+The SDL window is created fullscreen, which on Android means immersive mode
+(system bars hidden); the HUD is offset by the window safe area so it clears
+any display cutout.

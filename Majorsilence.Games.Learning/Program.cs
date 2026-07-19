@@ -88,15 +88,17 @@ void RunTitanicShip(string entryLevelPath)
         coop = !string.IsNullOrWhiteSpace(answer) && answer.Trim().StartsWith("y", StringComparison.OrdinalIgnoreCase);
     }
 
-    var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 18,
+    // 14pt in the zoomed ~360px-short-side logical space: on screen it's much
+    // larger than the old 18pt-at-native was, and the long status line still fits.
+    var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 14,
         new SDL.Color { A = 0, B = 210, G = 210, R = 210 }) { X = 8, Y = 8 };
 
     var game = new Game(renderer, hud, audioDevice);
 
     void SyncViewport()
     {
-        renderer.SyncLogicalPresentationToWindow();
-        var (w, h) = renderer.Size;
+        renderer.SyncLogicalPresentationToWindow(Game.TargetViewShortSide);
+        var (w, h) = renderer.LogicalSize;
         game.Camera.ViewportWidth = w;
         game.Camera.ViewportHeight = h;
     }

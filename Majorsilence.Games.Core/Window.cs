@@ -6,7 +6,7 @@ public class Window : IDisposable
 {
     private IntPtr _window;
 
-    public Window(string title, int width, int height, bool highPixelDensity = false)
+    public Window(string title, int width, int height, bool highPixelDensity = false, bool fullscreen = false)
     {
         if (!SDL.Init(SDL.InitFlags.Video))
         {
@@ -15,6 +15,10 @@ public class Window : IDisposable
         TTF.Init();
         var flags = SDL.WindowFlags.OpenGL | SDL.WindowFlags.Resizable;
         if (highPixelDensity) flags |= SDL.WindowFlags.HighPixelDensity;
+        // On Android a fullscreen SDL window makes SDLActivity enter immersive
+        // mode (system status/navigation bars hidden) instead of drawing under
+        // an opaque status bar.
+        if (fullscreen) flags |= SDL.WindowFlags.Fullscreen;
         _window = SDL.CreateWindow(title, width, height, flags);
     }
 

@@ -15,25 +15,36 @@ internal static class AndroidGame
 {
     public static void Run()
     {
-        // Size is nominal - SDL windows on Android are always fullscreen.
-        using var window = new Window("Titanic", 1280, 720, highPixelDensity: true);
+        // Size is nominal - SDL windows on Android cover the screen; the explicit
+        // fullscreen flag additionally hides the system bars (immersive mode), so
+        // nothing opaque overlaps the top of the game (where the HUD sits).
+        using var window = new Window("Titanic", 1280, 720, highPixelDensity: true, fullscreen: true);
         using var renderer = new Renderer(window);
         using var audioDevice = new AudioDevice();
 
         using var gameStartSound = new Sound(audioDevice, "assets/audio/game-start.mp3");
         gameStartSound.Play();
 
-        var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 18,
+        // 14pt in the zoomed ~360px-short-side logical space (see Game.TargetViewShortSide).
+        var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 14,
             new SDL.Color { A = 0, B = 210, G = 210, R = 210 }) { X = 8, Y = 8 };
 
         var game = new Game(renderer, hud, audioDevice);
 
         void SyncViewport()
         {
-            renderer.SyncLogicalPresentationToWindow();
-            var (w, h) = renderer.Size;
+            renderer.SyncLogicalPresentationToWindow(Game.TargetViewShortSide);
+            var (w, h) = renderer.LogicalSize;
             game.Camera.ViewportWidth = w;
             game.Camera.ViewportHeight = h;
+
+            // Keep the HUD out of any display cutout (camera notch): SDL reports
+            // the safe area in window points; convert its top inset to logical.
+            var (_, windowH) = window.Size;
+            if (SDL.GetWindowSafeArea(window, out var safe) && windowH > 0)
+            {
+                hud.Y = 8 + (int)MathF.Ceiling(safe.Y * h / (float)windowH);
+            }
         }
         SyncViewport();
         InputManager.WindowResized += SyncViewport;
@@ -42,7 +53,7 @@ internal static class AndroidGame
 
         // On-screen d-pad and buttons; registered as an extra InputActions
         // source so the shared game code needs no touch awareness.
-        var touchControls = new TouchControls(renderer, window);
+        var touchControls = new TouchControls(renderer);
         InputActions.RegisterSource(touchControls);
         game.GameObjects.Add(touchControls);
 

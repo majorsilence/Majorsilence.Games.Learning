@@ -14,7 +14,17 @@ public class Renderer : IDisposable
         _renderer = SDL.CreateRenderer(window, null);
         SDL.SetRenderVSync(_renderer, 1);
         _window = window;
+        LogicalSize = window.Size;
     }
+
+    /// <summary>
+    /// The coordinate space rendering happens in: the window's point size divided
+    /// by the zoom applied in SyncLogicalPresentationToWindow. Camera viewports and
+    /// screen-space overlays should size themselves from this, not from Size (raw
+    /// output pixels), or they'll disagree with the render space on zoomed/HiDPI
+    /// presentations.
+    /// </summary>
+    public (int Width, int Height) LogicalSize { get; private set; }
 
     public static implicit operator IntPtr(Renderer ap)
     {
@@ -59,11 +69,19 @@ public class Renderer : IDisposable
     /// never actually distorts anything - it only absorbs the points-to-physical-pixel
     /// HiDPI scale factor.
     /// </summary>
-    public void SyncLogicalPresentationToWindow()
+    /// <param name="targetShortSide">When positive, zooms the presentation so the
+    /// window's shorter edge shows about this many logical pixels (never zooming
+    /// below 1:1), keeping sprites a consistent, readable fraction of any screen -
+    /// a 32px tile is invisible mapped 1:1 onto a 2340px phone. 0 keeps 1:1.</param>
+    public void SyncLogicalPresentationToWindow(int targetShortSide = 0)
     {
         var (w, h) = _window.Size;
-        if (!SDL.SetRenderLogicalPresentation(_renderer, w, h, SDL.RendererLogicalPresentation.Stretch))
+        var zoom = targetShortSide > 0 ? MathF.Max(1f, Math.Min(w, h) / (float)targetShortSide) : 1f;
+        var logicalW = Math.Max(1, (int)MathF.Round(w / zoom));
+        var logicalH = Math.Max(1, (int)MathF.Round(h / zoom));
+        if (!SDL.SetRenderLogicalPresentation(_renderer, logicalW, logicalH, SDL.RendererLogicalPresentation.Stretch))
             throw new MajorsilenceException("Failed to set logical presentation: " + SDL.GetError());
+        LogicalSize = (logicalW, logicalH);
     }
 
     public bool IsFullscreen => (SDL.GetWindowFlags(_window) & SDL.WindowFlags.Fullscreen) != 0;

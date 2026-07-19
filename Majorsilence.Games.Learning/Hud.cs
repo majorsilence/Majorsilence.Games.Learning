@@ -26,6 +26,9 @@ public class Hud : GameObject
         _fontPath = fontPath;
         _size = size;
         _color = color;
+        // Screen-space overlay: sort above every world tile/sprite (its X/Y are
+        // screen coords near 0, which would otherwise bury it behind the map).
+        SortOffsetY = 1_000_000f;
     }
 
     /// <summary>The text currently shown - readable so game logic/tests can inspect what the player sees.</summary>
