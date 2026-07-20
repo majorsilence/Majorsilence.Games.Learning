@@ -135,7 +135,17 @@ public class Room
 
                 var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
                 var (wallX, wallY) = HangBelowTile(column, row, propKind.Width, propKind.Height);
-                var sprite = new Sprite(sheet) { X = wallX, Y = wallY, ZIndex = 1, SortOffsetY = propKind.Height };
+                // SortOffsetY of exactly the sprite height (a multiple of Grid.TileHeight/2)
+                // lands this wall's SortY exactly on top of whichever on-grid tile sits an
+                // integer number of diagonal steps "ahead" (e.g. 2 columns + 2 rows in, for
+                // a 32px-tall wall with a 16px tile height) - an exact tie that the painter's-
+                // algorithm sort resolves arbitrarily, flickering between the wall and that
+                // tile frame to frame. Shaving one pixel off breaks every such tie outright
+                // (the offset stops being a multiple of TileHeight/2) and consistently favors
+                // the interior deck tile, which is what should be visible there anyway - the
+                // wall is meant to dress the hull's outer skin below the railing, not paint
+                // over walkable deck further in.
+                var sprite = new Sprite(sheet) { X = wallX, Y = wallY, ZIndex = 1, SortOffsetY = propKind.Height - 1 };
                 RoomObjects.Add(sprite);
                 _rowAnchoredObjects.Add((row, sprite));
             }

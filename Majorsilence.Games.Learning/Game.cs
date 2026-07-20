@@ -51,6 +51,7 @@ public class Game
     private const float PickupRadius = 20f;
     private const int TixPenaltyOnDeath = 50;
     private const int LauncherCost = 1000;
+    private const int LauncherSellRefund = 500;
     private const int LauncherFireCost = 100;
     private const int LauncherFireCount = 100;
 
@@ -116,6 +117,16 @@ public class Game
     /// desktop and Android heads feed this to SyncLogicalPresentationToWindow.
     /// </summary>
     public const int TargetViewShortSide = 360;
+
+    /// <summary>
+    /// Base depth-sort margin for a standing player (their 32px sprite height),
+    /// topped up per-frame in BeforeFrame with however much a raised neighboring
+    /// tile "ahead" of them (see PlayerAheadElevationBonus) reaches beyond that -
+    /// otherwise a terraced deck's raised edge paints over a character standing at
+    /// its foot, since a flat ground tile's own sort key carries no margin for a
+    /// dynamic sprite's height the way a raised tile's stacked art visually does.
+    /// </summary>
+    private const int PlayerBaseSortOffsetY = 32;
 
     public Camera Camera { get; } = new();
     public List<GameObject> GameObjects { get; } = new();
@@ -313,7 +324,7 @@ public class Game
     public void Begin(string entryLevelPath, bool coop)
     {
         var playerSheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
-        var player1 = new Player(playerSheet) { Speed = 120f, ZIndex = 1, SortOffsetY = 32, AnimateOnlyWhenMoving = true };
+        var player1 = new Player(playerSheet) { Speed = 120f, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
         player1.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
         _sessions.Add(new PlayerSession(player1, null));
         GameObjects.Add(player1);
@@ -333,7 +344,7 @@ public class Game
             };
             var input2 = new KeyboardInputSource(bindings);
             var player2Sheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
-            var player2 = new Player(player2Sheet, input2) { Speed = 120f, ZIndex = 1, SortOffsetY = 32, AnimateOnlyWhenMoving = true };
+            var player2 = new Player(player2Sheet, input2) { Speed = 120f, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
             player2.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
             _sessions.Add(new PlayerSession(player2, input2));
             GameObjects.Add(player2);
@@ -520,8 +531,27 @@ public class Game
         {
             if (session.Escaped) continue;
             var (column, row) = TileUnderPlayer(session.Player);
-            session.Player.GroundZ = CurrentRoom.GetElevationPixels(column, row);
+            var ownElevation = CurrentRoom.GetElevationPixels(column, row);
+            session.Player.GroundZ = ownElevation;
+            session.Player.SortOffsetY = PlayerBaseSortOffsetY + PlayerAheadElevationBonus(column, row, ownElevation);
         }
+    }
+
+    /// <summary>
+    /// How much extra sort margin a standing player needs beyond their own tile's
+    /// elevation, to clear a taller neighboring tile "ahead" of them (the +column/
+    /// +row direction, which depth-sorts after - see IsometricGrid.TileToWorld). A
+    /// terraced deck's raised edge stacks its tile art upward via RenderTileStack,
+    /// reaching visually past its own footprint into the space where a shorter
+    /// neighbor - or a character standing on one - is drawn; a flat tile has no
+    /// such reach, so PlayerBaseSortOffsetY alone only covers the flat case.
+    /// </summary>
+    private int PlayerAheadElevationBonus(int column, int row, int ownElevation)
+    {
+        var ahead = Math.Max(CurrentRoom.GetElevationPixels(column + 1, row),
+            Math.Max(CurrentRoom.GetElevationPixels(column, row + 1),
+                CurrentRoom.GetElevationPixels(column + 1, row + 1)));
+        return Math.Max(0, ahead - ownElevation);
     }
 
     /// <summary>Rows every launched lifeboat (and its passenger) steadily away from the wreck.</summary>
@@ -1008,25 +1038,43 @@ public class Game
         }
     }
 
-    private void CheckShop()
+    /// <summary>
+    /// Distance from this session's player to the current room's shop counter
+    /// (null if the room has none), measured the same way as CheckShop/ShopHint so
+    /// both agree on when a player is "at" the shop.
+    /// </summary>
+    private float? DistanceToShop(PlayerSession session)
     {
-        if (CurrentRoom.ShopTile is null) return;
+        if (CurrentRoom.ShopTile is null) return null;
         var (shopColumn, shopRow) = CurrentRoom.ShopTile.Value;
         var (tileX, tileY) = CurrentRoom.Grid.TileToWorld(shopColumn, shopRow);
         var shopX = tileX + CurrentRoom.Grid.TileWidth / 2f;
         var shopY = tileY + CurrentRoom.Grid.TileHeight;
+        var dx = session.Player.X - shopX;
+        var dy = session.Player.Y - shopY;
+        return MathF.Sqrt(dx * dx + dy * dy);
+    }
 
+    /// <summary>
+    /// The purser's office shop: Confirm buys the Tix Launcher if it isn't owned
+    /// yet, or sells it back for a partial refund if it is - one button doubling as
+    /// both sides of the counter, same as every other Confirm-to-interact spot in
+    /// the game (NPCs, lifeboats) rather than a separate buy/sell menu.
+    /// </summary>
+    private void CheckShop()
+    {
         foreach (var session in _sessions)
         {
             if (session.Escaped) continue;
-            var dx = session.Player.X - shopX;
-            var dy = session.Player.Y - shopY;
-            if (MathF.Sqrt(dx * dx + dy * dy) > InteractRadius) continue;
+            var distance = DistanceToShop(session);
+            if (distance is null || distance > InteractRadius) continue;
             if (!SessionJustPressed(session, InputAction.Confirm)) continue;
 
             if (HasTixLauncher)
             {
-                ShowMessage("You already own the Tix Launcher.", 2.5f);
+                HasTixLauncher = false;
+                TixBalance += LauncherSellRefund;
+                ShowMessage($"Sold the Tix Launcher back for {LauncherSellRefund} tix.", 3f);
             }
             else if (TixBalance >= LauncherCost)
             {
@@ -1156,7 +1204,7 @@ public class Game
         // SortOffsetY pushed at least that far past its sprite height, or tiles
         // "in front" clip the hull and the passenger's legs.
         boat.SortOffsetY += CurrentRoom.Grid.TileHeight;
-        session.Player.SortOffsetY = 32 + CurrentRoom.Grid.TileHeight;
+        session.Player.SortOffsetY = PlayerBaseSortOffsetY + CurrentRoom.Grid.TileHeight;
 
         // Row straight away from the hull: out along the column (port/starboard)
         // axis, on whichever side of the ship's centerline the boat hangs.
@@ -1249,7 +1297,7 @@ public class Game
 
         var roleText = CurrentRole is not null ? $"  |  Role: {Capitalize(CurrentRole)}" : "";
         var launcherText = HasTixLauncher ? "  |  Tix Launcher (E to fire)" : "";
-        Hud.SetText($"Tix: {TixBalance}{roleText}{launcherText}  |  {PhaseLabel()}{LifeboatHint()}");
+        Hud.SetText($"Tix: {TixBalance}{roleText}{launcherText}  |  {PhaseLabel()}{LifeboatHint()}{ShopHint()}");
     }
 
     /// <summary>
@@ -1267,6 +1315,26 @@ public class Game
             return Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning
                 ? "  |  Lifeboat (locked until danger)"
                 : "  |  Enter/P: BOARD LIFEBOAT";
+        }
+        return "";
+    }
+
+    /// <summary>
+    /// A persistent on-screen prompt whenever a player is standing at the shop
+    /// counter, mirroring LifeboatHint - it names the price and toggles between
+    /// buy/sell wording depending on whether the launcher is already owned.
+    /// </summary>
+    private string ShopHint()
+    {
+        foreach (var session in _sessions)
+        {
+            if (session.Escaped || session.IsDying) continue;
+            var distance = DistanceToShop(session);
+            if (distance is null || distance > InteractRadius) continue;
+
+            return HasTixLauncher
+                ? $"  |  Enter: Sell Tix Launcher (+{LauncherSellRefund} tix)"
+                : $"  |  Enter: Buy Tix Launcher ({LauncherCost} tix)";
         }
         return "";
     }
