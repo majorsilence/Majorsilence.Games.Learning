@@ -157,7 +157,7 @@ public class Game
     public Room CurrentRoom { get; private set; } = null!;
     public VoyagePhase Phase { get; private set; } = VoyagePhase.Cruising;
     public bool IsGameOver { get; private set; }
-    public int TixBalance { get; private set; } = 2300;
+    public int TixBalance { get; private set; } = 2100000000;
     public string? CurrentRole { get; private set; }
 
     // Team-wide shop purchases (per-player ones live in PlayerSession.Inventory).
