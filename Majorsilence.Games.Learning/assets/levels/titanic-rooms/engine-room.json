@@ -29,8 +29,8 @@
     { "type": "crate", "column": 2, "row": 2 },
     { "type": "crate", "column": 9, "row": 6 },
     { "type": "npc", "column": 6, "row": 4, "properties": { "role": "engineer" } },
-    { "type": "tix", "column": 5, "row": 2 },
-    { "type": "tix", "column": 8, "row": 4 },
+    { "type": "tix", "column": 5, "row": 2, "properties": { "value": "50" } },
+    { "type": "tix", "column": 8, "row": 4, "properties": { "value": "50" } },
     { "type": "door", "column": 1, "row": 3, "properties": { "target": "assets/levels/titanic-rooms/pursers-office.json", "spawn": "fromEngineRoom" } },
     { "type": "spawnPoint", "column": 2, "row": 3, "properties": { "name": "fromPursersOffice" } }
   ]

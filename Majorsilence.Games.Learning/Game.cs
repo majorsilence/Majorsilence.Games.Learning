@@ -50,22 +50,45 @@ public class Game
     private const float InteractRadius = 40f;
     private const float PickupRadius = 20f;
     private const int TixPenaltyOnDeath = 50;
-    private const int LauncherCost = 1000;
-    private const int LauncherSellRefund = 500;
+    private const int LauncherSellRefund = 300;
     private const int LauncherFireCost = 100;
-    private const int LauncherFireCount = 100;
+    private const int LauncherFireCount = 120;
+    private const float PocketWatchBonusSeconds = 45f;
+
+    // Item effect tuning. Player.Speed has exactly one writer per frame
+    // (UpdatePlayerSpeeds), composing these multipliers - anything else setting
+    // Speed directly would silently stack against them.
+    private const float BasePlayerSpeed = 120f;
+    private const float DeckBootsMultiplier = 1.35f;
+    private const float SwimSpeedMultiplier = 0.45f;
+    private const float BlanketGraceSeconds = 3f;
+    private const float SwimFoamInterval = 0.4f;
+    private const float TntIcebergBonusSeconds = 60f;
+    private const string TntIconPath = "assets/artwork/titanic-demo/tnt.png";
 
     // The endgame: once the collision has happened, any player can board a nearby
-    // lifeboat (Confirm) and row to safety for a modest bonus - or gamble on
-    // riding the stern all the way down, because RMS Carpathia arrives this many
-    // seconds after the ship sinks and pays out a much bigger one to whoever is
-    // still aboard. Either way every player ends the voyage alive; the choice is
-    // purely a risk/reward bet against the waterline.
+    // lifeboat (Confirm) and row clear for a modest bonus - or cling to the stern.
+    // Either way, actual rescue is the RMS Carpathia: she steams in after the
+    // sinking (or early, if someone fires the flare gun), stops off the wreck,
+    // and takes aboard everyone who reaches her - lifeboats row to her
+    // automatically, swimmers and stern survivors must get within board radius.
+    // She waits a fixed boarding window and then departs with whoever made it,
+    // which is also what guarantees every session ends.
     private const float LifeboatRowSpeed = 28f;
     private const float LifeboatBoardRadius = 48f;
     private const int LifeboatEscapeBonusTix = 200;
     private const int SternSurvivorBonusTix = 500;
-    private const float RescueAfterSunkSeconds = 40f;
+    private const float CarpathiaSummonAfterSunkSeconds = 5f;
+    private const float CarpathiaSpawnDistance = 700f;
+    private const float CarpathiaSpeed = 45f;
+    // She comes alongside off the starboard rail: the stop distance clears the
+    // hull's half-width (~180px along the column axis) so she sits in open
+    // water, and the board radius reaches back over the starboard side of the
+    // stern deck - players must get to the rail, not just exist on the wreck.
+    private const float CarpathiaStopDistance = 260f;
+    private const float CarpathiaBoardRadius = 110f;
+    private const float CarpathiaBoardingWindowSeconds = 75f;
+    private const float CarpathiaRowTowardSpeed = 45f;
 
     // The iceberg starts this many world pixels ahead of the bow (in the ship's
     // direction of travel) once it's sighted, and closes that distance as the
@@ -135,8 +158,12 @@ public class Game
     public VoyagePhase Phase { get; private set; } = VoyagePhase.Cruising;
     public bool IsGameOver { get; private set; }
     public int TixBalance { get; private set; } = 300;
-    public bool HasTixLauncher { get; private set; }
     public string? CurrentRole { get; private set; }
+
+    // Team-wide shop purchases (per-player ones live in PlayerSession.Inventory).
+    public bool FlareGunOwned { get; private set; }
+    public bool FlareGunFired { get; private set; }
+    private bool _pocketWatchUsed;
 
     public string DefaultTilesetPath { get; }
     public Dictionary<string, int> DefaultTileFrameIndex { get; }
@@ -145,6 +172,7 @@ public class Game
     public string SmokeIconPath { get; }
     public Dictionary<string, (string ImagePath, int Width, int Height)> PropKinds { get; }
     public Dictionary<string, (string ImagePath, int Width, int Height)> NpcKinds { get; }
+    public Dictionary<string, string[]> NpcLines { get; }
 
     private readonly Renderer _renderer;
     private readonly Sound? _doorSound;
@@ -185,6 +213,42 @@ public class Game
     private readonly List<LaunchedBoat> _launchedBoats = new();
     private string _finalMessage = "";
 
+    // Several interaction checks (NPCs, shop, lifeboats) all key off the same
+    // just-pressed Confirm; whichever acts on a session's press first claims it
+    // here so one Enter can't e.g. open the shop AND board a lifeboat in the same
+    // frame. Cleared at the top of every AfterFrame.
+    private readonly HashSet<PlayerSession> _confirmConsumed = new();
+
+    // The purser's shop menu overlay: one shared panel, owned by whichever
+    // session opened it (the owner's movement is suspended and their
+    // Up/Down/Confirm/Cancel drive the menu until it closes).
+    private readonly ShopMenu _shopMenu;
+    private PlayerSession? _shopMenuOwner;
+    private int _shopMenuIndex;
+
+    // Second HUD line: everyone's carried items, kept off the main status line
+    // (single-line Hud, no wrapping - the catalog would run off the screen).
+    private readonly Hud _inventoryHud;
+
+    // Placed, still-fizzing TNT charges in the current room. The objects
+    // themselves live in the Room (row-anchored, so they drift and can submerge);
+    // this list is just Game's fuse watch.
+    private readonly List<TntCharge> _tntCharges = new();
+
+    // Set when the flare gun goes up; the rescue-ship logic consumes it to
+    // summon the Carpathia ahead of her scheduled post-sinking arrival.
+    private bool _flareSummonRequested;
+
+    private readonly RescueShip _rescueShip = new();
+
+    // The stern tip's world position and the ship's heading, cached every frame
+    // a drifting room is loaded - the Carpathia's spawn/stop points are derived
+    // from these even if she's summoned while everyone is below decks.
+    private float _wreckPointX;
+    private float _wreckPointY;
+    private float _wreckDirX = 1f;
+    private float _wreckDirY;
+
     private readonly List<Particle> _particles = new();
     private float _wakeSpawnTimer;
     private float _bowSprayTimer;
@@ -203,6 +267,8 @@ public class Game
         public bool IsDying;
         public float DyingTimer;
         public bool Escaped;
+        public bool Rescued;
+        public readonly PlayerInventory Inventory = new();
 
         public PlayerSession(Player player, IInputSource? inputSource)
         {
@@ -222,8 +288,10 @@ public class Game
     {
         public readonly Sprite Boat;
         public readonly Player Passenger;
-        public readonly float VelocityX;
-        public readonly float VelocityY;
+        // Mutable: once the Carpathia is on the water, boats retarget toward her
+        // gangway every frame instead of rowing blindly off-map.
+        public float VelocityX;
+        public float VelocityY;
         public float PreciseX;
         public float PreciseY;
 
@@ -244,8 +312,20 @@ public class Game
         Hud = hud;
         GameObjects.Add(Hud);
 
+        _inventoryHud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 12,
+            new SDL.Color { A = 0, B = 190, G = 185, R = 175 }) { X = 8, Y = 26 };
+        GameObjects.Add(_inventoryHud);
+
+        _shopMenu = new ShopMenu(renderer, "assets/fonts/Gidole-Regular.ttf");
+        GameObjects.Add(_shopMenu);
+
         _baseCollisionAtSeconds = MinCollisionAtSeconds
             + (float)_random.NextDouble() * (MaxCollisionAtSeconds - MinCollisionAtSeconds);
+
+        // Test hook: pin the collision time (seconds) for scripted/headless runs,
+        // so the whole sinking-to-rescue timeline can be exercised unattended.
+        if (float.TryParse(Environment.GetEnvironmentVariable("TITANIC_COLLISION_AT"), out var forcedCollisionAt))
+            _baseCollisionAtSeconds = forcedCollisionAt;
 
         if (audio is not null)
         {
@@ -276,6 +356,7 @@ public class Game
             ["shopCounter"] = ("assets/artwork/titanic-demo/shop-counter.png", 32, 28),
             ["hullSide"] = ("assets/artwork/titanic-demo/hull-side.png", 32, 32),
             ["doorway"] = ("assets/artwork/titanic-demo/doorway.png", 24, 36),
+            ["carpathia"] = ("assets/artwork/titanic-demo/carpathia.png", 200, 90),
         };
 
         NpcKinds = new Dictionary<string, (string, int, int)>
@@ -283,6 +364,28 @@ public class Game
             ["captain"] = ("assets/artwork/titanic-demo/captain.png", 16, 32),
             ["engineer"] = ("assets/artwork/titanic-demo/engineer.png", 16, 32),
             ["watcher"] = ("assets/artwork/titanic-demo/watcher.png", 16, 32),
+        };
+
+        NpcLines = new Dictionary<string, string[]>
+        {
+            ["captain"] = new[]
+            {
+                "\"Steady as she goes. Full speed ahead.\"",
+                "\"She's unsinkable, they tell me. We'll see.\"",
+                "\"Take the helm if you think you're up to it.\"",
+            },
+            ["engineer"] = new[]
+            {
+                "\"Boilers are running hot down here.\"",
+                "\"Mind the steam lines - one crack and we're in trouble.\"",
+                "\"I can squeeze a little more out of these engines if it comes to that.\"",
+            },
+            ["watcher"] = new[]
+            {
+                "\"Cold up here, but it's the best view on the ship.\"",
+                "\"Keep your eyes peeled for ice - it's out there somewhere.\"",
+                "\"Quietest post on the Titanic, until it isn't.\"",
+            },
         };
     }
 
@@ -307,6 +410,10 @@ public class Game
         return sheet;
     }
 
+    /// <summary>A floating, world-anchored text landmark (see WorldLabel) - Room uses this to mark the shop from across the room.</summary>
+    public WorldLabel CreateWorldLabel(string text, int x, int y, SDL.Color color) =>
+        new(_renderer, "assets/fonts/Gidole-Regular.ttf", 12, color, text, x, y);
+
     /// <summary>Seconds elapsed since the scripted collision, or -1 before it has happened.</summary>
     public float SecondsSinceCollision() =>
         Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning ? -1f : _voyageClock - CollisionAtSeconds;
@@ -324,7 +431,7 @@ public class Game
     public void Begin(string entryLevelPath, bool coop)
     {
         var playerSheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
-        var player1 = new Player(playerSheet) { Speed = 120f, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
+        var player1 = new Player(playerSheet) { Speed = BasePlayerSpeed, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
         player1.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
         _sessions.Add(new PlayerSession(player1, null));
         GameObjects.Add(player1);
@@ -341,10 +448,11 @@ public class Game
                 [InputAction.Jump] = new[] { SDL.Scancode.O },
                 [InputAction.Fire] = new[] { SDL.Scancode.U },
                 [InputAction.Confirm] = new[] { SDL.Scancode.P },
+                [InputAction.Cancel] = new[] { SDL.Scancode.Semicolon },
             };
             var input2 = new KeyboardInputSource(bindings);
             var player2Sheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
-            var player2 = new Player(player2Sheet, input2) { Speed = 120f, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
+            var player2 = new Player(player2Sheet, input2) { Speed = BasePlayerSpeed, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
             player2.SetAnimation(new Animation(frames: new[] { 0, 1, 2, 3 }, frameDurationMs: 150));
             _sessions.Add(new PlayerSession(player2, input2));
             GameObjects.Add(player2);
@@ -361,6 +469,14 @@ public class Game
     public void LoadRoom(string targetPath, string spawnName)
     {
         if (targetPath == BoatDeckPath && _hasSplit) targetPath = BoatDeckSplitPath;
+
+        // The shop counter (and thus the open menu's subject) doesn't exist in
+        // the next room - close before tearing the old room down. Particles and
+        // fizzing TNT belong to the room being left behind, too.
+        CloseShopMenu();
+        foreach (var stale in _particles) GameObjects.Remove(stale);
+        _particles.Clear();
+        _tntCharges.Clear();
 
         if (CurrentRoom is not null)
         {
@@ -396,6 +512,11 @@ public class Game
         // position - reset the tracker so UpdateIcebergApproach computes a clean delta.
         _icebergOffsetAppliedX = 0;
         _icebergOffsetAppliedY = 0;
+
+        // The Carpathia is only visible from the open ocean; her sim state
+        // persists across room changes either way.
+        if (isDriftingLevel) CreateRescueShipSpriteIfNeeded();
+        else RemoveRescueShipSprite();
 
         (int Column, int Row) spawnTile;
         if (spawnName != "" && room.SpawnPoints.TryGetValue(spawnName, out var found))
@@ -454,12 +575,17 @@ public class Game
     /// move in world space while tile coordinates themselves stay fixed), before
     /// resolving the tile the player is actually standing on.
     /// </summary>
-    private (int Column, int Row) TileUnderPlayer(Player player)
+    private (int Column, int Row) TileUnderPlayer(Player player) => TileUnder(player.X, player.Y, 16, 32);
+
+    /// <summary>
+    /// Generalized form of the anchor-inversion above - width/height are the
+    /// sprite's own footprint (16x32 for both the player and every NpcKind), so
+    /// Game.UpdateNpcWander can reuse the same math for NPC wall collision.
+    /// </summary>
+    private (int Column, int Row) TileUnder(int x, int y, int width, int height)
     {
-        const int width = 16;
-        const int height = 32;
-        var feetX = player.X + (width - CurrentRoom.Grid.TileWidth) / 2 - CurrentRoom.Tilemap.X;
-        var feetY = player.Y + height - CurrentRoom.Grid.TileHeight - CurrentRoom.Tilemap.Y;
+        var feetX = x + (width - CurrentRoom.Grid.TileWidth) / 2 - CurrentRoom.Tilemap.X;
+        var feetY = y + height - CurrentRoom.Grid.TileHeight - CurrentRoom.Tilemap.Y;
         return CurrentRoom.Grid.WorldToTile(feetX, feetY);
     }
 
@@ -525,7 +651,9 @@ public class Game
         UpdateCameraShake(deltaTime);
         UpdateSinkingWaterline();
         UpdateSplitBulge();
+        UpdateRescueShip(deltaTime);
         UpdateLaunchedBoats(deltaTime);
+        UpdatePlayerSpeeds(deltaTime);
 
         foreach (var session in _sessions)
         {
@@ -554,11 +682,188 @@ public class Game
         return Math.Max(0, ahead - ownElevation);
     }
 
-    /// <summary>Rows every launched lifeboat (and its passenger) steadily away from the wreck.</summary>
+    private bool IsDriftingRoom() =>
+        CurrentRoom.Level.DriftSpeedX != 0f || CurrentRoom.Level.DriftSpeedY != 0f;
+
+    /// <summary>
+    /// The Carpathia's whole life: summoned (by flare or a few seconds after the
+    /// ship sinks), steams in from beyond the horizon along the wreck's heading,
+    /// stops off the stern for a fixed boarding window, then departs - ending the
+    /// game with whoever made it aboard. The sim always runs; only the sprite is
+    /// tied to having the exterior loaded.
+    /// </summary>
+    private void UpdateRescueShip(float deltaTime)
+    {
+        if (IsDriftingRoom())
+        {
+            var (sternX, sternY) = CurrentRoom.StandOnTile(SternColumn, SternRow, 0, 0);
+            _wreckPointX = sternX;
+            _wreckPointY = sternY;
+
+            // She approaches broadside-on, off the starboard (+column) side of
+            // the stern - the same outboard axis launched lifeboats row along -
+            // never along the hull, which would park her on the wreck itself.
+            var (originX, originY) = CurrentRoom.Grid.TileToWorld(0, 0);
+            var (stepX, stepY) = CurrentRoom.Grid.TileToWorld(1, 0);
+            float axisX = stepX - originX, axisY = stepY - originY;
+            var length = MathF.Sqrt(axisX * axisX + axisY * axisY);
+            if (length > 0f)
+            {
+                _wreckDirX = axisX / length;
+                _wreckDirY = axisY / length;
+            }
+        }
+
+        switch (_rescueShip.State)
+        {
+            case RescueShipState.NotSummoned:
+                var scheduled = Phase == VoyagePhase.Sunk &&
+                    SecondsSinceCollision() >= SunkAfterCollisionSeconds + CarpathiaSummonAfterSunkSeconds;
+                if (!_flareSummonRequested && !scheduled) return;
+                _flareSummonRequested = false;
+                _rescueShip.State = RescueShipState.Steaming;
+                _rescueShip.PreciseX = _wreckPointX + _wreckDirX * CarpathiaSpawnDistance;
+                _rescueShip.PreciseY = _wreckPointY + _wreckDirY * CarpathiaSpawnDistance;
+                ShowMessage("A ship on the horizon - the Carpathia is coming!", 4f);
+                CreateRescueShipSpriteIfNeeded();
+                break;
+
+            case RescueShipState.Steaming:
+                var targetX = _wreckPointX + _wreckDirX * CarpathiaStopDistance;
+                var targetY = _wreckPointY + _wreckDirY * CarpathiaStopDistance;
+                var toTargetX = targetX - _rescueShip.PreciseX;
+                var toTargetY = targetY - _rescueShip.PreciseY;
+                var distance = MathF.Sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
+                var step = CarpathiaSpeed * deltaTime;
+                if (distance <= step)
+                {
+                    _rescueShip.PreciseX = targetX;
+                    _rescueShip.PreciseY = targetY;
+                    _rescueShip.State = RescueShipState.Boarding;
+                    _rescueShip.BoardingSecondsRemaining = CarpathiaBoardingWindowSeconds;
+                    ShowMessage($"The Carpathia is alongside - get aboard within {CarpathiaBoardingWindowSeconds:0}s!", 5f);
+                }
+                else
+                {
+                    _rescueShip.PreciseX += toTargetX / distance * step;
+                    _rescueShip.PreciseY += toTargetY / distance * step;
+                }
+                SyncRescueShipSprite();
+                break;
+
+            case RescueShipState.Boarding:
+                _rescueShip.BoardingSecondsRemaining -= deltaTime;
+                if (_rescueShip.BoardingSecondsRemaining <= 0f)
+                {
+                    _rescueShip.State = RescueShipState.Departed;
+                    if (!IsGameOver)
+                    {
+                        var rescued = _sessions.Count(s => s.Rescued);
+                        EndGame($"The Carpathia departs... {rescued} of {_sessions.Count} rescued. Final tix: {TixBalance}.");
+                    }
+                }
+                break;
+
+            case RescueShipState.Departed:
+                // She steams back out the way she came - a slow exit for the tableau.
+                _rescueShip.PreciseX += _wreckDirX * CarpathiaSpeed * deltaTime;
+                _rescueShip.PreciseY += _wreckDirY * CarpathiaSpeed * deltaTime;
+                SyncRescueShipSprite();
+                break;
+        }
+    }
+
+    /// <summary>Builds the Carpathia's sprite for the current (drifting) room - the sim position is authoritative, the sprite is just its view.</summary>
+    private void CreateRescueShipSpriteIfNeeded()
+    {
+        if (_rescueShip.State == RescueShipState.NotSummoned) return;
+        if (!IsDriftingRoom()) return;
+        if (_rescueShip.Sprite is null)
+        {
+            var (path, width, height) = PropKinds["carpathia"];
+            var sheet = GetSheet(path, width, height);
+            // Afloat on open water: like launched boats, the sort footprint must
+            // clear the flat water tiles around the hull or they'd clip it.
+            _rescueShip.Sprite = new Sprite(sheet) { ZIndex = 1, SortOffsetY = height + CurrentRoom.Grid.TileHeight };
+            GameObjects.Add(_rescueShip.Sprite);
+        }
+        SyncRescueShipSprite();
+    }
+
+    private void RemoveRescueShipSprite()
+    {
+        if (_rescueShip.Sprite is null) return;
+        GameObjects.Remove(_rescueShip.Sprite);
+        _rescueShip.Sprite = null;
+    }
+
+    private void SyncRescueShipSprite()
+    {
+        if (_rescueShip.Sprite is null) return;
+        var (_, width, height) = PropKinds["carpathia"];
+        // PreciseX/Y is the gangway (center-bottom of the hull, slightly above
+        // the waterline art) - lay the sprite out around it.
+        _rescueShip.Sprite.X = (int)MathF.Round(_rescueShip.PreciseX - width / 2f);
+        _rescueShip.Sprite.Y = (int)MathF.Round(_rescueShip.PreciseY - height + 12);
+    }
+
+    /// <summary>
+    /// The single writer of Player.Speed: base speed times deck boots, times any
+    /// active snack buff (whose timer counts down here), times the swim penalty
+    /// while a life jacket or blanket is keeping the player alive in the water.
+    /// </summary>
+    private void UpdatePlayerSpeeds(float deltaTime)
+    {
+        foreach (var session in _sessions)
+        {
+            var inventory = session.Inventory;
+            if (inventory.FoodBuffSecondsRemaining > 0f)
+            {
+                inventory.FoodBuffSecondsRemaining -= deltaTime;
+                if (inventory.FoodBuffSecondsRemaining <= 0f) inventory.FoodBuffMultiplier = 1f;
+            }
+
+            var speed = BasePlayerSpeed * inventory.FoodBuffMultiplier;
+            if (inventory.HasDeckBoots) speed *= DeckBootsMultiplier;
+            if (inventory.IsSwimming) speed *= SwimSpeedMultiplier;
+            session.Player.Speed = speed;
+        }
+    }
+
+    /// <summary>
+    /// Rows every launched lifeboat (and its passenger): away from the wreck at
+    /// first, then curving toward the Carpathia's gangway once she's on the
+    /// water - and aboard her (rescued, boat and passenger leave the world) when
+    /// they reach it during the boarding window.
+    /// </summary>
     private void UpdateLaunchedBoats(float deltaTime)
     {
-        foreach (var launched in _launchedBoats)
+        for (var i = _launchedBoats.Count - 1; i >= 0; i--)
         {
+            var launched = _launchedBoats[i];
+
+            if (_rescueShip.State is RescueShipState.Steaming or RescueShipState.Boarding)
+            {
+                var toShipX = _rescueShip.PreciseX - launched.PreciseX;
+                var toShipY = _rescueShip.PreciseY - launched.PreciseY;
+                var distance = MathF.Sqrt(toShipX * toShipX + toShipY * toShipY);
+                if (distance > 1f)
+                {
+                    launched.VelocityX = toShipX / distance * CarpathiaRowTowardSpeed;
+                    launched.VelocityY = toShipY / distance * CarpathiaRowTowardSpeed;
+                }
+
+                if (_rescueShip.State == RescueShipState.Boarding && distance <= CarpathiaBoardRadius && !IsGameOver)
+                {
+                    var session = _sessions.FirstOrDefault(s => s.Player == launched.Passenger);
+                    GameObjects.Remove(launched.Boat);
+                    GameObjects.Remove(launched.Passenger);
+                    _launchedBoats.RemoveAt(i);
+                    if (session is not null) RescueSession(session);
+                    continue;
+                }
+            }
+
             launched.PreciseX += launched.VelocityX * deltaTime;
             launched.PreciseY += launched.VelocityY * deltaTime;
             launched.Boat.X = (int)MathF.Round(launched.PreciseX);
@@ -566,6 +871,44 @@ public class Game
             // seated amidships: horizontally centered in the 32-wide boat, feet just above its stern seat
             launched.Passenger.SnapTo(launched.Boat.X + 8, launched.Boat.Y - 12);
         }
+    }
+
+    /// <summary>
+    /// Rescue by one's own feet (or life-jacket swim): any player who gets within
+    /// board radius of the gangway while the Carpathia is alongside is taken
+    /// aboard - no button needed, the crew hauls them up.
+    /// </summary>
+    private void CheckCarpathiaBoarding()
+    {
+        if (_rescueShip.State != RescueShipState.Boarding) return;
+        if (!IsDriftingRoom()) return;
+
+        foreach (var session in _sessions)
+        {
+            if (session.Escaped || session.IsDying) continue;
+            var dx = session.Player.X + 8 - _rescueShip.PreciseX;
+            var dy = session.Player.Y + 16 - _rescueShip.PreciseY;
+            if (MathF.Sqrt(dx * dx + dy * dy) > CarpathiaBoardRadius) continue;
+            GameObjects.Remove(session.Player);
+            RescueSession(session);
+        }
+    }
+
+    private void RescueSession(PlayerSession session)
+    {
+        if (session.Rescued) return;
+        if (_shopMenuOwner == session) CloseShopMenu();
+
+        session.Rescued = true;
+        session.Escaped = true;
+        session.Player.InputEnabled = false;
+        TixBalance += SternSurvivorBonusTix;
+
+        var who = _sessions.Count > 1 ? $"P{_sessions.IndexOf(session) + 1} is" : "You are";
+        ShowMessage($"{who} aboard the Carpathia! +{SternSurvivorBonusTix} tix.", 3f);
+
+        if (_sessions.All(s => s.Rescued))
+            EndGame($"Everyone rescued by RMS Carpathia! Final tix: {TixBalance}.");
     }
 
     /// <summary>Cycles the tilemap's water variants on a timer so the whole ocean shimmers.</summary>
@@ -717,12 +1060,10 @@ public class Game
         var driftSpeedX = CurrentRoom.Level.DriftSpeedX;
         var driftSpeedY = CurrentRoom.Level.DriftSpeedY;
         var speedFactor = ShipSpeedFactor();
-        if (driftSpeedX == 0f && driftSpeedY == 0f)
-        {
-            foreach (var stale in _particles) GameObjects.Remove(stale);
-            _particles.Clear();
-        }
-        else if (speedFactor > 0.05f)
+        // (Interior rooms spawn no ship effects - drift is zero - but other
+        // particles, e.g. TNT smoke and swim foam, still live and expire here;
+        // LoadRoom clears the list wholesale on every room change.)
+        if ((driftSpeedX != 0f || driftSpeedY != 0f) && speedFactor > 0.05f)
         {
             _wakeSpawnTimer -= deltaTime;
             if (_wakeSpawnTimer <= 0f)
@@ -798,6 +1139,7 @@ public class Game
 
     public void AfterFrame(float deltaTime)
     {
+        _confirmConsumed.Clear();
         UpdateVoyageClock(deltaTime);
 
         // After the game has been decided, the world keeps sinking/rowing for the
@@ -816,6 +1158,8 @@ public class Game
                 }
 
                 var (column, row) = TileUnderPlayer(session.Player);
+                var inventory = session.Inventory;
+                if (inventory.HazardGraceSeconds > 0f) inventory.HazardGraceSeconds -= deltaTime;
 
                 if (CurrentRoom.IsSolid(column, row))
                 {
@@ -828,10 +1172,29 @@ public class Game
 
                     if (CurrentRoom.TryGetHazard(column, row, out var hazard) && session.Player.IsGrounded)
                     {
-                        TriggerDeath(session, hazard);
+                        // A life jacket turns lethal water into slow swimming for
+                        // good; a blanket's grace window does the same for a few
+                        // seconds after it saved this player (see TriggerDeath).
+                        if (inventory.HasLifeJacket || inventory.HazardGraceSeconds > 0f)
+                        {
+                            inventory.IsSwimming = true;
+                            SpawnSwimFoam(session, deltaTime);
+                        }
+                        else
+                        {
+                            TriggerDeath(session, hazard);
+                        }
+                    }
+                    else
+                    {
+                        inventory.IsSwimming = false;
                     }
                 }
             }
+
+            UpdateNpcWander();
+            UpdateShopMenu();
+            UpdateTntCharges();
 
             if (_doorCooldown > 0f) _doorCooldown -= deltaTime;
             else CheckDoors();
@@ -839,8 +1202,9 @@ public class Game
             CheckPickups();
             CheckNpcInteractionAndRoleBonus();
             CheckShop();
-            CheckLauncherFire();
+            CheckFireAction();
             CheckLifeboats();
+            CheckCarpathiaBoarding();
         }
 
         UpdateHudText(deltaTime);
@@ -894,17 +1258,15 @@ public class Game
                 {
                     Phase = VoyagePhase.Sunk;
                     ShowMessage("The ship has gone down. Survive the wreck.", 6f);
+                    // An unfired flare is never wasted - it goes up as the ship does down.
+                    if (FlareGunOwned && !FlareGunFired) FireFlareGun();
                 }
                 break;
 
             case VoyagePhase.Sunk:
                 ApplyFloodIfDueForCurrentRoom();
-                if (!IsGameOver && SecondsSinceCollision() >= SunkAfterCollisionSeconds + RescueAfterSunkSeconds)
-                {
-                    var survivors = _sessions.Count(s => !s.Escaped);
-                    TixBalance += SternSurvivorBonusTix * survivors;
-                    EndGame($"RMS Carpathia arrives! Stern survivors rescued (+{SternSurvivorBonusTix} tix each). Final tix: {TixBalance}.");
-                }
+                // Rescue is no longer an instant payout here - the Carpathia
+                // physically arrives and must be boarded (see UpdateRescueShip).
                 break;
         }
     }
@@ -974,6 +1336,29 @@ public class Game
         }
     }
 
+    /// <summary>
+    /// Wall collision for wandering NPCs: same trial-move-then-revert as player
+    /// movement (Npc.Update already picked a direction and moved this frame; this
+    /// just undoes it if that landed on a solid tile), since Npc itself has no
+    /// notion of the Room it's standing in.
+    /// </summary>
+    private void UpdateNpcWander()
+    {
+        foreach (var npc in CurrentRoom.Npcs)
+        {
+            var (column, row) = TileUnder(npc.X, npc.Y, 16, 32);
+            if (CurrentRoom.IsSolid(column, row))
+            {
+                npc.SnapTo(npc.LastGoodX, npc.LastGoodY);
+            }
+            else
+            {
+                npc.LastGoodX = npc.X;
+                npc.LastGoodY = npc.Y;
+            }
+        }
+    }
+
     private void CheckNpcInteractionAndRoleBonus()
     {
         if (CurrentRole is null)
@@ -982,14 +1367,19 @@ public class Game
             {
                 if (session.Escaped) continue;
                 var npc = CurrentRoom.Npcs.FirstOrDefault(n => Distance(session.Player, n) <= InteractRadius);
-                if (npc is not null && SessionJustPressed(session, InputAction.Confirm))
+                if (npc is not null && ConfirmAvailable(session))
                 {
+                    ConsumeConfirm(session);
                     CurrentRole = npc.Role;
                     _currentRoleRoomPath = CurrentRoom.Path;
+                    var line = npc.NextLine();
                     CurrentRoom.Npcs.Remove(npc);
                     CurrentRoom.RoomObjects.Remove(npc);
                     GameObjects.Remove(npc);
-                    ShowMessage($"You are now the {Capitalize(npc.Role)}.", 3f);
+                    // The dialogue line does the talking; the persistent "Role: X"
+                    // HUD segment already confirms the takeover, so this stays a
+                    // spoken line rather than a status readout doubling up on it.
+                    ShowMessage($"{Capitalize(npc.Role)}: {line}", 3.5f);
                     return;
                 }
             }
@@ -999,8 +1389,11 @@ public class Game
             foreach (var session in _sessions)
             {
                 if (session.Escaped) continue;
-                if (SessionJustPressed(session, InputAction.Confirm) && TryApplyRoleBonus())
+                if (ConfirmAvailable(session) && TryApplyRoleBonus())
+                {
+                    ConsumeConfirm(session);
                     return;
+                }
             }
         }
     }
@@ -1056,60 +1449,419 @@ public class Game
     }
 
     /// <summary>
-    /// The purser's office shop: Confirm buys the Tix Launcher if it isn't owned
-    /// yet, or sells it back for a partial refund if it is - one button doubling as
-    /// both sides of the counter, same as every other Confirm-to-interact spot in
-    /// the game (NPCs, lifeboats) rather than a separate buy/sell menu.
+    /// The purser's office shop: Confirm at the counter opens the shop menu for
+    /// that player (one shared panel - a second player pressing Confirm while
+    /// it's open just gets told the purser is busy).
     /// </summary>
     private void CheckShop()
     {
         foreach (var session in _sessions)
         {
-            if (session.Escaped) continue;
+            if (session.Escaped || session.IsDying) continue;
             var distance = DistanceToShop(session);
             if (distance is null || distance > InteractRadius) continue;
-            if (!SessionJustPressed(session, InputAction.Confirm)) continue;
+            if (!ConfirmAvailable(session)) continue;
+            ConsumeConfirm(session);
 
-            if (HasTixLauncher)
+            if (_shopMenuOwner is not null)
             {
-                HasTixLauncher = false;
-                TixBalance += LauncherSellRefund;
-                ShowMessage($"Sold the Tix Launcher back for {LauncherSellRefund} tix.", 3f);
+                if (_shopMenuOwner != session)
+                    ShowMessage("The purser is busy with the other passenger.", 2f);
+                continue;
             }
-            else if (TixBalance >= LauncherCost)
-            {
-                TixBalance -= LauncherCost;
-                HasTixLauncher = true;
-                ShowMessage("Purchased the Tix Launcher! Press E to fire.", 3f);
-            }
-            else
-            {
-                ShowMessage($"The Tix Launcher costs {LauncherCost} tix - you have {TixBalance}.", 2.5f);
-            }
-            return;
+
+            OpenShopMenu(session);
         }
     }
 
-    private void CheckLauncherFire()
+    private void OpenShopMenu(PlayerSession session)
     {
-        if (!HasTixLauncher) return;
+        _shopMenuOwner = session;
+        _shopMenuIndex = 0;
+        // Movement is suspended while browsing (Up/Down navigate the menu instead) -
+        // same suspension mechanism the death freeze uses.
+        session.Player.InputEnabled = false;
+        _shopMenu.IsVisible = true;
+        RefreshShopMenu();
+    }
 
+    private void CloseShopMenu()
+    {
+        if (_shopMenuOwner is null) return;
+        // Death and escape also disable input and must keep it disabled - only an
+        // ordinary browse-and-close hands movement back.
+        if (!_shopMenuOwner.IsDying && !_shopMenuOwner.Escaped)
+            _shopMenuOwner.Player.InputEnabled = true;
+        _shopMenuOwner = null;
+        _shopMenu.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Drives the open shop menu from its owner's input: Up/Down move the
+    /// selection, Confirm buys (or closes, on the Close row), Cancel closes.
+    /// Runs before the other Confirm interactions each frame, so a menu Confirm
+    /// can never simultaneously talk to an NPC or board a lifeboat.
+    /// </summary>
+    private void UpdateShopMenu()
+    {
+        if (_shopMenuOwner is null) return;
+        var owner = _shopMenuOwner;
+
+        if (owner.IsDying || owner.Escaped)
+        {
+            CloseShopMenu();
+            return;
+        }
+
+        if (SessionJustPressed(owner, InputAction.Cancel))
+        {
+            CloseShopMenu();
+            return;
+        }
+
+        var items = VisibleShopItems();
+        var rowCount = items.Count + 1; // + the Close row
+        if (_shopMenuIndex >= rowCount) _shopMenuIndex = rowCount - 1;
+
+        if (SessionJustPressed(owner, InputAction.MoveUp))
+            _shopMenuIndex = (_shopMenuIndex - 1 + rowCount) % rowCount;
+        if (SessionJustPressed(owner, InputAction.MoveDown))
+            _shopMenuIndex = (_shopMenuIndex + 1) % rowCount;
+
+        if (ConfirmAvailable(owner))
+        {
+            ConsumeConfirm(owner);
+            if (_shopMenuIndex == items.Count)
+            {
+                CloseShopMenu();
+                return;
+            }
+            TryPurchase(items[_shopMenuIndex], owner);
+        }
+
+        RefreshShopMenu();
+    }
+
+    /// <summary>
+    /// The catalog minus items that no longer make sense to sell: the pocket
+    /// watch once the collision has happened (or one was already bought - its
+    /// effect is instant and once per voyage), and the flare gun once the team
+    /// owns or has fired one.
+    /// </summary>
+    private List<ShopItem> VisibleShopItems()
+    {
+        var beforeCollision = Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning;
+        return ShopCatalog.Items.Where(item => item.Kind switch
+        {
+            ShopItemKind.PocketWatch => beforeCollision && !_pocketWatchUsed,
+            ShopItemKind.FlareGun => !FlareGunOwned && !FlareGunFired,
+            _ => true
+        }).ToList();
+    }
+
+    private void RefreshShopMenu()
+    {
+        if (_shopMenuOwner is null) return;
+        var inventory = _shopMenuOwner.Inventory;
+        var items = VisibleShopItems();
+
+        var rows = new List<string>();
+        foreach (var item in items)
+        {
+            var label = item.Kind switch
+            {
+                ShopItemKind.TixLauncher when inventory.HasTixLauncher => $"Sell Tix Launcher  +{LauncherSellRefund}",
+                ShopItemKind.LifeJacket when inventory.HasLifeJacket => $"{item.Name}  {item.Price}  (owned)",
+                ShopItemKind.DeckBoots when inventory.HasDeckBoots => $"{item.Name}  {item.Price}  (owned)",
+                ShopItemKind.Blanket when inventory.Blankets > 0 => $"{item.Name}  {item.Price}  (x{inventory.Blankets})",
+                _ => $"{item.Name}  {item.Price}"
+            };
+            rows.Add(label);
+        }
+        rows.Add("Close");
+
+        var ownerLabel = _sessions.Count > 1 ? $"P{_sessions.IndexOf(_shopMenuOwner) + 1} - " : "";
+        _shopMenu.SetContent($"PURSER'S SHOP - {ownerLabel}Tix: {TixBalance}", rows, _shopMenuIndex);
+    }
+
+    private void TryPurchase(ShopItem item, PlayerSession buyer)
+    {
+        var inventory = buyer.Inventory;
+
+        // The launcher row doubles as sell-back once owned.
+        if (item.Kind == ShopItemKind.TixLauncher && inventory.HasTixLauncher)
+        {
+            inventory.HasTixLauncher = false;
+            TixBalance += LauncherSellRefund;
+            ShowMessage($"Sold the Tix Launcher back for {LauncherSellRefund} tix.", 2.5f);
+            return;
+        }
+
+        if (item.Kind == ShopItemKind.LifeJacket && inventory.HasLifeJacket)
+        {
+            ShowMessage("You already have a life jacket on.", 2f);
+            return;
+        }
+        if (item.Kind == ShopItemKind.DeckBoots && inventory.HasDeckBoots)
+        {
+            ShowMessage("You're already wearing deck boots.", 2f);
+            return;
+        }
+
+        if (TixBalance < item.Price)
+        {
+            ShowMessage($"{item.Name} costs {item.Price} tix - you have {TixBalance}.", 2.5f);
+            return;
+        }
+
+        TixBalance -= item.Price;
+        switch (item.Kind)
+        {
+            case ShopItemKind.LifeJacket:
+                inventory.HasLifeJacket = true;
+                ShowMessage("Life jacket on - the water can't kill you, but swimming is slow.", 3f);
+                break;
+
+            case ShopItemKind.DeckBoots:
+                inventory.HasDeckBoots = true;
+                ShowMessage("Deck boots on - permanently faster on your feet.", 3f);
+                break;
+
+            case ShopItemKind.Blanket:
+                inventory.Blankets++;
+                ShowMessage($"Blanket bought ({inventory.Blankets} carried) - each cancels one icy death.", 3f);
+                break;
+
+            case ShopItemKind.FlareGun:
+                FlareGunOwned = true;
+                ShowMessage("Flare gun bought - after a collision, Up+E summons the Carpathia.", 3.5f);
+                break;
+
+            case ShopItemKind.PocketWatch:
+                _pocketWatchUsed = true;
+                _collisionBonusSeconds += PocketWatchBonusSeconds;
+                ShowMessage("The lookout consults the pocket watch - impact delayed!", 3f);
+                break;
+
+            case ShopItemKind.TixLauncher:
+                inventory.HasTixLauncher = true;
+                ShowMessage("Purchased the Tix Launcher! Press E to fire.", 3f);
+                break;
+
+            case ShopItemKind.Snack:
+                inventory.Snacks.Enqueue(item.Snack!);
+                ShowMessage($"{item.Name} bought - {(inventory.HasTixLauncher ? "Down+E" : "E")} eats it for a speed burst.", 3f);
+                break;
+
+            case ShopItemKind.Tnt:
+                inventory.TntCharges.Enqueue(item.Tnt!.Value);
+                ShowMessage($"{item.Name} bought - hold Space (jump) and press E to place. Stand back!", 3f);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// The Fire key (P1 E, P2 U, Android TIX) does different things by chord,
+    /// checked most-specific first: Jump held = place TNT, Up held = fire the
+    /// flare gun, Down held (or no launcher owned) = eat a snack, otherwise fire
+    /// the tix launcher. Everything degrades gracefully - a chord whose item
+    /// isn't carried falls through to the next branch.
+    /// </summary>
+    private void CheckFireAction()
+    {
         foreach (var session in _sessions)
         {
-            if (session.Escaped) continue;
+            if (session.Escaped || session.IsDying) continue;
+            if (_shopMenuOwner == session) continue;
             if (!SessionJustPressed(session, InputAction.Fire)) continue;
+            var inventory = session.Inventory;
+
+            if (SessionPressed(session, InputAction.Jump) && inventory.TntCharges.Count > 0)
+            {
+                PlaceTnt(session);
+                continue;
+            }
+
+            if (SessionPressed(session, InputAction.MoveUp) && FlareGunOwned && !FlareGunFired)
+            {
+                TryFireFlareGun();
+                continue;
+            }
+
+            var wantsSnack = !inventory.HasTixLauncher || SessionPressed(session, InputAction.MoveDown);
+            if (wantsSnack && inventory.Snacks.Count > 0)
+            {
+                EatSnack(session);
+                continue;
+            }
+
+            if (!inventory.HasTixLauncher) continue;
 
             if (TixBalance < LauncherFireCost)
             {
                 ShowMessage("Not enough tix to fire the launcher.", 2f);
-                return;
+                continue;
             }
 
             TixBalance -= LauncherFireCost;
             FireLauncher(session);
-            ShowMessage("The tix launcher fires - 100 tix scatter!", 2f);
+            ShowMessage($"The tix launcher fires - {LauncherFireCost} tix scatter as {LauncherFireCount} coins!", 2f);
+        }
+    }
+
+    private void EatSnack(PlayerSession session)
+    {
+        var snack = session.Inventory.Snacks.Dequeue();
+        // Eating replaces any active buff rather than stacking with it.
+        session.Inventory.FoodBuffMultiplier = snack.SpeedMultiplier;
+        session.Inventory.FoodBuffSecondsRemaining = snack.DurationSeconds;
+        ShowMessage($"You scarf the {snack.Kind} - speed boost for {snack.DurationSeconds:0}s!", 2.5f);
+    }
+
+    private void TryFireFlareGun()
+    {
+        if (Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning)
+        {
+            ShowMessage("Save the flare - the Carpathia won't answer before there's real trouble.", 2.5f);
             return;
         }
+        FireFlareGun();
+    }
+
+    private void FireFlareGun()
+    {
+        FlareGunFired = true;
+        _flareSummonRequested = true;
+        ShowMessage("The flare arcs into the night - the Carpathia is coming!", 4f);
+    }
+
+    private void PlaceTnt(PlayerSession session)
+    {
+        var size = session.Inventory.TntCharges.Dequeue();
+        var (column, row) = TileUnderPlayer(session.Player);
+        var sheet = GetSheet(TntIconPath, 16, 16);
+        var (x, y, sortOffset) = CurrentRoom.StandOnTileElevated(column, row, 16, 16);
+        var charge = new TntCharge(sheet, size, column, row) { X = x, Y = y, ZIndex = 1, SortOffsetY = sortOffset };
+        CurrentRoom.AttachRowAnchored(charge, row);
+        GameObjects.Add(charge);
+        _tntCharges.Add(charge);
+        ShowMessage($"{size} TNT placed - {TntCharge.FuseSeconds(size):0.#}s fuse. RUN!", 2f);
+    }
+
+    /// <summary>Detonates any charge whose fuse ran out (a charge whose deck row already went under is just forgotten).</summary>
+    private void UpdateTntCharges()
+    {
+        for (var i = _tntCharges.Count - 1; i >= 0; i--)
+        {
+            var charge = _tntCharges[i];
+            if (!CurrentRoom.RoomObjects.Contains(charge))
+            {
+                _tntCharges.RemoveAt(i);
+                continue;
+            }
+            if (!charge.FuseExpired) continue;
+            _tntCharges.RemoveAt(i);
+            DetonateTnt(charge);
+        }
+    }
+
+    private void DetonateTnt(TntCharge charge)
+    {
+        CurrentRoom.ReleaseFromShip(charge);
+        GameObjects.Remove(charge);
+
+        var radiusTiles = TntCharge.BlastRadiusTiles(charge.Size);
+        var (shakeAmplitude, shakeSeconds) = charge.Size switch
+        {
+            TntSize.Small => (5f, 0.8f),
+            TntSize.Medium => (8f, 1.2f),
+            _ => (12f, 1.6f)
+        };
+        StartShake(shakeAmplitude, shakeSeconds);
+        _groanSound?.Play();
+
+        CurrentRoom.BlastAt(charge.Column, charge.Row, radiusTiles);
+
+        // Smoke burst scattering outward from the charge.
+        var smokeSheet = GetSheet(SmokeIconPath, 16, 16);
+        for (var i = 0; i < radiusTiles * 8; i++)
+        {
+            var angle = (float)(_random.NextDouble() * Math.PI * 2);
+            var speed = 20f + (float)_random.NextDouble() * 40f;
+            var puff = new Particle(smokeSheet, 1.1f)
+            {
+                X = charge.X + _random.Next(-6, 7),
+                Y = charge.Y + _random.Next(-4, 5),
+                ZIndex = 3,
+                SortOffsetY = CurrentRoom.Grid.TileHeight * 2,
+                VelocityX = MathF.Cos(angle) * speed,
+                VelocityY = MathF.Sin(angle) * speed * 0.5f,
+                RiseSpeed = 30f
+            };
+            _particles.Add(puff);
+            GameObjects.Add(puff);
+        }
+
+        // Anyone standing too close is caught in the blast - the life jacket is
+        // no help here, though a carried blanket still absorbs it (TriggerDeath).
+        var blastPixels = radiusTiles * CurrentRoom.Grid.TileWidth;
+        foreach (var session in _sessions)
+        {
+            if (session.Escaped || session.IsDying) continue;
+            var dx = session.Player.X + 8 - (charge.X + 8);
+            var dy = session.Player.Y + 16 - (charge.Y + 8);
+            if (MathF.Sqrt(dx * dx + dy * dy) <= blastPixels)
+                TriggerDeath(session, "blast");
+        }
+
+        CheckTntIcebergPayoff(charge, blastPixels);
+    }
+
+    /// <summary>
+    /// The Large-TNT gambit: shatter the approaching iceberg during the Warning
+    /// to buy a big collision delay - the expensive, skill-based alternative to
+    /// the pocket watch (the berg is out on the water, so getting a charge near
+    /// it usually means a life jacket swim or a last-second bow placement).
+    /// </summary>
+    private void CheckTntIcebergPayoff(TntCharge charge, float blastPixels)
+    {
+        var berg = CurrentRoom.Iceberg;
+        if (berg is null || Phase != VoyagePhase.Warning) return;
+
+        var (_, bergWidth, bergHeight) = PropKinds["iceberg"];
+        var dx = berg.X + bergWidth / 2f - (charge.X + 8);
+        var dy = berg.Y + bergHeight / 2f - (charge.Y + 8);
+        var distance = MathF.Sqrt(dx * dx + dy * dy);
+        if (distance > blastPixels + 40f) return;
+
+        if (charge.Size != TntSize.Large)
+        {
+            ShowMessage("The berg shrugs it off - that needs Large TNT.", 3f);
+            return;
+        }
+
+        var detached = CurrentRoom.DetachIceberg();
+        if (detached is not null) GameObjects.Remove(detached);
+        _collisionBonusSeconds += TntIcebergBonusSeconds;
+        ShowMessage("The iceberg shatters! The collision is postponed!", 4f);
+    }
+
+    /// <summary>Foam trail while swimming - the visual cue that the water is survivable right now.</summary>
+    private void SpawnSwimFoam(PlayerSession session, float deltaTime)
+    {
+        session.Inventory.SwimFoamTimer -= deltaTime;
+        if (session.Inventory.SwimFoamTimer > 0f) return;
+        session.Inventory.SwimFoamTimer = SwimFoamInterval;
+
+        var sheet = GetSheet(WakeIconPath, 16, 8);
+        var foam = new Particle(sheet, 0.6f)
+        {
+            X = session.Player.X,
+            Y = session.Player.Y + 24,
+            SortOffsetY = CurrentRoom.Grid.TileHeight + 8
+        };
+        _particles.Add(foam);
+        GameObjects.Add(foam);
     }
 
     private void FireLauncher(PlayerSession session)
@@ -1142,8 +1894,8 @@ public class Game
         foreach (var session in _sessions)
         {
             if (session.Escaped || session.IsDying) continue;
-            if (!SessionJustPressed(session, InputAction.Confirm)) continue;
-            TryBoardLifeboat(session.Player);
+            if (!ConfirmAvailable(session)) continue;
+            if (TryBoardLifeboat(session.Player)) ConsumeConfirm(session);
         }
     }
 
@@ -1193,6 +1945,7 @@ public class Game
     {
         CurrentRoom.ReleaseFromShip(boat);
 
+        if (_shopMenuOwner == session) CloseShopMenu();
         session.Escaped = true;
         session.Player.InputEnabled = false;
         session.Player.Z = 0f;
@@ -1204,7 +1957,16 @@ public class Game
         // SortOffsetY pushed at least that far past its sprite height, or tiles
         // "in front" clip the hull and the passenger's legs.
         boat.SortOffsetY += CurrentRoom.Grid.TileHeight;
-        session.Player.SortOffsetY = PlayerBaseSortOffsetY + CurrentRoom.Grid.TileHeight;
+
+        // The passenger is snapped to (boat.Y - 12) every frame (see
+        // UpdateLaunchedBoats), which - combined with the boat's own SortOffsetY
+        // above - lands their SortY (Y + SortOffsetY) exactly on the boat's own
+        // SortY every frame: 32 + 16 vs 20(boat height) + 16 - 12. Equal ZIndex too,
+        // so that exact tie left the painter's-algorithm sort to break it arbitrarily
+        // (it flips with unrelated array churn like particle spawns), flickering the
+        // passenger's legs in and out from behind the boat. The +1 guarantees the
+        // passenger always sorts after (renders on top of) their own boat.
+        session.Player.SortOffsetY = PlayerBaseSortOffsetY + CurrentRoom.Grid.TileHeight + 1;
 
         // Row straight away from the hull: out along the column (port/starboard)
         // axis, on whichever side of the ship's centerline the boat hangs.
@@ -1226,24 +1988,49 @@ public class Game
 
         ShowMessage($"Away in a lifeboat! +{LifeboatEscapeBonusTix} tix survival bonus.", 3f);
 
-        if (_sessions.All(s => s.Escaped))
-            EndGame($"Everyone escaped the wreck by lifeboat! Final tix: {TixBalance}.");
+        // With everyone off the wreck there's nothing left to wait for - call the
+        // Carpathia in now (the boats will row to her and the game ends aboard).
+        if (_sessions.All(s => s.Escaped) && _rescueShip.State == RescueShipState.NotSummoned)
+            _flareSummonRequested = true;
     }
 
     private void EndGame(string message)
     {
+        CloseShopMenu();
         IsGameOver = true;
         _finalMessage = message;
+        Console.WriteLine(message);
     }
 
     private void TriggerDeath(PlayerSession session, string hazard)
     {
+        // A carried blanket cancels the death outright (any death - icy water,
+        // floodwater, even a TNT blast) and buys a short window of hazard
+        // immunity to scramble clear in.
+        var inventory = session.Inventory;
+        if (inventory.Blankets > 0)
+        {
+            inventory.Blankets--;
+            inventory.HazardGraceSeconds = BlanketGraceSeconds;
+            ShowMessage($"A blanket keeps you alive! ({inventory.Blankets} left) - move!", 2.5f);
+            return;
+        }
+
+        // Dying at the counter (the purser's office floods mid-game) must not
+        // leave a menu open fighting over InputEnabled - death wins.
+        if (_shopMenuOwner == session) CloseShopMenu();
+
         session.IsDying = true;
         session.DyingTimer = DeathFreezeSeconds;
         session.Player.InputEnabled = false;
         TixBalance = Math.Max(0, TixBalance - TixPenaltyOnDeath);
 
-        var verb = hazard == "freeze" ? "froze in the North Atlantic" : "drowned in the flooding compartment";
+        var verb = hazard switch
+        {
+            "freeze" => "froze in the North Atlantic",
+            "blast" => "were blown off your feet by the TNT",
+            _ => "drowned in the flooding compartment"
+        };
         ShowMessage($"You {verb}... ({TixPenaltyOnDeath} tix lost)", DeathFreezeSeconds);
     }
 
@@ -1282,6 +2069,8 @@ public class Game
 
     private void UpdateHudText(float deltaTime)
     {
+        UpdateInventoryHud();
+
         if (IsGameOver)
         {
             Hud.SetText(_finalMessage);
@@ -1296,8 +2085,31 @@ public class Game
         }
 
         var roleText = CurrentRole is not null ? $"  |  Role: {Capitalize(CurrentRole)}" : "";
-        var launcherText = HasTixLauncher ? "  |  Tix Launcher (E to fire)" : "";
-        Hud.SetText($"Tix: {TixBalance}{roleText}{launcherText}  |  {PhaseLabel()}{LifeboatHint()}{ShopHint()}");
+        Hud.SetText($"Tix: {TixBalance}{roleText}  |  {PhaseLabel()}{LifeboatHint()}{ShopHint()}");
+    }
+
+    /// <summary>
+    /// The second HUD line: what each player is carrying. Lives on its own line
+    /// because the main status line is single-line/no-wrap and already long.
+    /// </summary>
+    private void UpdateInventoryHud()
+    {
+        var parts = new List<string>();
+        for (var i = 0; i < _sessions.Count; i++)
+        {
+            var inventory = _sessions[i].Inventory;
+            var bits = new List<string>();
+            if (inventory.HasLifeJacket) bits.Add("jacket");
+            if (inventory.HasDeckBoots) bits.Add("boots");
+            if (inventory.HasTixLauncher) bits.Add("launcher(E)");
+            if (inventory.Blankets > 0) bits.Add($"blankets x{inventory.Blankets}");
+            if (inventory.Snacks.Count > 0) bits.Add($"snacks x{inventory.Snacks.Count}");
+            if (inventory.TntCharges.Count > 0) bits.Add($"TNT x{inventory.TntCharges.Count}");
+            if (bits.Count == 0) continue;
+            parts.Add((_sessions.Count > 1 ? $"P{i + 1}: " : "") + string.Join(" ", bits));
+        }
+        if (FlareGunOwned && !FlareGunFired) parts.Add("flare gun (Up+E)");
+        _inventoryHud.SetText(string.Join("  |  ", parts));
     }
 
     /// <summary>
@@ -1321,20 +2133,18 @@ public class Game
 
     /// <summary>
     /// A persistent on-screen prompt whenever a player is standing at the shop
-    /// counter, mirroring LifeboatHint - it names the price and toggles between
-    /// buy/sell wording depending on whether the launcher is already owned.
+    /// counter with the menu closed, mirroring LifeboatHint.
     /// </summary>
     private string ShopHint()
     {
+        if (_shopMenuOwner is not null) return "";
         foreach (var session in _sessions)
         {
             if (session.Escaped || session.IsDying) continue;
             var distance = DistanceToShop(session);
             if (distance is null || distance > InteractRadius) continue;
 
-            return HasTixLauncher
-                ? $"  |  Enter: Sell Tix Launcher (+{LauncherSellRefund} tix)"
-                : $"  |  Enter: Buy Tix Launcher ({LauncherCost} tix)";
+            return "  |  Enter: SHOP";
         }
         return "";
     }
@@ -1342,6 +2152,13 @@ public class Game
     private string PhaseLabel()
     {
         var sinceCollision = SecondsSinceCollision();
+
+        // Boarding overrides everything: the countdown is the only number that
+        // matters once she's alongside (an early flare can put her here well
+        // before the Sunk phase).
+        if (_rescueShip.State == RescueShipState.Boarding)
+            return $"CARPATHIA ALONGSIDE - board within {Math.Max(0f, _rescueShip.BoardingSecondsRemaining):0}s!";
+
         return Phase switch
         {
             VoyagePhase.Cruising => "Cruising the North Atlantic",
@@ -1349,13 +2166,27 @@ public class Game
             VoyagePhase.Collision => "COLLISION",
             VoyagePhase.Sinking => $"SINKING - {sinceCollision:0}s since impact",
             VoyagePhase.Split => $"THE SHIP HAS SPLIT - {sinceCollision:0}s since impact",
-            VoyagePhase.Sunk => $"SUNK - cling to the stern! Carpathia in {Math.Max(0f, SunkAfterCollisionSeconds + RescueAfterSunkSeconds - sinceCollision):0}s",
+            VoyagePhase.Sunk => _rescueShip.State switch
+            {
+                RescueShipState.Steaming => "SUNK - the Carpathia approaches off the starboard side!",
+                RescueShipState.Departed => "The Carpathia has departed.",
+                _ => "SUNK - cling to the stern!"
+            },
             _ => ""
         };
     }
 
     private bool SessionJustPressed(PlayerSession session, InputAction action) =>
         session.InputSource?.IsActionJustPressed(action) ?? InputActions.IsJustPressed(action);
+
+    private bool SessionPressed(PlayerSession session, InputAction action) =>
+        session.InputSource?.IsActionPressed(action) ?? InputActions.IsPressed(action);
+
+    /// <summary>This session pressed Confirm this frame and no earlier check has claimed it yet.</summary>
+    private bool ConfirmAvailable(PlayerSession session) =>
+        !_confirmConsumed.Contains(session) && SessionJustPressed(session, InputAction.Confirm);
+
+    private void ConsumeConfirm(PlayerSession session) => _confirmConsumed.Add(session);
 
     private static float Distance(GameObject a, GameObject b)
     {

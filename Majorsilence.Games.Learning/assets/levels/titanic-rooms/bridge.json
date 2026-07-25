@@ -24,6 +24,7 @@
   "entities": [
     { "type": "wheel", "column": 5, "row": 3 },
     { "type": "npc", "column": 5, "row": 2, "properties": { "role": "captain" } },
+    { "type": "tix", "column": 3, "row": 3, "properties": { "value": "30" } },
     { "type": "door", "column": 4, "row": 7, "properties": { "target": "assets/levels/titanic.json", "spawn": "fromBridge" } },
     { "type": "spawnPoint", "column": 5, "row": 6, "properties": { "name": "fromBoatDeck" } }
   ]

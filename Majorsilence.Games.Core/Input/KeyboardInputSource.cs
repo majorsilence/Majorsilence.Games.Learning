@@ -21,7 +21,9 @@ public class KeyboardInputSource : IInputSource
             [InputAction.Confirm] = new[] { SDL.Scancode.Return },
             [InputAction.Cancel] = new[] { SDL.Scancode.Escape },
             [InputAction.ToggleFullscreen] = new[] { SDL.Scancode.F },
-            [InputAction.Quit] = new[] { SDL.Scancode.Q, SDL.Scancode.Escape },
+            // Escape deliberately stays off Quit (it doubles as Cancel above) -
+            // otherwise closing a UI panel with Esc would exit the whole game.
+            [InputAction.Quit] = new[] { SDL.Scancode.Q },
         };
     }
 

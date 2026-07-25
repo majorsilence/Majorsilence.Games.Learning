@@ -1,6 +1,7 @@
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Isometric;
 using Majorsilence.Games.Core.Levels;
+using SDL3;
 
 namespace Majorsilence.Games.Learning;
 
@@ -189,7 +190,9 @@ public class Room
                     {
                         var npcSheet = game.GetSheet(npcKind.ImagePath, npcKind.Width, npcKind.Height);
                         var (npcX, npcY, npcSortOffset) = StandOnTileElevated(entity.Column, entity.Row, npcKind.Width, npcKind.Height);
-                        var npc = new Npc(npcSheet, role) { X = npcX, Y = npcY, ZIndex = 1, SortOffsetY = npcSortOffset };
+                        var lines = game.NpcLines.GetValueOrDefault(role, new[] { "..." });
+                        var npc = new Npc(npcSheet, role, lines) { ZIndex = 1, SortOffsetY = npcSortOffset };
+                        npc.SetHome(npcX, npcY);
                         Npcs.Add(npc);
                         RoomObjects.Add(npc);
                         _rowAnchoredObjects.Add((entity.Row, npc));
@@ -208,6 +211,18 @@ public class Room
 
                 case "shop":
                     ShopTile = (entity.Column, entity.Row);
+
+                    // A floating sign above the counter, always visible (not just
+                    // once the player is close enough to interact) - the shop is
+                    // otherwise indistinguishable from any other prop-filled room
+                    // until you stumble right up to it.
+                    var (shopTileX, shopTileY) = Grid.TileToWorld(entity.Column, entity.Row);
+                    var labelX = Tilemap.X + shopTileX + Grid.TileWidth / 2;
+                    var labelY = Tilemap.Y + shopTileY - 40;
+                    var shopLabel = game.CreateWorldLabel("SHOP", labelX, labelY,
+                        new SDL.Color { A = 0, R = 255, G = 210, B = 60 });
+                    RoomObjects.Add(shopLabel);
+                    _rowAnchoredObjects.Add((entity.Row, shopLabel));
                     break;
 
                 case "playerStart":
@@ -357,6 +372,54 @@ public class Room
             obj.X += deltaX;
             obj.Y += deltaY;
         }
+    }
+
+    /// <summary>
+    /// Adds a runtime-spawned object (e.g. a placed TNT charge) to the room with
+    /// the same lifecycle as a built-in prop: it drifts with the ship and is
+    /// removed if its row submerges. The caller also adds it to Game.GameObjects.
+    /// </summary>
+    public void AttachRowAnchored(GameObject obj, int row)
+    {
+        RoomObjects.Add(obj);
+        _rowAnchoredObjects.Add((row, obj));
+    }
+
+    /// <summary>
+    /// A TNT blast: every "wall" tile within radiusTiles (Chebyshev distance) of
+    /// the center becomes walkable "floor" - blowing shortcut routes through
+    /// interior rooms. Perimeter tiles are never touched, so a blast can't open
+    /// the room into the void; rooms without wall/floor tile types (the open
+    /// deck) simply have nothing to blast.
+    /// </summary>
+    public void BlastAt(int column, int row, int radiusTiles)
+    {
+        if (!_tileFrameIndex.TryGetValue("floor", out var floorFrame)) return;
+
+        var rows = _tileTypes.GetLength(0);
+        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        for (var r = Math.Max(1, row - radiusTiles); r <= Math.Min(rows - 2, row + radiusTiles); r++)
+        {
+            for (var c = Math.Max(1, column - radiusTiles); c <= Math.Min(columns - 2, column + radiusTiles); c++)
+            {
+                if (_tileTypes[r, c] != "wall") continue;
+                _tileTypes[r, c] = "floor";
+                Tilemap.SetTile(c, r, floorFrame);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes the iceberg from the room (a Large TNT charge shattered it) and
+    /// hands it back so Game can drop it from its render list too.
+    /// </summary>
+    public Sprite? DetachIceberg()
+    {
+        var berg = Iceberg;
+        if (berg is null) return null;
+        Iceberg = null;
+        RoomObjects.Remove(berg);
+        return berg;
     }
 
     /// <summary>

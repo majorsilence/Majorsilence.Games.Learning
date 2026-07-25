@@ -19,6 +19,7 @@
   ],
   "entities": [
     { "type": "npc", "column": 3, "row": 2, "properties": { "role": "watcher" } },
+    { "type": "tix", "column": 4, "row": 3, "properties": { "value": "40" } },
     { "type": "door", "column": 2, "row": 5, "properties": { "target": "assets/levels/titanic.json", "spawn": "fromCrowsNest" } },
     { "type": "spawnPoint", "column": 3, "row": 4, "properties": { "name": "fromBoatDeck" } }
   ]

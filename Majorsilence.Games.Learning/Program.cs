@@ -121,7 +121,7 @@ void RunClassicDemo(string levelPath)
         "assets/fonts/Gidole-Regular.ttf",
         size: 25,
         new SDL.Color { A = 0, B = 155, G = 155, R = 155 },
-        "Arrow keys to move, Space to jump, F fullscreen, Esc/Q to quit"
+        "Arrow keys to move, Space to jump, F fullscreen, Q to quit"
     );
     var title = new StationaryObject(titleTexture);
 

@@ -126,4 +126,17 @@ public class Renderer : IDisposable
     {
         SDL.SetRenderDrawColor(this, r, g, b, a);
     }
+
+    /// <summary>
+    /// Fills a screen-space rectangle in the given color, alpha-blended - the
+    /// primitive backing UI panels (e.g. menu backgrounds) that need a solid
+    /// surface behind text without a dedicated texture asset.
+    /// </summary>
+    public void FillRect(int x, int y, int width, int height, byte r, byte g, byte b, byte a)
+    {
+        SDL.SetRenderDrawBlendMode(this, SDL.BlendMode.Blend);
+        SDL.SetRenderDrawColor(this, r, g, b, a);
+        var rect = new SDL.FRect { X = x, Y = y, W = width, H = height };
+        SDL.RenderFillRect(this, in rect);
+    }
 }

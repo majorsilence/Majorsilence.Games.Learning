@@ -194,42 +194,66 @@
     {
       "type": "tix",
       "column": 5,
-      "row": 22
+      "row": 22,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 14,
-      "row": 22
+      "row": 22,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 5,
-      "row": 33
+      "row": 33,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 5,
-      "row": 45
+      "row": 45,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 14,
-      "row": 38
+      "row": 38,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 14,
-      "row": 45
+      "row": 45,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 7,
-      "row": 62
+      "row": 62,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 12,
-      "row": 62
+      "row": 62,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "door",
@@ -317,6 +341,38 @@
       "type": "lifeboat",
       "column": 16,
       "row": 64
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 8,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 14,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 7,
+      "row": 52,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 52,
+      "properties": {
+        "value": "15"
+      }
     }
   ],
   "elevationStep": 16,

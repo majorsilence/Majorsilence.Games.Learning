@@ -140,17 +140,34 @@
     {
       "type": "tix",
       "column": 12,
-      "row": 3
+      "row": 3,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 22,
-      "row": 9
+      "row": 9,
+      "properties": {
+        "value": "15"
+      }
     },
     {
       "type": "tix",
       "column": 36,
-      "row": 10
+      "row": 10,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 28,
+      "row": 9,
+      "properties": {
+        "value": "15"
+      }
     }
   ]
 }
