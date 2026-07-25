@@ -1,0 +1,139 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 13,
+      "row": 1,
+      "properties": {
+        "target": "assets/levels/meridian/corridor.json",
+        "spawn": "from-second-class"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 14,
+      "row": 2,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 13
+    },
+    {
+      "type": "bed",
+      "column": 6,
+      "row": 13
+    },
+    {
+      "type": "bed",
+      "column": 10,
+      "row": 13
+    },
+    {
+      "type": "bed",
+      "column": 14,
+      "row": 13
+    },
+    {
+      "type": "bed",
+      "column": 18,
+      "row": 13
+    },
+    {
+      "type": "table",
+      "column": 3,
+      "row": 2
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 7,
+      "row": 8,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 13,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 3,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 19,
+      "row": 8,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 23,
+      "row": 13,
+      "properties": {
+        "value": "25"
+      }
+    }
+  ],
+  "floodDelaySeconds": 45
+}

@@ -49,7 +49,9 @@ internal static class AndroidGame
         SyncViewport();
         InputManager.WindowResized += SyncViewport;
 
-        game.Begin("assets/levels/titanic.json", coop: false);
+        // No console on Android, so no mode prompt: always continue the saved
+        // campaign (a fresh install simply starts at voyage 1).
+        game.BeginCampaign(CampaignSave.Load(), coop: false);
 
         // On-screen d-pad and buttons; registered as an extra InputActions
         // source so the shared game code needs no touch awareness.

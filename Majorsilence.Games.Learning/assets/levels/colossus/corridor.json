@@ -1,0 +1,172 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 2,
+      "properties": {
+        "target": "assets/levels/colossus/ship.json",
+        "spawn": "fromADeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "name": "fromDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 41,
+      "row": 11,
+      "properties": {
+        "target": "assets/levels/colossus/pursers-office.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 40,
+      "row": 11,
+      "properties": {
+        "name": "fromPurser"
+      }
+    },
+    {
+      "type": "door",
+      "column": 13,
+      "row": 12,
+      "properties": {
+        "target": "assets/levels/colossus/officers-ward.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 13,
+      "row": 11,
+      "properties": {
+        "name": "from-officers-ward"
+      }
+    },
+    {
+      "type": "door",
+      "column": 21,
+      "row": 12,
+      "properties": {
+        "target": "assets/levels/colossus/general-ward.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 21,
+      "row": 11,
+      "properties": {
+        "name": "from-general-ward"
+      }
+    },
+    {
+      "type": "door",
+      "column": 29,
+      "row": 12,
+      "properties": {
+        "target": "assets/levels/colossus/steerage.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 29,
+      "row": 11,
+      "properties": {
+        "name": "from-steerage"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 13,
+      "row": 7,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 22,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 31,
+      "row": 7,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 40,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "crate",
+      "column": 38,
+      "row": 2
+    }
+  ],
+  "floodDelaySeconds": 35
+}

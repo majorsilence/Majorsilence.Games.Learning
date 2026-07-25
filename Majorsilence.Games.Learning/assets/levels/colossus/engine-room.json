@@ -1,0 +1,94 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "boiler",
+      "column": 7,
+      "row": 8
+    },
+    {
+      "type": "boiler",
+      "column": 11,
+      "row": 8
+    },
+    {
+      "type": "crate",
+      "column": 2,
+      "row": 2
+    },
+    {
+      "type": "npc",
+      "column": 7,
+      "row": 5,
+      "properties": {
+        "role": "engineer"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 2,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 8,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "door",
+      "column": 1,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/colossus/pursers-office.json",
+        "spawn": "fromEngine"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 2,
+      "row": 3,
+      "properties": {
+        "name": "fromPurser"
+      }
+    }
+  ],
+  "floodDelaySeconds": 5
+}

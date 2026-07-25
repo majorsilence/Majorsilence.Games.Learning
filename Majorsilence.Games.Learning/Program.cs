@@ -80,6 +80,24 @@ void RunTitanicShip(string entryLevelPath)
 {
     var entryLevel = LevelLoader.Load(entryLevelPath);
 
+    // Campaign is the default way to play: four escalating voyages with banked
+    // tix and gear carried between them, progress saved to disk. Free play is
+    // the original one-shot Titanic run.
+    var save = CampaignSave.Load();
+    var nextVoyage = Campaign.Voyages[Math.Clamp(save.VoyageIndex, 0, Campaign.Voyages.Count - 1)];
+    Console.WriteLine("Choose a mode:");
+    Console.WriteLine($"  1. Continue campaign - {nextVoyage.Name}, bank {save.Bank} tix");
+    Console.WriteLine("  2. New campaign (erases saved progress)");
+    Console.WriteLine("  3. Free play - a single Titanic voyage, nothing saved");
+    Console.Write("Enter a number (1-3, default 1): ");
+    var modeInput = Console.ReadLine()?.Trim();
+    var mode = modeInput == "2" ? 2 : modeInput == "3" ? 3 : 1;
+    if (mode == 2)
+    {
+        CampaignSave.Delete();
+        save = new CampaignSave();
+    }
+
     var coop = false;
     if (entryLevel.Coop)
     {
@@ -105,7 +123,8 @@ void RunTitanicShip(string entryLevelPath)
     SyncViewport();
     InputManager.WindowResized += SyncViewport;
 
-    game.Begin(entryLevelPath, coop);
+    if (mode == 3) game.Begin(entryLevelPath, coop);
+    else game.BeginCampaign(save, coop);
 
     renderer.DrawColor(18, 28, 42, 255);
     var loop = new EventLoop(renderer);

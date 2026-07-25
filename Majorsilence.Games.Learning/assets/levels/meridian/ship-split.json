@@ -1,0 +1,384 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "coop": true,
+  "tilesetPath": "assets/artwork/titanic-demo/tileset.png",
+  "tileFrames": {
+    "deck": 0,
+    "water": 1,
+    "railing": 2,
+    "cabin": 5
+  },
+  "tileVariants": {
+    "water": [
+      1,
+      3,
+      4
+    ]
+  },
+  "wallProps": {
+    "railing": "hullSide"
+  },
+  "legend": {
+    "D": "deck",
+    "W": "water",
+    "R": "railing",
+    "C": "cabin"
+  },
+  "solid": [
+    "railing"
+  ],
+  "hazards": {
+    "water": "freeze"
+  },
+  "worldMinColumn": -2000,
+  "worldMaxColumn": 2000,
+  "worldMinRow": -2000,
+  "worldMaxRow": 2000,
+  "fallbackTileType": "water",
+  "driftSpeedX": 4,
+  "driftSpeedY": -2,
+  "elevationStep": 16,
+  "tiles": [
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWDDDDWWWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDCCCCCCCCCCDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDDDDDRW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WWRDDDDDDDDDDDDDDRWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWWRDDDDDDDDDDDDRWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWWRDDDDDDDDDDRWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWWRDDDDDDDDRWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWWRDDDDDDRWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWWRDDDDRWWWWWWW",
+    "WWWWWWWWDDDDWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWW"
+  ],
+  "heights": [
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000111111111100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000112222221100000",
+    "00000111111111100000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000",
+    "00000000000000000000"
+  ],
+  "entities": [
+    {
+      "type": "playerStart",
+      "column": 9,
+      "row": 17
+    },
+    {
+      "type": "iceberg",
+      "column": 9,
+      "row": 0
+    },
+    {
+      "type": "door",
+      "column": 9,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/meridian/bridge.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 12,
+      "row": 5,
+      "properties": {
+        "target": "assets/levels/meridian/crows-nest.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 7,
+      "properties": {
+        "name": "fromBridge"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 12,
+      "row": 7,
+      "properties": {
+        "name": "fromCrowsNest"
+      }
+    },
+    {
+      "type": "mast",
+      "column": 9,
+      "row": 6
+    },
+    {
+      "type": "door",
+      "column": 9,
+      "row": 44,
+      "properties": {
+        "target": "assets/levels/meridian/corridor.json",
+        "spawn": "fromDeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 45,
+      "properties": {
+        "name": "fromADeck"
+      }
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 22
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 30
+    },
+    {
+      "type": "funnel",
+      "column": 9,
+      "row": 39
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 20
+    },
+    {
+      "type": "lifeboat",
+      "column": 16,
+      "row": 20
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 28
+    },
+    {
+      "type": "lifeboat",
+      "column": 16,
+      "row": 28
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 36
+    },
+    {
+      "type": "lifeboat",
+      "column": 16,
+      "row": 36
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 21,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 21,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 26,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 26,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 31,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 31,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 35,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 35,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 40,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 40,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 20,
+      "properties": {
+        "name": "forwardHalf"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 11,
+      "row": 45,
+      "properties": {
+        "name": "aftHalf"
+      }
+    }
+  ]
+}

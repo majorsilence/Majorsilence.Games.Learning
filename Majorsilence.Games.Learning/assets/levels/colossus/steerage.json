@@ -1,0 +1,173 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 9,
+      "row": 1,
+      "properties": {
+        "target": "assets/levels/colossus/corridor.json",
+        "spawn": "from-steerage"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 10,
+      "row": 2,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 9
+    },
+    {
+      "type": "bed",
+      "column": 6,
+      "row": 9
+    },
+    {
+      "type": "bed",
+      "column": 10,
+      "row": 9
+    },
+    {
+      "type": "table",
+      "column": 3,
+      "row": 2
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 6,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 9,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 6,
+      "row": 3,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 7,
+      "row": 6,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 8,
+      "row": 9,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 10,
+      "row": 3,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 6,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 9,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 13,
+      "row": 3,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 14,
+      "row": 6,
+      "properties": {
+        "value": "6"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 9,
+      "properties": {
+        "value": "6"
+      }
+    }
+  ],
+  "floodDelaySeconds": 15
+}

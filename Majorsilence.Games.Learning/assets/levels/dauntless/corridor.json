@@ -1,0 +1,118 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFTFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 2,
+      "properties": {
+        "target": "assets/levels/dauntless/ship.json",
+        "spawn": "fromADeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "name": "fromDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 21,
+      "row": 7,
+      "properties": {
+        "target": "assets/levels/dauntless/pursers-office.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 20,
+      "row": 7,
+      "properties": {
+        "name": "fromPurser"
+      }
+    },
+    {
+      "type": "door",
+      "column": 11,
+      "row": 8,
+      "properties": {
+        "target": "assets/levels/dauntless/crew-berths.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 11,
+      "row": 7,
+      "properties": {
+        "name": "from-crew-berths"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 2,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 5,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 20,
+      "row": 2,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "crate",
+      "column": 18,
+      "row": 2
+    }
+  ],
+  "floodDelaySeconds": 45
+}

@@ -1,0 +1,125 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 9,
+      "row": 1,
+      "properties": {
+        "target": "assets/levels/dauntless/corridor.json",
+        "spawn": "from-crew-berths"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 10,
+      "row": 2,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 9
+    },
+    {
+      "type": "bed",
+      "column": 6,
+      "row": 9
+    },
+    {
+      "type": "bed",
+      "column": 10,
+      "row": 9
+    },
+    {
+      "type": "table",
+      "column": 3,
+      "row": 2
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 6,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 8,
+      "row": 9,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 10,
+      "row": 3,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 13,
+      "row": 6,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 9,
+      "properties": {
+        "value": "10"
+      }
+    }
+  ],
+  "floodDelaySeconds": 25
+}

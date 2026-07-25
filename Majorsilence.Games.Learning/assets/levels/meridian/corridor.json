@@ -1,0 +1,145 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFTFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 2,
+      "properties": {
+        "target": "assets/levels/meridian/ship.json",
+        "spawn": "fromADeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "name": "fromDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 29,
+      "row": 9,
+      "properties": {
+        "target": "assets/levels/meridian/pursers-office.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 28,
+      "row": 9,
+      "properties": {
+        "name": "fromPurser"
+      }
+    },
+    {
+      "type": "door",
+      "column": 12,
+      "row": 10,
+      "properties": {
+        "target": "assets/levels/meridian/second-class.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 12,
+      "row": 9,
+      "properties": {
+        "name": "from-second-class"
+      }
+    },
+    {
+      "type": "door",
+      "column": 18,
+      "row": 10,
+      "properties": {
+        "target": "assets/levels/meridian/third-class.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 18,
+      "row": 9,
+      "properties": {
+        "name": "from-third-class"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 2,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 12,
+      "row": 6,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 20,
+      "row": 2,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 28,
+      "row": 6,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "crate",
+      "column": 26,
+      "row": 2
+    }
+  ],
+  "floodDelaySeconds": 40
+}

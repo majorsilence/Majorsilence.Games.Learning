@@ -1,0 +1,66 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXX",
+    "XFFFFX",
+    "XFFFFX",
+    "XFFFFX",
+    "XFFFFX",
+    "XXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "npc",
+      "column": 3,
+      "row": 2,
+      "properties": {
+        "role": "watcher"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 3,
+      "properties": {
+        "value": "50"
+      }
+    },
+    {
+      "type": "door",
+      "column": 2,
+      "row": 4,
+      "properties": {
+        "target": "assets/levels/colossus/ship.json",
+        "spawn": "fromCrowsNest"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "name": "fromBoatDeck"
+      }
+    }
+  ]
+}

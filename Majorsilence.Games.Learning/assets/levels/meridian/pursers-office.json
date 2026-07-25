@@ -1,0 +1,87 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XTFFFFFFFX",
+    "XFFFFFFFTX",
+    "XFFFFFFFFX",
+    "XXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "shopCounter",
+      "column": 4,
+      "row": 1
+    },
+    {
+      "type": "shop",
+      "column": 4,
+      "row": 2
+    },
+    {
+      "type": "tix",
+      "column": 7,
+      "row": 1,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "door",
+      "column": 1,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/meridian/corridor.json",
+        "spawn": "fromPurser"
+      }
+    },
+    {
+      "type": "door",
+      "column": 8,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/meridian/engine-room.json",
+        "spawn": "fromPurser"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 2,
+      "row": 3,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 7,
+      "row": 3,
+      "properties": {
+        "name": "fromEngine"
+      }
+    }
+  ],
+  "floodDelaySeconds": 25
+}

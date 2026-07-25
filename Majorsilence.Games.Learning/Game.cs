@@ -27,19 +27,12 @@ public enum VoyagePhase
 /// </summary>
 public class Game
 {
-    public const string BoatDeckPath = "assets/levels/titanic.json";
-    public const string BoatDeckSplitPath = "assets/levels/titanic-rooms/boat-deck-split.json";
-    private const int BoatDeckSplitMidRow = 40;
-
-    // The voyage is different every time: the iceberg strikes somewhere between
-    // 1 and 10 minutes in, rolled once per session, with the lookout's warning
-    // always coming a fixed 30 seconds before impact (so the iceberg's visible
-    // approach is equally dramatic however long the cruise lasted).
-    private const float MinCollisionAtSeconds = 60f;
-    private const float MaxCollisionAtSeconds = 600f;
+    // The lookout's warning always comes a fixed 30 seconds before impact (so
+    // the iceberg's visible approach is equally dramatic however long the
+    // cruise lasted). Everything else about the disaster's shape - when the
+    // iceberg can strike, how fast she splits and sinks, which ship this even
+    // is - lives in the current VoyageConfig.
     private const float WarningBeforeCollisionSeconds = 30f;
-    private const float SplitAfterCollisionSeconds = 70f;
-    private const float SunkAfterCollisionSeconds = 110f;
 
     private const float WatcherBonusSeconds = 20f;
     private const float CaptainBonusSeconds = 15f;
@@ -87,7 +80,6 @@ public class Game
     // stern deck - players must get to the rail, not just exist on the wreck.
     private const float CarpathiaStopDistance = 260f;
     private const float CarpathiaBoardRadius = 110f;
-    private const float CarpathiaBoardingWindowSeconds = 75f;
     private const float CarpathiaRowTowardSpeed = 45f;
 
     // The iceberg starts this many world pixels ahead of the bow (in the ship's
@@ -96,12 +88,8 @@ public class Game
     // "out there" getting closer, not just an abstract timer.
     private const float IcebergApproachDistance = 550f;
 
-    // Stern/bow tip tiles on the boat deck hull (see assets/levels/titanic.json) -
-    // where the wake trail and bow spray spawn from.
-    private const int SternColumn = 9;
-    private const int SternRow = 77;
-    private const int BowColumn = 9;
-    private const int BowRow = 2;
+    // (Stern/bow tip tiles - where the wake trail and bow spray spawn from -
+    // come from the voyage's hull geometry: _voyage.CenterColumn/SternRow/BowRow.)
 
     private const float WakeSpawnInterval = 0.5f;
     private const float WakeLifespanSeconds = 5f;
@@ -125,12 +113,8 @@ public class Game
     private const int SplitBulgeMaxPixels = 26;
     private const int SplitBulgeHalfWidthRows = 9;
 
-    // How far down the hull (row index, bow at the top) the waterline reaches at
-    // key story beats: by the moment the ship splits, everything forward of the
-    // split row is awash; by Sunk, all but the last few stern rows are gone -
-    // the stern is the classic final refuge.
-    private const int WaterlineRowAtSplit = BoatDeckSplitMidRow - 1;
-    private const int WaterlineRowAtSunk = 65;
+    // (Waterline story beats - how far down the hull the sea reaches at the
+    // split and at Sunk - are derived per-hull in VoyageConfig.)
 
     /// <summary>
     /// How many world-pixels the window's shorter edge should show. With 32x16
@@ -185,7 +169,14 @@ public class Game
     private readonly Random _random = new();
     private readonly Dictionary<string, float> _floodDelayBonusByPath = new();
 
-    private readonly float _baseCollisionAtSeconds;
+    // Which ship/disaster this session is currently playing, plus campaign
+    // progression when running in campaign mode (free play leaves it off).
+    private VoyageConfig _voyage = Campaign.FreePlayTitanic;
+    private bool _campaignMode;
+    private int _voyageIndex;
+    private bool _voyageCleared;
+
+    private float _baseCollisionAtSeconds;
     private string? _currentRoleRoomPath;
     private bool _watcherBonusUsed;
     private bool _captainBonusUsed;
@@ -319,14 +310,6 @@ public class Game
         _shopMenu = new ShopMenu(renderer, "assets/fonts/Gidole-Regular.ttf");
         GameObjects.Add(_shopMenu);
 
-        _baseCollisionAtSeconds = MinCollisionAtSeconds
-            + (float)_random.NextDouble() * (MaxCollisionAtSeconds - MinCollisionAtSeconds);
-
-        // Test hook: pin the collision time (seconds) for scripted/headless runs,
-        // so the whole sinking-to-rescue timeline can be exercised unattended.
-        if (float.TryParse(Environment.GetEnvironmentVariable("TITANIC_COLLISION_AT"), out var forcedCollisionAt))
-            _baseCollisionAtSeconds = forcedCollisionAt;
-
         if (audio is not null)
         {
             _doorSound = new Sound(audio, "assets/audio/door-enter.wav");
@@ -427,8 +410,37 @@ public class Game
         return baseDelay + _floodDelayBonusByPath.GetValueOrDefault(path);
     }
 
-    /// <summary>Creates the player(s) and loads the first room. Call once, before running EventLoop.</summary>
+    /// <summary>Free play: the classic single Titanic voyage, no persistence. Call once, before running EventLoop.</summary>
     public void Begin(string entryLevelPath, bool coop)
+    {
+        CreatePlayers(coop);
+        ResetVoyage(Campaign.FreePlayTitanic);
+        _music?.Play();
+    }
+
+    /// <summary>
+    /// Campaign mode: starts at the saved voyage with the saved bank and gear,
+    /// and persists progress at the end of every voyage. Call once.
+    /// </summary>
+    public void BeginCampaign(CampaignSave save, bool coop)
+    {
+        _campaignMode = true;
+        _voyageIndex = Math.Clamp(save.VoyageIndex, 0, Campaign.Voyages.Count - 1);
+
+        // Test hook: jump the campaign to a specific voyage for scripted runs.
+        if (int.TryParse(Environment.GetEnvironmentVariable("TITANIC_VOYAGE"), out var forcedVoyage))
+            _voyageIndex = Math.Clamp(forcedVoyage, 0, Campaign.Voyages.Count - 1);
+
+        CreatePlayers(coop);
+        TixBalance = Math.Max(0, save.Bank);
+        for (var i = 0; i < _sessions.Count && i < save.Players.Count; i++)
+            save.Players[i].ApplyTo(_sessions[i].Inventory);
+
+        ResetVoyage(Campaign.Voyages[_voyageIndex]);
+        _music?.Play();
+    }
+
+    private void CreatePlayers(bool coop)
     {
         var playerSheet = GetSheet("assets/artwork/isometric-demo/character.png", 16, 32);
         var player1 = new Player(playerSheet) { Speed = BasePlayerSpeed, ZIndex = 1, SortOffsetY = PlayerBaseSortOffsetY, AnimateOnlyWhenMoving = true };
@@ -462,13 +474,91 @@ public class Game
             Camera.Target = anchor;
         }
 
-        LoadRoom(entryLevelPath, "");
-        _music?.Play();
+    }
+
+    /// <summary>
+    /// Tears down whatever voyage was running and starts this one from its boat
+    /// deck: fresh disaster clock and phase, fresh world state (boats, rescue
+    /// ship, particles, drift), same players with their banked tix and gear -
+    /// the whole point of the campaign is that those carry over.
+    /// </summary>
+    private void ResetVoyage(VoyageConfig voyage)
+    {
+        _voyage = voyage;
+        _voyageCleared = false;
+
+        // World objects from the previous voyage.
+        foreach (var launched in _launchedBoats) GameObjects.Remove(launched.Boat);
+        _launchedBoats.Clear();
+        RemoveRescueShipSprite();
+        _rescueShip.State = RescueShipState.NotSummoned;
+        _flareSummonRequested = false;
+        foreach (var stale in _particles) GameObjects.Remove(stale);
+        _particles.Clear();
+        _tntCharges.Clear();
+        CloseShopMenu();
+
+        // Disaster clock and phase.
+        Phase = VoyagePhase.Cruising;
+        IsGameOver = false;
+        _finalMessage = "";
+        _voyageClock = 0f;
+        _collisionBonusSeconds = 0f;
+        _hasSplit = false;
+        _doorCooldown = 0f;
+        _transientTimer = 0f;
+        _shakeSecondsRemaining = 0f;
+        RollCollisionTime();
+
+        // Role and per-voyage one-shots. A bought-but-unfired flare gun carries
+        // over; a fired one was consumed.
+        CurrentRole = null;
+        _currentRoleRoomPath = null;
+        _watcherBonusUsed = _captainBonusUsed = _engineerBonusUsed = false;
+        _floodDelayBonusByPath.Clear();
+        _pocketWatchUsed = false;
+        if (FlareGunFired) FlareGunOwned = false;
+        FlareGunFired = false;
+
+        // Ship drift starts from zero on a fresh hull.
+        _shipDriftAccumX = _shipDriftAccumY = 0f;
+        _shipDriftAppliedX = _shipDriftAppliedY = 0;
+
+        // Players: alive, aboard, ashore of any lifeboat.
+        foreach (var session in _sessions)
+        {
+            session.Escaped = false;
+            session.Rescued = false;
+            session.IsDying = false;
+            session.Player.InputEnabled = true;
+            session.Player.Z = 0f;
+            session.Inventory.IsSwimming = false;
+            session.Inventory.HazardGraceSeconds = 0f;
+            session.Inventory.FoodBuffSecondsRemaining = 0f;
+            session.Inventory.FoodBuffMultiplier = 1f;
+            if (!GameObjects.Contains(session.Player)) GameObjects.Add(session.Player);
+        }
+
+        LoadRoom(voyage.ExteriorPath, "");
+
+        var goalText = _campaignMode && voyage.TixGoal > 0 ? $" Goal: bank {voyage.TixGoal} tix." : "";
+        ShowMessage($"{voyage.Name} - {voyage.Briefing}{goalText}", 7f);
+    }
+
+    private void RollCollisionTime()
+    {
+        _baseCollisionAtSeconds = _voyage.CollisionMinSeconds
+            + (float)_random.NextDouble() * (_voyage.CollisionMaxSeconds - _voyage.CollisionMinSeconds);
+
+        // Test hook: pin the collision time (seconds) for scripted/headless runs,
+        // so the whole sinking-to-rescue timeline can be exercised unattended.
+        if (float.TryParse(Environment.GetEnvironmentVariable("TITANIC_COLLISION_AT"), out var forcedCollisionAt))
+            _baseCollisionAtSeconds = forcedCollisionAt;
     }
 
     public void LoadRoom(string targetPath, string spawnName)
     {
-        if (targetPath == BoatDeckPath && _hasSplit) targetPath = BoatDeckSplitPath;
+        if (targetPath == _voyage.ExteriorPath && _hasSplit) targetPath = _voyage.SplitPath;
 
         // The shop counter (and thus the open menu's subject) doesn't exist in
         // the next room - close before tearing the old room down. Particles and
@@ -487,7 +577,7 @@ public class Game
         // reloads (a fresh Room instance is built every time a door is used,
         // including re-entering the boat deck) - other rooms never drift, so they
         // always start at zero regardless of how far the ship has sailed.
-        var isDriftingLevel = targetPath == BoatDeckPath || targetPath == BoatDeckSplitPath;
+        var isDriftingLevel = targetPath == _voyage.ExteriorPath || targetPath == _voyage.SplitPath;
 
         // Launched lifeboats (and their escaped passengers) live in the open-ocean
         // world - they carry across boat-deck reloads (same world, e.g. the split),
@@ -696,7 +786,7 @@ public class Game
     {
         if (IsDriftingRoom())
         {
-            var (sternX, sternY) = CurrentRoom.StandOnTile(SternColumn, SternRow, 0, 0);
+            var (sternX, sternY) = CurrentRoom.StandOnTile(_voyage.CenterColumn, _voyage.SternRow, 0, 0);
             _wreckPointX = sternX;
             _wreckPointY = sternY;
 
@@ -718,7 +808,7 @@ public class Game
         {
             case RescueShipState.NotSummoned:
                 var scheduled = Phase == VoyagePhase.Sunk &&
-                    SecondsSinceCollision() >= SunkAfterCollisionSeconds + CarpathiaSummonAfterSunkSeconds;
+                    SecondsSinceCollision() >= _voyage.SunkAfterCollisionSeconds + CarpathiaSummonAfterSunkSeconds;
                 if (!_flareSummonRequested && !scheduled) return;
                 _flareSummonRequested = false;
                 _rescueShip.State = RescueShipState.Steaming;
@@ -740,8 +830,8 @@ public class Game
                     _rescueShip.PreciseX = targetX;
                     _rescueShip.PreciseY = targetY;
                     _rescueShip.State = RescueShipState.Boarding;
-                    _rescueShip.BoardingSecondsRemaining = CarpathiaBoardingWindowSeconds;
-                    ShowMessage($"The Carpathia is alongside - get aboard within {CarpathiaBoardingWindowSeconds:0}s!", 5f);
+                    _rescueShip.BoardingSecondsRemaining = _voyage.BoardingWindowSeconds;
+                    ShowMessage($"The Carpathia is alongside - get aboard within {_voyage.BoardingWindowSeconds:0}s!", 5f);
                 }
                 else
                 {
@@ -960,15 +1050,15 @@ public class Game
         int waterlineRow;
         if (Phase == VoyagePhase.Collision || Phase == VoyagePhase.Sinking)
         {
-            var progress = Math.Clamp(sinceCollision / SplitAfterCollisionSeconds, 0f, 1f);
-            waterlineRow = (int)(progress * WaterlineRowAtSplit);
+            var progress = Math.Clamp(sinceCollision / _voyage.SplitAfterCollisionSeconds, 0f, 1f);
+            waterlineRow = (int)(progress * _voyage.WaterlineRowAtSplit);
         }
         else if (Phase == VoyagePhase.Split || Phase == VoyagePhase.Sunk)
         {
-            var sinceSplit = sinceCollision - SplitAfterCollisionSeconds;
-            var span = SunkAfterCollisionSeconds - SplitAfterCollisionSeconds;
+            var sinceSplit = sinceCollision - _voyage.SplitAfterCollisionSeconds;
+            var span = _voyage.SunkAfterCollisionSeconds - _voyage.SplitAfterCollisionSeconds;
             var progress = span > 0f ? Math.Clamp(sinceSplit / span, 0f, 1f) : 1f;
-            waterlineRow = WaterlineRowAtSplit + (int)(progress * (WaterlineRowAtSunk - WaterlineRowAtSplit));
+            waterlineRow = _voyage.WaterlineRowAtSplit + (int)(progress * (_voyage.WaterlineRowAtSunk - _voyage.WaterlineRowAtSplit));
         }
         else
         {
@@ -990,12 +1080,12 @@ public class Game
         if (CurrentRoom.Level.DriftSpeedX == 0f && CurrentRoom.Level.DriftSpeedY == 0f) return;
         if (Phase != VoyagePhase.Sinking) return;
 
-        var start = SplitAfterCollisionSeconds - SplitBulgeSeconds;
+        var start = _voyage.SplitAfterCollisionSeconds - SplitBulgeSeconds;
         var sinceCollision = SecondsSinceCollision();
         if (sinceCollision <= start) return;
 
         var strength = Math.Clamp((sinceCollision - start) / SplitBulgeSeconds, 0f, 1f);
-        CurrentRoom.ApplySplitBulge(BoatDeckSplitMidRow, SplitBulgeHalfWidthRows, SplitBulgeMaxPixels, strength);
+        CurrentRoom.ApplySplitBulge(_voyage.SplitMidRow, SplitBulgeHalfWidthRows, SplitBulgeMaxPixels, strength);
     }
 
     /// <summary>
@@ -1069,7 +1159,7 @@ public class Game
             if (_wakeSpawnTimer <= 0f)
             {
                 _wakeSpawnTimer = WakeSpawnInterval / speedFactor;
-                var (wakeX, wakeY) = CurrentRoom.StandOnTile(SternColumn, SternRow, 16, 8);
+                var (wakeX, wakeY) = CurrentRoom.StandOnTile(_voyage.CenterColumn, _voyage.SternRow, 16, 8);
                 var wakeSheet = GetSheet(WakeIconPath, 16, 8);
                 // SortOffsetY must exceed a tile's own depth-sort height (TileHeight,
                 // see IsometricTilemap) or the tile this sits on always paints over it.
@@ -1082,7 +1172,7 @@ public class Game
             if (_bowSprayTimer <= 0f)
             {
                 _bowSprayTimer = BowSprayInterval / speedFactor;
-                var (sprayX, sprayY) = CurrentRoom.StandOnTile(BowColumn, BowRow, 16, 8);
+                var (sprayX, sprayY) = CurrentRoom.StandOnTile(_voyage.CenterColumn, _voyage.BowRow, 16, 8);
                 var spraySheet = GetSheet(WakeIconPath, 16, 8);
                 // small sideways scatter so the spray reads as splashing off the bow, not a fixed dot
                 var spray = new Particle(spraySheet, BowSprayLifespanSeconds)
@@ -1207,6 +1297,7 @@ public class Game
             CheckCarpathiaBoarding();
         }
 
+        CheckVoyageAdvance();
         UpdateHudText(deltaTime);
     }
 
@@ -1242,7 +1333,7 @@ public class Game
 
             case VoyagePhase.Sinking:
                 ApplyFloodIfDueForCurrentRoom();
-                if (SecondsSinceCollision() >= SplitAfterCollisionSeconds)
+                if (SecondsSinceCollision() >= _voyage.SplitAfterCollisionSeconds)
                 {
                     Phase = VoyagePhase.Split;
                     ShowMessage("The ship has split in two!", 4f);
@@ -1254,7 +1345,7 @@ public class Game
 
             case VoyagePhase.Split:
                 ApplyFloodIfDueForCurrentRoom();
-                if (SecondsSinceCollision() >= SunkAfterCollisionSeconds)
+                if (SecondsSinceCollision() >= _voyage.SunkAfterCollisionSeconds)
                 {
                     Phase = VoyagePhase.Sunk;
                     ShowMessage("The ship has gone down. Survive the wreck.", 6f);
@@ -1274,12 +1365,12 @@ public class Game
     private void TriggerSplit()
     {
         _hasSplit = true;
-        if (CurrentRoom.Path != BoatDeckPath) return;
+        if (CurrentRoom.Path != _voyage.ExteriorPath) return;
 
         // Always the stern half: by the moment the ship breaks, the sinking
         // waterline has already put the entire forward half awash, so anyone
         // still alive scrambles aft with the upheaval.
-        LoadRoom(BoatDeckSplitPath, "aftHalf");
+        LoadRoom(_voyage.SplitPath, "aftHalf");
     }
 
     private void ApplyFloodIfDueForCurrentRoom()
@@ -1998,8 +2089,55 @@ public class Game
     {
         CloseShopMenu();
         IsGameOver = true;
+
+        if (_campaignMode)
+        {
+            _voyageCleared = _sessions.Any(s => s.Rescued);
+            if (_voyageCleared && _voyage.TixGoal > 0 && TixBalance >= _voyage.TixGoal)
+            {
+                TixBalance += _voyage.GoalBonusTix;
+                message += $" Banking goal met: +{_voyage.GoalBonusTix} bonus!";
+            }
+
+            var lastVoyage = _voyageIndex >= Campaign.Voyages.Count - 1;
+            message += _voyageCleared
+                ? lastVoyage ? "  CAMPAIGN COMPLETE! (Enter: sail the finale again)" : "  (Enter: next voyage)"
+                : "  (Enter: retry this voyage)";
+
+            SaveCampaignProgress();
+        }
+
         _finalMessage = message;
         Console.WriteLine(message);
+    }
+
+    private void SaveCampaignProgress()
+    {
+        var save = new CampaignSave
+        {
+            VoyageIndex = _voyageCleared ? Math.Min(_voyageIndex + 1, Campaign.Voyages.Count - 1) : _voyageIndex,
+            Bank = TixBalance,
+            Players = _sessions.Select(s => InventorySave.From(s.Inventory)).ToList(),
+        };
+        save.Save();
+    }
+
+    /// <summary>
+    /// The only interaction left after a voyage has been decided: Enter moves
+    /// the campaign along - next voyage if this one was cleared (anyone aboard
+    /// the Carpathia), a retry of the same ship otherwise.
+    /// </summary>
+    private void CheckVoyageAdvance()
+    {
+        if (!_campaignMode || !IsGameOver) return;
+
+        foreach (var session in _sessions)
+        {
+            if (!SessionJustPressed(session, InputAction.Confirm)) continue;
+            if (_voyageCleared && _voyageIndex < Campaign.Voyages.Count - 1) _voyageIndex++;
+            ResetVoyage(Campaign.Voyages[_voyageIndex]);
+            return;
+        }
     }
 
     private void TriggerDeath(PlayerSession session, string hazard)
@@ -2159,9 +2297,14 @@ public class Game
         if (_rescueShip.State == RescueShipState.Boarding)
             return $"CARPATHIA ALONGSIDE - board within {Math.Max(0f, _rescueShip.BoardingSecondsRemaining):0}s!";
 
+        var cruisingLabel = _campaignMode
+            ? $"{_voyage.Name} ({_voyageIndex + 1}/{Campaign.Voyages.Count}) - Cruising" +
+              (_voyage.TixGoal > 0 ? $"  |  Goal: bank {_voyage.TixGoal}" : "")
+            : "Cruising the North Atlantic";
+
         return Phase switch
         {
-            VoyagePhase.Cruising => "Cruising the North Atlantic",
+            VoyagePhase.Cruising => cruisingLabel,
             VoyagePhase.Warning => "ICEBERG WARNING",
             VoyagePhase.Collision => "COLLISION",
             VoyagePhase.Sinking => $"SINKING - {sinceCollision:0}s since impact",

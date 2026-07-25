@@ -1,0 +1,347 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "coop": true,
+  "tilesetPath": "assets/artwork/titanic-demo/tileset.png",
+  "tileFrames": {
+    "deck": 0,
+    "water": 1,
+    "railing": 2,
+    "cabin": 5
+  },
+  "tileVariants": {
+    "water": [
+      1,
+      3,
+      4
+    ]
+  },
+  "wallProps": {
+    "railing": "hullSide"
+  },
+  "legend": {
+    "D": "deck",
+    "W": "water",
+    "R": "railing",
+    "C": "cabin"
+  },
+  "solid": [
+    "railing"
+  ],
+  "hazards": {
+    "water": "freeze"
+  },
+  "worldMinColumn": -2000,
+  "worldMaxColumn": 2000,
+  "worldMinRow": -2000,
+  "worldMaxRow": 2000,
+  "fallbackTileType": "water",
+  "driftSpeedX": 4,
+  "driftSpeedY": -2,
+  "elevationStep": 16,
+  "tiles": [
+    "WWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWW",
+    "WWWWWWDDDDWWWWWW",
+    "WWWWWRDDDDRWWWWW",
+    "WWWWWRDDDDRWWWWW",
+    "WWWWRDDDDDDRWWWW",
+    "WWWWRDDDDDDRWWWW",
+    "WWWRDDDDDDDDRWWW",
+    "WWWRDDDDDDDDRWWW",
+    "WWRDDDDDDDDDDRWW",
+    "WWRDDDDDDDDDDRWW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WWWWWWWWWWWWWWWW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDCCCCCCDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WRDDDDDDDDDDDDRW",
+    "WWRDDDDDDDDDDRWW",
+    "WWRDDDDDDDDDDRWW",
+    "WWWRDDDDDDDDRWWW",
+    "WWWRDDDDDDDDRWWW",
+    "WWWWRDDDDDDRWWWW",
+    "WWWWRDDDDDDRWWWW",
+    "WWWWWRDDDDRWWWWW",
+    "WWWWWRDDDDRWWWWW",
+    "WWWWWWDDDDWWWWWW",
+    "WWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWW"
+  ],
+  "heights": [
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000011111100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011221100000",
+    "0000011111100000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000"
+  ],
+  "entities": [
+    {
+      "type": "playerStart",
+      "column": 7,
+      "row": 13
+    },
+    {
+      "type": "iceberg",
+      "column": 7,
+      "row": 0
+    },
+    {
+      "type": "door",
+      "column": 7,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/dauntless/bridge.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "door",
+      "column": 10,
+      "row": 5,
+      "properties": {
+        "target": "assets/levels/dauntless/crows-nest.json",
+        "spawn": "fromBoatDeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 7,
+      "row": 7,
+      "properties": {
+        "name": "fromBridge"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 10,
+      "row": 7,
+      "properties": {
+        "name": "fromCrowsNest"
+      }
+    },
+    {
+      "type": "mast",
+      "column": 7,
+      "row": 6
+    },
+    {
+      "type": "door",
+      "column": 7,
+      "row": 32,
+      "properties": {
+        "target": "assets/levels/dauntless/corridor.json",
+        "spawn": "fromDeck"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 7,
+      "row": 33,
+      "properties": {
+        "name": "fromADeck"
+      }
+    },
+    {
+      "type": "funnel",
+      "column": 7,
+      "row": 18
+    },
+    {
+      "type": "funnel",
+      "column": 7,
+      "row": 27
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 16
+    },
+    {
+      "type": "lifeboat",
+      "column": 12,
+      "row": 16
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 24
+    },
+    {
+      "type": "lifeboat",
+      "column": 12,
+      "row": 24
+    },
+    {
+      "type": "lifeboat",
+      "column": 3,
+      "row": 28
+    },
+    {
+      "type": "lifeboat",
+      "column": 12,
+      "row": 28
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 17,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 17,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 20,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 20,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 23,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 23,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 25,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 25,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 28,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 11,
+      "row": 28,
+      "properties": {
+        "value": "10"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 16,
+      "properties": {
+        "name": "forwardHalf"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 33,
+      "properties": {
+        "name": "aftHalf"
+      }
+    }
+  ]
+}

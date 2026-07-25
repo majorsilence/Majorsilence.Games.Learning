@@ -1,0 +1,74 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XFFFFFFFFX",
+    "XXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "wheel",
+      "column": 5,
+      "row": 3
+    },
+    {
+      "type": "npc",
+      "column": 5,
+      "row": 2,
+      "properties": {
+        "role": "captain"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "value": "30"
+      }
+    },
+    {
+      "type": "door",
+      "column": 4,
+      "row": 6,
+      "properties": {
+        "target": "assets/levels/meridian/ship.json",
+        "spawn": "fromBridge"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 5,
+      "row": 5,
+      "properties": {
+        "name": "fromBoatDeck"
+      }
+    }
+  ],
+  "floodDelaySeconds": 95
+}

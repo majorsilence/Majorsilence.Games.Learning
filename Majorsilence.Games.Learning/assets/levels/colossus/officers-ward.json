@@ -1,0 +1,138 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 16,
+  "perspective": "isometric",
+  "tilesetPath": "assets/artwork/titanic-demo/interior-tileset.png",
+  "tileFrames": {
+    "floor": 0,
+    "wall": 1,
+    "stair": 2,
+    "floodwater": 3
+  },
+  "legend": {
+    "F": "floor",
+    "X": "wall",
+    "T": "stair"
+  },
+  "solid": [
+    "wall"
+  ],
+  "hazards": {
+    "floodwater": "drown"
+  },
+  "tiles": [
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XFFFFFFFFFFFFFFFFFFFFFFFFFFFFX",
+    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 15,
+      "row": 1,
+      "properties": {
+        "target": "assets/levels/colossus/corridor.json",
+        "spawn": "from-officers-ward"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 16,
+      "row": 2,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "bed",
+      "column": 2,
+      "row": 15
+    },
+    {
+      "type": "bed",
+      "column": 6,
+      "row": 15
+    },
+    {
+      "type": "bed",
+      "column": 10,
+      "row": 15
+    },
+    {
+      "type": "bed",
+      "column": 14,
+      "row": 15
+    },
+    {
+      "type": "bed",
+      "column": 18,
+      "row": 15
+    },
+    {
+      "type": "bed",
+      "column": 22,
+      "row": 15
+    },
+    {
+      "type": "table",
+      "column": 3,
+      "row": 2
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 3,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 9,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 15,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 21,
+      "row": 3,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 27,
+      "row": 9,
+      "properties": {
+        "value": "60"
+      }
+    }
+  ],
+  "floodDelaySeconds": 60
+}
