@@ -1,6 +1,8 @@
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Isometric;
 using Majorsilence.Games.Core.Levels;
+using Majorsilence.Games.Core.Physics;
+using Majorsilence.Games.Core.Tilemaps;
 using SDL3;
 
 namespace Majorsilence.Games.Learning;
@@ -11,13 +13,31 @@ namespace Majorsilence.Games.Learning;
 /// flooding can rewrite it at runtime without touching the immutable LevelMap
 /// the room was built from). Built once per room load by Game; torn down and
 /// replaced (not mutated in place) when the player walks through a door.
+///
+/// Two perspectives share this one class rather than a subtype hierarchy: an
+/// isometric room (Grid/Tilemap) or a side-view platformer room (FlatMap) -
+/// exactly one of the two pairs is non-null, selected by IsPlatformer from the
+/// level's Perspective field. Ship-mechanics methods below (drift, submerge,
+/// split bulge, the virtual world) are isometric-only; platformer rooms never
+/// trigger them because their levels declare zero drift and no world bounds.
 /// </summary>
 public class Room
 {
     public string Path { get; }
     public LevelMap Level { get; }
-    public IsometricGrid Grid { get; }
-    public IsometricTilemap Tilemap { get; }
+    public bool IsPlatformer { get; }
+    public IsometricGrid? Grid { get; }
+    public IsometricTilemap? Tilemap { get; }
+    public FlatTilemap? FlatMap { get; }
+
+    /// <summary>
+    /// World Y of the rising floodwater surface in a platformer room, or null
+    /// while dry. Set by ApplyFlood (a delayed trigger, same as isometric
+    /// rooms) and advanced toward the room's ceiling by AdvanceWaterLine -
+    /// unlike isometric flooding (an instant per-tile hazard swap), the water
+    /// climbs continuously so a tall vertical shaft plays as a race to the top.
+    /// </summary>
+    public float? WaterLineY { get; private set; }
 
     /// <summary>Every GameObject this room owns (tilemap, props, NPCs, tix) - not the player(s)/HUD, which persist across rooms.</summary>
     public List<GameObject> RoomObjects { get; } = new();
@@ -72,33 +92,46 @@ public class Room
     {
         Path = path;
         Level = LevelLoader.Load(path);
+        IsPlatformer = Level.Perspective.Equals("sidescroll", StringComparison.OrdinalIgnoreCase);
 
         var tilesetPath = string.IsNullOrEmpty(Level.TilesetPath) ? game.DefaultTilesetPath : Level.TilesetPath;
-        var tileset = game.GetSheet(tilesetPath, 32, 16);
         _tileFrameIndex = Level.TileFrames.Count > 0 ? Level.TileFrames : game.DefaultTileFrameIndex;
 
-        _hasVirtualWorld = Level.WorldMaxColumn > Level.WorldMinColumn && Level.WorldMaxRow > Level.WorldMinRow;
-        var fallbackFrameIndex = !string.IsNullOrEmpty(Level.FallbackTileType) && _tileFrameIndex.TryGetValue(Level.FallbackTileType, out var fbFrame)
-            ? fbFrame
-            : -1;
-
         var tiles = LevelLoader.ResolveTileIndices(Level, _tileFrameIndex);
-        var elevations = LevelLoader.ResolveElevations(Level);
-        Grid = new IsometricGrid(Level.TileWidth, Level.TileHeight);
-        Tilemap = new IsometricTilemap(tiles, tileset, Grid, elevations,
-            Level.WorldMinColumn, Level.WorldMaxColumn, Level.WorldMinRow, Level.WorldMaxRow, fallbackFrameIndex)
-        { X = initialDriftX, Y = initialDriftY, ZIndex = 0 };
-        RoomObjects.Add(Tilemap);
 
-        if (Level.TileVariants.Count > 0)
+        if (IsPlatformer)
         {
-            var frameVariants = new Dictionary<int, int[]>();
-            foreach (var (typeName, variants) in Level.TileVariants)
+            var tileset = game.GetSheet(tilesetPath, Level.TileWidth, Level.TileHeight);
+            FlatMap = new FlatTilemap(tiles, tileset, Level.TileWidth, Level.TileHeight)
+            { X = initialDriftX, Y = initialDriftY, ZIndex = 0 };
+            RoomObjects.Add(FlatMap);
+            RoomObjects.Add(game.CreateWaterOverlay(this));
+        }
+        else
+        {
+            var tileset = game.GetSheet(tilesetPath, 32, 16);
+            _hasVirtualWorld = Level.WorldMaxColumn > Level.WorldMinColumn && Level.WorldMaxRow > Level.WorldMinRow;
+            var fallbackFrameIndex = !string.IsNullOrEmpty(Level.FallbackTileType) && _tileFrameIndex.TryGetValue(Level.FallbackTileType, out var fbFrame)
+                ? fbFrame
+                : -1;
+
+            var elevations = LevelLoader.ResolveElevations(Level);
+            Grid = new IsometricGrid(Level.TileWidth, Level.TileHeight);
+            Tilemap = new IsometricTilemap(tiles, tileset, Grid, elevations,
+                Level.WorldMinColumn, Level.WorldMaxColumn, Level.WorldMinRow, Level.WorldMaxRow, fallbackFrameIndex)
+            { X = initialDriftX, Y = initialDriftY, ZIndex = 0 };
+            RoomObjects.Add(Tilemap);
+
+            if (Level.TileVariants.Count > 0)
             {
-                if (_tileFrameIndex.TryGetValue(typeName, out var baseFrame) && variants.Length > 0)
-                    frameVariants[baseFrame] = variants;
+                var frameVariants = new Dictionary<int, int[]>();
+                foreach (var (typeName, variants) in Level.TileVariants)
+                {
+                    if (_tileFrameIndex.TryGetValue(typeName, out var baseFrame) && variants.Length > 0)
+                        frameVariants[baseFrame] = variants;
+                }
+                if (frameVariants.Count > 0) Tilemap.SetFrameVariants(frameVariants);
             }
-            if (frameVariants.Count > 0) Tilemap.SetFrameVariants(frameVariants);
         }
 
         var rows = Level.Tiles.Length;
@@ -216,9 +249,9 @@ public class Room
                     // once the player is close enough to interact) - the shop is
                     // otherwise indistinguishable from any other prop-filled room
                     // until you stumble right up to it.
-                    var (shopTileX, shopTileY) = Grid.TileToWorld(entity.Column, entity.Row);
-                    var labelX = Tilemap.X + shopTileX + Grid.TileWidth / 2;
-                    var labelY = Tilemap.Y + shopTileY - 40;
+                    var (originX, originY) = TileOrigin(entity.Column, entity.Row);
+                    var labelX = originX + Level.TileWidth / 2;
+                    var labelY = originY - 40;
                     var shopLabel = game.CreateWorldLabel("SHOP", labelX, labelY,
                         new SDL.Color { A = 0, R = 255, G = 210, B = 60 });
                     RoomObjects.Add(shopLabel);
@@ -279,16 +312,38 @@ public class Room
     }
 
     /// <summary>
+    /// The tile grid's raw world-space origin (no width/height anchor adjustment) -
+    /// tilemap drift offset included, so callers that need to build their own
+    /// anchor (a floating label, a distance check) agree with StandOnTile without
+    /// duplicating the isometric-vs-flat math themselves.
+    /// </summary>
+    public (int X, int Y) TileOrigin(int column, int row)
+    {
+        if (IsPlatformer)
+            return (FlatMap!.X + column * Level.TileWidth, FlatMap.Y + row * Level.TileHeight);
+
+        var (tileX, tileY) = Grid!.TileToWorld(column, row);
+        return (Tilemap!.X + tileX, Tilemap.Y + tileY);
+    }
+
+    /// <summary>
     /// Places a GameObject's top-left so it stands upright with its base planted on
-    /// the given tile's front (bottom) vertex, matching the anchor convention used
-    /// throughout the isometric demos. Includes the tilemap's current drift offset,
-    /// so a freshly-placed object (room entry, respawn) lands in the right spot
-    /// even if the ship has already sailed some distance this session.
+    /// the given tile's front (bottom) vertex (isometric) or bottom edge (flat),
+    /// matching the anchor convention used throughout the demos. Includes the
+    /// tilemap's current drift offset, so a freshly-placed object (room entry,
+    /// respawn) lands in the right spot even if the ship has already sailed some
+    /// distance this session.
     /// </summary>
     public (int X, int Y) StandOnTile(int column, int row, int width, int height)
     {
-        var (tileX, tileY) = Grid.TileToWorld(column, row);
-        return (Tilemap.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight - height);
+        if (IsPlatformer)
+        {
+            var (originX, originY) = TileOrigin(column, row);
+            return (originX + (Level.TileWidth - width) / 2, originY + Level.TileHeight - height);
+        }
+
+        var (tileX, tileY) = Grid!.TileToWorld(column, row);
+        return (Tilemap!.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight - height);
     }
 
     /// <summary>
@@ -296,12 +351,14 @@ public class Room
     /// height and inflates SortOffsetY by the same amount, so a prop standing on an
     /// upper deck is drawn up there but still depth-sorts by its footprint row
     /// (SortY = Y + SortOffsetY is unchanged by the lift). Players don't use this -
-    /// their GroundZ/Z physics apply the lift at render time instead.
+    /// their GroundZ/Z physics apply the lift at render time instead. Platformer
+    /// rooms have no elevation grid (PlatformerBody handles height physically), so
+    /// this is just StandOnTile there.
     /// </summary>
     public (int X, int Y, float SortOffsetY) StandOnTileElevated(int column, int row, int width, int height)
     {
         var (x, y) = StandOnTile(column, row, width, height);
-        var elevation = Tilemap.GetElevationPixels(column, row);
+        var elevation = GetElevationPixels(column, row);
         return (x, y - elevation, height + elevation);
     }
 
@@ -309,15 +366,56 @@ public class Room
     /// The opposite anchor from StandOnTile: positions a sprite's top-left so it
     /// hangs downward from the tile's front (bottom) vertex instead of standing
     /// upward from it - used for wall props (a ship's hull side) that should
-    /// extend toward the viewer/water rather than rise off the deck.
+    /// extend toward the viewer/water rather than rise off the deck. Isometric-only
+    /// (WallProps is never set on a platformer level).
     /// </summary>
     public (int X, int Y) HangBelowTile(int column, int row, int width, int height)
     {
-        var (tileX, tileY) = Grid.TileToWorld(column, row);
-        return (Tilemap.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight);
+        var (tileX, tileY) = Grid!.TileToWorld(column, row);
+        return (Tilemap!.X + tileX + (Grid.TileWidth - width) / 2, Tilemap.Y + tileY + Grid.TileHeight);
     }
 
-    public int GetElevationPixels(int column, int row) => Tilemap.GetElevationPixels(column, row);
+    public int GetElevationPixels(int column, int row) => Tilemap?.GetElevationPixels(column, row) ?? 0;
+
+    /// <summary>
+    /// Resolves the tile at (column, row) to its platformer collision behavior,
+    /// for PlatformerBody.TileAt. Matches the demo test bed's convention: columns
+    /// outside the grid are solid (level side walls), rows outside are open (clear
+    /// sky above, an open pit/water below - hazard tiles at the true bottom row
+    /// handle lethal falls).
+    /// </summary>
+    public TileKind KindAt(int column, int row)
+    {
+        var rows = _tileTypes.GetLength(0);
+        var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        if (column < 0 || column >= columns) return TileKind.Solid;
+        if (row < 0 || row >= rows) return TileKind.Empty;
+
+        var type = _tileTypes[row, column];
+        if (Level.Solid.Contains(type)) return TileKind.Solid;
+        if (Level.Platforms.Contains(type)) return TileKind.OneWay;
+        if (Level.Climbable.Contains(type)) return TileKind.Ladder;
+        return TileKind.Empty;
+    }
+
+    /// <summary>
+    /// Generalized anchor-inversion (see TileUnderPlayer in Game): given a sprite's
+    /// world top-left and footprint, resolves the tile its feet are standing on -
+    /// isometric or flat, whichever this room is.
+    /// </summary>
+    public (int Column, int Row) TileUnder(int x, int y, int width, int height)
+    {
+        if (IsPlatformer)
+        {
+            var centerX = x + width / 2f - FlatMap!.X;
+            var bottomY = y + height - 1f - FlatMap.Y;
+            return ((int)MathF.Floor(centerX / Level.TileWidth), (int)MathF.Floor(bottomY / Level.TileHeight));
+        }
+
+        var feetX = x + (width - Grid!.TileWidth) / 2 - Tilemap!.X;
+        var feetY = y + height - Grid.TileHeight - Tilemap.Y;
+        return Grid.WorldToTile(feetX, feetY);
+    }
 
     /// <summary>Out-of-range tiles are treated as solid, since no room's ship layout should be walked off the edge of its own grid (unless a virtual world extends it - see ResolveTileType).</summary>
     public bool IsSolid(int column, int row)
@@ -404,7 +502,8 @@ public class Room
             {
                 if (_tileTypes[r, c] != "wall") continue;
                 _tileTypes[r, c] = "floor";
-                Tilemap.SetTile(c, r, floorFrame);
+                if (IsPlatformer) FlatMap!.SetTile(c, r, floorFrame);
+                else Tilemap!.SetTile(c, r, floorFrame);
             }
         }
     }
@@ -477,6 +576,7 @@ public class Room
     /// </summary>
     public void ApplySplitBulge(int midRow, int halfWidthRows, int maxBumpPixels, float strength)
     {
+        if (Tilemap is null) return; // isometric-only mechanic; never called on a drifting (always-isometric) room's platformer counterpart
         var rows = _tileTypes.GetLength(0);
         var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
         _bulgeAppliedByRow ??= new int[rows];
@@ -533,7 +633,7 @@ public class Room
         var removed = new List<GameObject>();
         if (lastRowInclusive <= _submergedThroughRow) return removed;
 
-        if (_tileFrameIndex.TryGetValue(waterType, out var waterFrame))
+        if (Tilemap is not null && _tileFrameIndex.TryGetValue(waterType, out var waterFrame))
         {
             var rows = _tileTypes.GetLength(0);
             var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
@@ -577,11 +677,20 @@ public class Room
     /// Converts every non-solid, not-already-hazardous floor tile to "floodwater"
     /// (visually and for hazard checks). A room with no "floodwater" entry in its
     /// Hazards map simply has nothing to flood into (e.g. an already-open-air room).
+    /// Platformer rooms flood differently (see ApplyFlood's IsPlatformer branch) -
+    /// a continuously rising world-space water line instead of an instant tile
+    /// swap, since a tall vertical shaft should read as a race against the water.
     /// </summary>
     public void ApplyFlood()
     {
         if (HasFlooded) return;
         HasFlooded = true;
+
+        if (IsPlatformer)
+        {
+            if (FlatMap is not null) WaterLineY = FlatMap.Y + FlatMap.PixelHeight;
+            return;
+        }
 
         if (!Level.Hazards.ContainsKey("floodwater")) return;
         if (!_tileFrameIndex.TryGetValue("floodwater", out var floodFrame)) return;
@@ -597,8 +706,19 @@ public class Room
                 if (Level.Hazards.ContainsKey(type)) continue;
 
                 _tileTypes[row, column] = "floodwater";
-                Tilemap.SetTile(column, row, floodFrame);
+                Tilemap!.SetTile(column, row, floodFrame);
             }
         }
+    }
+
+    private const float PlatformerFloodRiseSpeed = 18f; // world px/sec the water climbs once triggered
+
+    /// <summary>Advances the rising water line toward the room's ceiling - a no-op until ApplyFlood has triggered, and once it reaches the top. Called every frame; cheap when dry.</summary>
+    public void AdvanceWaterLine(float deltaTime)
+    {
+        if (WaterLineY is not { } current || FlatMap is null) return;
+        var top = FlatMap.Y;
+        if (current <= top) return;
+        WaterLineY = MathF.Max(top, current - PlatformerFloodRiseSpeed * deltaTime);
     }
 }

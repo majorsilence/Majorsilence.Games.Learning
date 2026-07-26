@@ -1,5 +1,6 @@
 using System;
 using Majorsilence.Games.Core.Input;
+using Majorsilence.Games.Core.Physics;
 using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Core.Textures;
 
@@ -31,6 +32,19 @@ public class DynamicObject : GameObject
     public bool IsGrounded => Z <= GroundZ && _verticalVelocity <= 0f;
 
     /// <summary>
+    /// Optional side-view physics. Null (the default) keeps the classic free
+    /// 8-way movement + Z-hop above. When set, Update integrates through the
+    /// body instead: DirectionX drives horizontal movement, DirectionY becomes
+    /// ladder-climb intent, gravity acts on world Y with real tile collision,
+    /// and Z stays 0. Swapped per room by game code (platformer rooms attach a
+    /// body, isometric rooms detach it).
+    /// </summary>
+    public PlatformerBody? Platformer { get; set; }
+
+    /// <summary>Mirror the sprite horizontally when rendering (side-view facing direction).</summary>
+    public bool FlipHorizontal { get; set; }
+
+    /// <summary>
     /// When true, the assigned Animation advances at full speed only while this
     /// object is actually moving (either direction non-zero); while standing
     /// still it advances at IdleAnimationRate instead of stopping outright, so a
@@ -50,6 +64,12 @@ public class DynamicObject : GameObject
 
     public void Jump()
     {
+        if (Platformer is not null)
+        {
+            Platformer.Jump();
+            return;
+        }
+
         if (IsGrounded) _verticalVelocity = JumpSpeed;
     }
 
@@ -89,21 +109,34 @@ public class DynamicObject : GameObject
             _initialized = true;
         }
 
-        // Update position based on speed and direction
-        _preciseX += Speed * (int)DirectionX * deltaTime;
-        _preciseY += Speed * (int)DirectionY * deltaTime;
-        X = (int)MathF.Round(_preciseX);
-        Y = (int)MathF.Round(_preciseY);
-
-        _verticalVelocity -= Gravity * deltaTime;
-        Z += _verticalVelocity * deltaTime;
-        if (Z <= GroundZ)
+        if (Platformer is not null)
         {
-            Z = GroundZ;
+            Platformer.MoveAndCollide(ref _preciseX, ref _preciseY, (int)DirectionX, (int)DirectionY, Speed, deltaTime);
+            X = (int)MathF.Round(_preciseX);
+            Y = (int)MathF.Round(_preciseY);
+            Z = 0f;
             _verticalVelocity = 0f;
         }
+        else
+        {
+            // Update position based on speed and direction
+            _preciseX += Speed * (int)DirectionX * deltaTime;
+            _preciseY += Speed * (int)DirectionY * deltaTime;
+            X = (int)MathF.Round(_preciseX);
+            Y = (int)MathF.Round(_preciseY);
 
-        var isMoving = DirectionX != HorizontalDirection.None || DirectionY != VerticalDirection.None;
+            _verticalVelocity -= Gravity * deltaTime;
+            Z += _verticalVelocity * deltaTime;
+            if (Z <= GroundZ)
+            {
+                Z = GroundZ;
+                _verticalVelocity = 0f;
+            }
+        }
+
+        var isMoving = Platformer is not null
+            ? DirectionX != HorizontalDirection.None || Platformer.OnLadder && DirectionY != VerticalDirection.None
+            : DirectionX != HorizontalDirection.None || DirectionY != VerticalDirection.None;
         if (!AnimateOnlyWhenMoving || isMoving)
         {
             _animation?.Update(deltaTime);
@@ -119,6 +152,6 @@ public class DynamicObject : GameObject
     {
         var frame = _animation?.CurrentFrame ?? _frameIndex;
         var (screenX, screenY) = camera.WorldToScreen(X, Y - Z);
-        _spriteSheet.Render(screenX, screenY, frame);
+        _spriteSheet.Render(screenX, screenY, frame, FlipHorizontal);
     }
 }

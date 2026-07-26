@@ -168,6 +168,40 @@
       "properties": {
         "value": "15"
       }
+    },
+    {
+      "type": "door",
+      "column": 4,
+      "row": 9,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/turbine-room.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 10,
+      "properties": {
+        "name": "fromTurbineRoom"
+      }
+    },
+    {
+      "type": "door",
+      "column": 14,
+      "row": 3,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/grand-stair-escape.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 14,
+      "row": 2,
+      "properties": {
+        "name": "fromGrandStair"
+      }
     }
   ]
 }

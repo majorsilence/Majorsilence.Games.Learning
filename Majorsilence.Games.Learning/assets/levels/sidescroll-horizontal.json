@@ -3,26 +3,49 @@
   "tileHeight": 32,
   "perspective": "sidescroll",
   "scrollMode": "horizontal",
+  "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
+  "tileFrames": {
+    "empty": -1,
+    "floor": 0,
+    "wall": 1,
+    "grating": 2,
+    "ladder": 3,
+    "pipe": 4,
+    "porthole": 5,
+    "steam": 6,
+    "crate": 7
+  },
   "legend": {
     ".": "empty",
-    "G": "ground",
-    "B": "brick"
+    "F": "floor",
+    "W": "wall",
+    "P": "grating",
+    "L": "ladder",
+    "C": "crate",
+    "O": "porthole"
   },
+  "solid": ["floor", "wall", "crate", "pipe"],
+  "platforms": ["grating"],
+  "climbable": ["ladder"],
   "tiles": [
     "........................................",
     "........................................",
+    "............PPPP........................",
     "........................................",
-    "........................................",
-    "........................................",
-    "........................................",
-    "........BBB.........BBB.......BBB.......",
-    "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG"
+    ".....PPP..L.............C...............",
+    "..........L.............CC..............",
+    "..........L............WCCC.....PPP.....",
+    "O.........L............W...............O",
+    "FFFFFFFF..FFFFFFFFFFFFFFFFFFF...FFFFFFFF",
+    "WWWWWWWW.LWWWWWWWWWWWWWWWWWWW.L.WWWWWWWW",
+    "WWWWWWWW.LWWWWWWWWWWWWWWWWWWW.L.WWWWWWWW",
+    "WWWWWWWWFFWWWWWWWWWWWWWWWWWWWFFFWWWWWWWW"
   ],
   "entities": [
     {
       "type": "playerStart",
-      "column": 1,
-      "row": 6
+      "column": 2,
+      "row": 7
     }
   ]
 }

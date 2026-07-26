@@ -1,0 +1,114 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "perspective": "sidescroll",
+  "scrollMode": "vertical",
+  "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
+  "tileFrames": {
+    "empty": -1,
+    "floor": 0,
+    "wall": 1,
+    "grating": 2,
+    "ladder": 3,
+    "pipe": 4,
+    "porthole": 5,
+    "steam": 6,
+    "crate": 7
+  },
+  "legend": {
+    "P": "grating",
+    ".": "empty",
+    "L": "ladder",
+    "W": "wall",
+    "F": "floor"
+  },
+  "solid": [
+    "wall",
+    "floor",
+    "crate"
+  ],
+  "platforms": [
+    "grating",
+    "steam"
+  ],
+  "climbable": [
+    "ladder"
+  ],
+  "hazards": {
+    "steam": "steam"
+  },
+  "floodDelaySeconds": 22,
+  "tiles": [
+    "WWWWWWWWWWWW",
+    "W..........W",
+    "W..........W",
+    "W..L.......W",
+    "W..PPPP....W",
+    "W..L.......W",
+    "W..L.......W",
+    "W..L.....L.W",
+    "W..L..PPPP.W",
+    "W..L.....L.W",
+    "W..L.....L.W",
+    "W.PPPP...L.W",
+    "W..L.....L.W",
+    "W..L.....L.W",
+    "W..L.....L.W",
+    "W..L.....L.W",
+    "W..L.....L.W",
+    "W..L.....L.W",
+    "W..L.......W",
+    "WFFFFFFFFFFW"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 4,
+      "row": 19,
+      "properties": {
+        "target": "assets/levels/colossus/corridor.json",
+        "spawn": "fromVentShaft"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 6,
+      "row": 19,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 4,
+      "properties": {
+        "value": "30"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 8,
+      "row": 8,
+      "properties": {
+        "value": "35"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 11,
+      "properties": {
+        "value": "35"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 1,
+      "properties": {
+        "value": "50"
+      }
+    }
+  ]
+}

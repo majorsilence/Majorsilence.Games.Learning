@@ -273,6 +273,23 @@
       }
     },
     {
+      "type": "door",
+      "column": 13,
+      "row": 62,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/grand-stair-escape.json",
+        "spawn": "fromBoatDeckTop"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 13,
+      "row": 64,
+      "properties": {
+        "name": "fromGrandStair"
+      }
+    },
+    {
       "type": "lifeboat",
       "column": 3,
       "row": 16

@@ -166,6 +166,40 @@
       "type": "crate",
       "column": 38,
       "row": 2
+    },
+    {
+      "type": "door",
+      "column": 8,
+      "row": 5,
+      "properties": {
+        "target": "assets/levels/colossus/boiler-gallery.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 5,
+      "properties": {
+        "name": "fromBoilerGallery"
+      }
+    },
+    {
+      "type": "door",
+      "column": 33,
+      "row": 5,
+      "properties": {
+        "target": "assets/levels/colossus/ventilation-shaft.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 32,
+      "row": 5,
+      "properties": {
+        "name": "fromVentShaft"
+      }
     }
   ],
   "floodDelaySeconds": 35

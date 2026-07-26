@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="../Version.props" />
+
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
@@ -10,6 +12,18 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
+
+    <!-- Steamworks.NET is only pulled in for a build that explicitly opts in
+         (dotnet build -p:EnableSteam=true); the plain desktop/Android builds
+         never reference it. SteamBootstrap.cs compiles to a no-op shell
+         either way (see its #if STEAM), so Program.cs can call it unconditionally. -->
+    <PropertyGroup Condition="'$(EnableSteam)' == 'true'">
+        <DefineConstants>$(DefineConstants);STEAM</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(EnableSteam)' == 'true'">
+        <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
+    </ItemGroup>
+
     <ItemGroup>
         <None Remove="ppy.SDL2-CS" />
         <None Remove="SixLabors.ImageSharp" />
@@ -44,6 +58,7 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Majorsilence.Games.Core\Majorsilence.Games.Core.csproj" />
+      <ProjectReference Include="..\Majorsilence.Games.Shared\Majorsilence.Games.Shared.csproj" />
     </ItemGroup>
     <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
         <PackageReference Include="SDL3-CS.Linux" Version="3.4.10.5" />

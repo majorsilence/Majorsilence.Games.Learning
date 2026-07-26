@@ -1,3 +1,13 @@
+# Steam dev-only appid marker (see docs/store-checklist.md) - never committed,
+# every developer running a -p:EnableSteam=true build drops their own copy.
+steam_appid.txt
+
+# Android release keystore + local server data - never committed.
+*.keystore
+*.jks
+Majorsilence.Games.Server/*.db
+Majorsilence.Games.Server/*.db-*
+
 # globs
 Makefile.in
 *.userprefs

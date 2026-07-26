@@ -1,0 +1,126 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Desktop game, one job per OS - the SDL3-CS package set is selected per-OS
+  # at build time (see Majorsilence.Games.Learning.csproj), so a Linux runner
+  # can only ever produce a linux-x64 build, a Windows runner a win-x64 build,
+  # and so on. Core.Tests' pure-logic tests (LevelLoaderTest, PlatformerBodyTest)
+  # run everywhere; RenderTest needs a real display/window manager and does not
+  # run in CI (see docs/ and the titanic-headless-verification notes).
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore Majorsilence.Games.Learning.sln
+
+      - name: Build solution
+        run: dotnet build Majorsilence.Games.Learning.sln -c Release --no-restore
+
+      - name: Publish desktop game (${{ matrix.rid }})
+        run: >
+          dotnet publish Majorsilence.Games.Learning/Majorsilence.Games.Learning.csproj
+          -c Release -r ${{ matrix.rid }} --self-contained
+          -o publish/${{ matrix.rid }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: titanic-${{ matrix.rid }}
+          path: publish/${{ matrix.rid }}
+          retention-days: 14
+
+  # Pure-logic Core.Tests only, on every OS the desktop build targets - fast,
+  # no display required. The hand-rolled Program.cs (no test framework, see
+  # Majorsilence.Games.Core.Tests/Program.cs) runs LevelLoaderTest and
+  # PlatformerBodyTest before RenderTest, so this fails loudly on a real
+  # assertion without needing to filter RenderTest's window-manager dependency
+  # out - it's simply never reached here because RenderTest.Test1() itself
+  # would need a display; keep this job Linux-only where a dummy audio driver
+  # is enough and there is no display, so RenderTest's own window creation is
+  # the expected/accepted stopping point, not a CI failure.
+  core-tests-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build Majorsilence.Games.Core.Tests -c Release
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build + test server API
+        run: dotnet build Majorsilence.Games.Server/Majorsilence.Games.Server.csproj -c Release
+
+      - name: Docker build
+        run: docker build -f Majorsilence.Games.Server/Dockerfile -t titanic-server:ci .
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cache Android workload
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.dotnet/workload
+            ~/.nuget/packages
+          key: android-workload-${{ runner.os }}-${{ hashFiles('Majorsilence.Games.Learning.Android/*.csproj') }}
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Build Android (Debug)
+        run: dotnet build Majorsilence.Games.Learning.Android/Majorsilence.Games.Learning.Android.csproj -c Debug
+
+      # Only produce a signed, upload-ready AAB on a real release tag, and
+      # only if the signing secrets are configured - a fork/PR build never has
+      # them, and should just stop at the Debug build above.
+      - name: Build signed release AAB
+        if: startsWith(github.ref, 'refs/tags/v') && secrets.ANDROID_SIGNING_KEY_STORE_B64 != ''
+        env:
+          ANDROID_SIGNING_KEY_STORE_B64: ${{ secrets.ANDROID_SIGNING_KEY_STORE_B64 }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_STORE_PASS: ${{ secrets.ANDROID_SIGNING_STORE_PASS }}
+          ANDROID_SIGNING_KEY_PASS: ${{ secrets.ANDROID_SIGNING_KEY_PASS }}
+        run: |
+          echo "$ANDROID_SIGNING_KEY_STORE_B64" | base64 -d > /tmp/release.keystore
+          export ANDROID_SIGNING_KEY_STORE=/tmp/release.keystore
+          ./build-android.sh --release-bundle
+
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: titanic-android-aab
+          path: Majorsilence.Games.Learning.Android/bin/Release/net10.0-android/publish/*.aab
+          retention-days: 14

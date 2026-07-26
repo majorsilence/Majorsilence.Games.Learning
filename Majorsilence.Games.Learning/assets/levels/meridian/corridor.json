@@ -139,6 +139,40 @@
       "type": "crate",
       "column": 26,
       "row": 2
+    },
+    {
+      "type": "door",
+      "column": 8,
+      "row": 4,
+      "properties": {
+        "target": "assets/levels/meridian/cargo-hold.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 4,
+      "properties": {
+        "name": "fromCargoHold"
+      }
+    },
+    {
+      "type": "door",
+      "column": 24,
+      "row": 4,
+      "properties": {
+        "target": "assets/levels/meridian/escape-shaft.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 23,
+      "row": 4,
+      "properties": {
+        "name": "fromEscapeShaft"
+      }
     }
   ],
   "floodDelaySeconds": 40

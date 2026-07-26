@@ -51,6 +51,11 @@ public class SpriteSheet
         Texture.Render(x, y, GetFrameRect(frameIndex));
     }
 
+    public void Render(int x, int y, int frameIndex, bool flipHorizontal)
+    {
+        Texture.Render(x, y, GetFrameRect(frameIndex), flipHorizontal);
+    }
+
     public void Render(int x, int y, int column, int row)
     {
         Texture.Render(x, y, GetFrameRect(column, row));

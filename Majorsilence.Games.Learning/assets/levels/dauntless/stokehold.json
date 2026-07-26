@@ -1,0 +1,103 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "perspective": "sidescroll",
+  "scrollMode": "horizontal",
+  "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
+  "tileFrames": {
+    "empty": -1,
+    "floor": 0,
+    "wall": 1,
+    "grating": 2,
+    "ladder": 3,
+    "pipe": 4,
+    "porthole": 5,
+    "steam": 6,
+    "crate": 7
+  },
+  "legend": {
+    ".": "empty",
+    "W": "wall",
+    "F": "floor",
+    "L": "ladder",
+    "P": "grating",
+    "S": "steam"
+  },
+  "solid": [
+    "wall",
+    "floor"
+  ],
+  "platforms": [
+    "grating",
+    "steam"
+  ],
+  "climbable": [
+    "ladder"
+  ],
+  "hazards": {
+    "steam": "steam"
+  },
+  "floodDelaySeconds": 20,
+  "tiles": [
+    "WWWWWWWWWWWWWWWWWWWW",
+    "W..................W",
+    "WL.PPPP.....PPPP...W",
+    "WL.................W",
+    "WL.................W",
+    "WL.................W",
+    "WL.................W",
+    "WL.................W",
+    "WFFFFFFFFSFFFFFFFFFW"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 8,
+      "properties": {
+        "target": "assets/levels/dauntless/corridor.json",
+        "spawn": "fromStokehold"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 8,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 1,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 13,
+      "row": 1,
+      "properties": {
+        "value": "25"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 15,
+      "row": 8,
+      "properties": {
+        "value": "15"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 6,
+      "row": 8,
+      "properties": {
+        "value": "15"
+      }
+    }
+  ]
+}

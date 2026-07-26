@@ -7,13 +7,16 @@ using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Isometric;
 using Majorsilence.Games.Core.Levels;
+using Majorsilence.Games.Core.Physics;
 using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Core.Surfaces;
 using Majorsilence.Games.Core.Textures;
 using Majorsilence.Games.Core.Tilemaps;
 
-// Which level to run - pass a level path as the first CLI argument to skip the
-// prompt (e.g. for scripted/automated runs), otherwise pick interactively.
+// Which level to run - pass a level path as the first CLI argument, or
+// "--pick-level" for the interactive dev console chooser below. With no args
+// (the normal store-launched case, no terminal attached) this defaults
+// straight to the real game instead of blocking on a console prompt.
 string ChooseLevelPath()
 {
     var files = Directory.GetFiles("assets/levels", "*.json").OrderBy(f => f).ToArray();
@@ -52,7 +55,9 @@ string ChooseLevelPath()
     }
 }
 
-var levelPath = args.Length > 0 ? args[0] : ChooseLevelPath();
+var levelPath = args.Length > 0 && args[0] == "--pick-level" ? ChooseLevelPath()
+    : args.Length > 0 ? args[0]
+    : "assets/levels/titanic.json";
 
 // The Titanic ship is a multi-room level graph (doors linking separate JSON files,
 // a scripted sinking timeline, an economy, NPCs) driven by the Game orchestrator -
@@ -67,16 +72,21 @@ using var audioDevice = new AudioDevice();
 using var gameStartSound = new Sound(audioDevice, "assets/audio/game-start.mp3");
 gameStartSound.Play();
 
+// No-op unless built with -p:EnableSteam=true (see SteamBootstrap).
+SteamBootstrap.Init();
+
 if (isTitanicShip)
 {
-    RunTitanicShip(levelPath);
+    await RunTitanicShip(levelPath);
 }
 else
 {
     RunClassicDemo(levelPath);
 }
 
-void RunTitanicShip(string entryLevelPath)
+SteamBootstrap.Shutdown();
+
+async Task RunTitanicShip(string entryLevelPath)
 {
     var entryLevel = LevelLoader.Load(entryLevelPath);
 
@@ -84,26 +94,75 @@ void RunTitanicShip(string entryLevelPath)
     // tix and gear carried between them, progress saved to disk. Free play is
     // the original one-shot Titanic run.
     var save = CampaignSave.Load();
+
+    // Headless/CI escape hatch: TITANIC_AUTO_MODE=1|2|3 skips the title screen
+    // entirely (there's no stdin to answer it, and no way to inject SDL input
+    // in a sandboxed test run). TITANIC_AUTO_COOP=1 enables co-op alongside it.
+    // Cloud sync stays active either way - it's timeout-bounded and fails safe
+    // (falls back to the local save), so it's harmless in CI and lets a
+    // headless run exercise the real sync path against a test server.
+    var autoMode = Environment.GetEnvironmentVariable("TITANIC_AUTO_MODE");
+
+    var cloud = new CloudSaveClient();
+    var cloudSave = await cloud.StartupSyncAsync(save);
+    if (cloudSave is not null)
+    {
+        save = cloudSave;
+        save.Save(); // persist the restored cloud copy locally too
+    }
+
     var nextVoyage = Campaign.Voyages[Math.Clamp(save.VoyageIndex, 0, Campaign.Voyages.Count - 1)];
-    Console.WriteLine("Choose a mode:");
-    Console.WriteLine($"  1. Continue campaign - {nextVoyage.Name}, bank {save.Bank} tix");
-    Console.WriteLine("  2. New campaign (erases saved progress)");
-    Console.WriteLine("  3. Free play - a single Titanic voyage, nothing saved");
-    Console.Write("Enter a number (1-3, default 1): ");
-    var modeInput = Console.ReadLine()?.Trim();
-    var mode = modeInput == "2" ? 2 : modeInput == "3" ? 3 : 1;
+
+    int mode;
+    bool coop;
+
+    if (autoMode is not null)
+    {
+        mode = autoMode == "2" ? 2 : autoMode == "3" ? 3 : 1;
+        coop = entryLevel.Coop && Environment.GetEnvironmentVariable("TITANIC_AUTO_COOP") == "1";
+    }
+    else
+    {
+        var titleCamera = new Camera();
+        void SyncTitleViewport()
+        {
+            renderer.SyncLogicalPresentationToWindow(Game.TargetViewShortSide);
+            var (w, h) = renderer.LogicalSize;
+            titleCamera.ViewportWidth = w;
+            titleCamera.ViewportHeight = h;
+        }
+        SyncTitleViewport();
+        InputManager.WindowResized += SyncTitleViewport;
+
+        var continueLabel = $"Continue Campaign - {nextVoyage.Name}, bank {save.Bank} tix";
+        var titleMenu = new TitleMenu(renderer, "assets/fonts/Gidole-Regular.ttf", continueLabel, entryLevel.Coop, cloud);
+        var titleObjects = new List<GameObject> { titleMenu };
+        var titleLoop = new EventLoop(renderer);
+        renderer.DrawColor(18, 28, 42, 255);
+        var titleShotPath = Environment.GetEnvironmentVariable("TITANIC_TITLE_SCREENSHOT");
+        var titleFrame = 0;
+        titleLoop.Start(titleObjects, titleCamera, null, _ =>
+        {
+            titleFrame++;
+            if (titleShotPath is not null && titleFrame == 30) renderer.SaveScreenshot(titleShotPath);
+            if (titleMenu.Choice != TitleChoice.None) titleLoop.Stop();
+        });
+        InputManager.WindowResized -= SyncTitleViewport;
+
+        if (titleLoop.QuitRequested || titleMenu.Choice == TitleChoice.Quit) return;
+
+        mode = titleMenu.Choice == TitleChoice.New ? 2 : titleMenu.Choice == TitleChoice.FreePlay ? 3 : 1;
+        coop = entryLevel.Coop && titleMenu.CoopEnabled;
+    }
+
     if (mode == 2)
     {
         CampaignSave.Delete();
         save = new CampaignSave();
-    }
-
-    var coop = false;
-    if (entryLevel.Coop)
-    {
-        Console.Write("Enable local 2-player co-op? Player 1: arrows/Space/Enter/E. Player 2: IJKL/O/P/U. (y/N): ");
-        var answer = Console.ReadLine();
-        coop = !string.IsNullOrWhiteSpace(answer) && answer.Trim().StartsWith("y", StringComparison.OrdinalIgnoreCase);
+        // Stamp + push the fresh empty save immediately - otherwise the next
+        // launch's cloud sync would just pull the old progress right back.
+        save.Save();
+        cloud?.QueueUpload(save);
     }
 
     // 14pt in the zoomed ~360px-short-side logical space: on screen it's much
@@ -111,7 +170,7 @@ void RunTitanicShip(string entryLevelPath)
     var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 14,
         new SDL.Color { A = 0, B = 210, G = 210, R = 210 }) { X = 8, Y = 8 };
 
-    var game = new Game(renderer, hud, audioDevice);
+    var game = new Game(renderer, hud, audioDevice) { Cloud = cloud };
 
     void SyncViewport()
     {
@@ -126,9 +185,38 @@ void RunTitanicShip(string entryLevelPath)
     if (mode == 3) game.Begin(entryLevelPath, coop);
     else game.BeginCampaign(save, coop);
 
+    // Test hooks (env-gated, no effect otherwise): TITANIC_TEST_ROOM="path|spawn"
+    // jumps straight into a room without needing live input - useful for
+    // verifying a new room (e.g. a platformer interior) loads and renders
+    // correctly. TITANIC_SCREENSHOT="path.bmp" saves one frame ~1.5s in.
+    var testRoomSpec = Environment.GetEnvironmentVariable("TITANIC_TEST_ROOM");
+    if (testRoomSpec is not null)
+    {
+        var parts = testRoomSpec.Split('|', 2);
+        game.LoadRoom(parts[0], parts.Length > 1 ? parts[1] : "");
+    }
+
+    var screenshotPath = Environment.GetEnvironmentVariable("TITANIC_SCREENSHOT");
+    var screenshotFrame = 0;
+    Action<float> afterFrame = game.AfterFrame;
+    if (screenshotPath is not null)
+    {
+        afterFrame = dt =>
+        {
+            game.AfterFrame(dt);
+            screenshotFrame++;
+            if (screenshotFrame == 90) renderer.SaveScreenshot(screenshotPath);
+        };
+    }
+
     renderer.DrawColor(18, 28, 42, 255);
     var loop = new EventLoop(renderer);
-    loop.Start(game.GameObjects, game.Camera, game.BeforeFrame, game.AfterFrame);
+    Action<float> beforeFrame = dt =>
+    {
+        SteamBootstrap.RunCallbacks();
+        game.BeforeFrame(dt);
+    };
+    loop.Start(game.GameObjects, game.Camera, beforeFrame, afterFrame);
 }
 
 void RunClassicDemo(string levelPath)
@@ -173,9 +261,16 @@ void RunClassicDemo(string levelPath)
 
     if (isSideScroll)
     {
-        var sideTilesetTexture = Texture.CreateImageTexture(renderer, "assets/artwork/isometric-demo/sidescroll-tileset.png");
-        var sideTileset = new SpriteSheet(sideTilesetTexture, frameWidth: 32, frameHeight: 32);
-        var sideFrameIndex = new Dictionary<string, int> { ["empty"] = -1, ["ground"] = 0, ["brick"] = 1 };
+        // A level can bring its own tileset/frame mapping; older sidescroll
+        // levels without one fall back to the original two-frame demo tileset.
+        var sideTilesetPath = string.IsNullOrEmpty(level.TilesetPath)
+            ? "assets/artwork/isometric-demo/sidescroll-tileset.png"
+            : level.TilesetPath;
+        var sideTilesetTexture = Texture.CreateImageTexture(renderer, sideTilesetPath);
+        var sideTileset = new SpriteSheet(sideTilesetTexture, frameWidth: level.TileWidth, frameHeight: level.TileHeight);
+        var sideFrameIndex = level.TileFrames.Count > 0
+            ? level.TileFrames
+            : new Dictionary<string, int> { ["empty"] = -1, ["ground"] = 0, ["brick"] = 1 };
         var sideTiles = LevelLoader.ResolveTileIndices(level, sideFrameIndex);
         var flatMap = new FlatTilemap(sideTiles, sideTileset, level.TileWidth, level.TileHeight) { ZIndex = 0 };
 
@@ -183,6 +278,36 @@ void RunClassicDemo(string levelPath)
         player.Y = playerStart.Row * level.TileHeight + level.TileHeight - 32; // feet on the tile's bottom edge
         // no isometric depth-sort needed in a flat side-scroller (tiles never visually overlap)
         player.SortOffsetY = 0;
+
+        // Resolve each tile's collision behavior once from the level's
+        // solid/platforms/climbable lists, then hand the player real side-view
+        // physics driven by that lookup.
+        var rows = level.Tiles.Length;
+        var columns = level.Tiles[0].Length;
+        var kinds = new TileKind[rows, columns];
+        for (var row = 0; row < rows; row++)
+        {
+            for (var column = 0; column < columns; column++)
+            {
+                var typeName = level.Legend[level.Tiles[row][column]];
+                kinds[row, column] = level.Solid.Contains(typeName) ? TileKind.Solid
+                    : level.Platforms.Contains(typeName) ? TileKind.OneWay
+                    : level.Climbable.Contains(typeName) ? TileKind.Ladder
+                    : TileKind.Empty;
+            }
+        }
+
+        player.Platformer = new PlatformerBody
+        {
+            TileAt = (column, row) =>
+            {
+                if (column < 0 || column >= columns) return TileKind.Solid; // level edges block
+                if (row < 0 || row >= rows) return TileKind.Empty; // open sky above, pit below
+                return kinds[row, column];
+            },
+            TileWidth = level.TileWidth,
+            TileHeight = level.TileHeight
+        };
 
         camera.Axis = level.ScrollMode.Equals("vertical", StringComparison.OrdinalIgnoreCase)
             ? ScrollAxis.Vertical
@@ -195,14 +320,6 @@ void RunClassicDemo(string levelPath)
         camera.MaxY = flatMap.PixelHeight;
 
         gameObjects.Insert(0, flatMap);
-
-        void SyncPlayerGroundZ(float deltaTime)
-        {
-            var column = player.X / level.TileWidth;
-            var row = (player.Y + 32) / level.TileHeight; // ground check just below the player's feet
-            player.GroundZ = flatMap.GetElevationPixels(column, row);
-        }
-        beforeUpdate = SyncPlayerGroundZ;
     }
     else
     {

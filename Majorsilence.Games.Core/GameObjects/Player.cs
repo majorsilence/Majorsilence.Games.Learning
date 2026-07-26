@@ -54,6 +54,14 @@ public class Player : DynamicObject
             DirectionX =  HorizontalDirection.None;
         }
 
+        // In side view the sprite faces its travel direction (and keeps facing
+        // it while standing still). Isometric art has no facing, so don't flip.
+        if (Platformer is not null)
+        {
+            if (DirectionX == HorizontalDirection.Left) FlipHorizontal = true;
+            else if (DirectionX == HorizontalDirection.Right) FlipHorizontal = false;
+        }
+
         if (IsPressed(InputAction.MoveUp))
         {
             DirectionY = VerticalDirection.Up;
@@ -69,7 +77,11 @@ public class Player : DynamicObject
 
         if (IsJustPressed(InputAction.Jump))
         {
-            Jump();
+            // Down+Jump on a one-way platform drops through it instead of jumping.
+            if (Platformer is not null && Platformer.OnGround && IsPressed(InputAction.MoveDown))
+                Platformer.RequestDropThrough();
+            else
+                Jump();
         }
 
         // Update position based on speed and direction

@@ -1,0 +1,22 @@
+<Project>
+  <!--
+    Single source of truth for the game's version, imported by every shippable
+    project (desktop, Android, server). Bump these together when cutting a
+    release - nothing else should hardcode a version number.
+  -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Titanic</Product>
+    <Company>Majorsilence</Company>
+    <Copyright>Copyright Majorsilence</Copyright>
+
+    <!-- Android property names, specifically: ApplicationVersion is the
+         strictly-increasing integer versionCode Play uses to order releases -
+         bump it on every release that ships, even ones that don't change
+         ApplicationDisplayVersion (the human-facing version string). -->
+    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+  </PropertyGroup>
+</Project>

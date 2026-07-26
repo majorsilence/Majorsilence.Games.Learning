@@ -29,7 +29,21 @@ internal static class AndroidGame
         var hud = new Hud(renderer, "assets/fonts/Gidole-Regular.ttf", 14,
             new SDL.Color { A = 0, B = 210, G = 210, R = 210 }) { X = 8, Y = 8 };
 
-        var game = new Game(renderer, hud, audioDevice);
+        // Same offline-safe cloud sync as the desktop title screen (Program.cs),
+        // minus the UI - blocking on StartupSyncAsync here is fine (bounded by
+        // its own 3s HttpClient timeout) since this runs on the dedicated SDL
+        // thread, not the Android UI thread, so there's no synchronization
+        // context to deadlock against.
+        var cloud = new CloudSaveClient();
+        var save = CampaignSave.Load();
+        var cloudSave = cloud.StartupSyncAsync(save).GetAwaiter().GetResult();
+        if (cloudSave is not null)
+        {
+            save = cloudSave;
+            save.Save();
+        }
+
+        var game = new Game(renderer, hud, audioDevice) { Cloud = cloud };
 
         void SyncViewport()
         {
@@ -51,7 +65,7 @@ internal static class AndroidGame
 
         // No console on Android, so no mode prompt: always continue the saved
         // campaign (a fresh install simply starts at voyage 1).
-        game.BeginCampaign(CampaignSave.Load(), coop: false);
+        game.BeginCampaign(save, coop: false);
 
         // On-screen d-pad and buttons; registered as an extra InputActions
         // source so the shared game code needs no touch awareness.

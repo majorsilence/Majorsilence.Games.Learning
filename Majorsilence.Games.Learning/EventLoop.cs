@@ -12,11 +12,18 @@ namespace Majorsilence.Games.Learning;
 public class EventLoop
 {
     private readonly Renderer _renderer;
+    private bool _stopRequested;
 
     public EventLoop(Renderer renderer)
     {
         _renderer = renderer;
     }
+
+    /// <summary>Ends the next Start() call's loop on the following frame, without quitting the app (SDL stays initialized) - e.g. a title screen handing off to the real game loop. Distinct from the player pressing Quit: see QuitRequested.</summary>
+    public void Stop() => _stopRequested = true;
+
+    /// <summary>True if the most recent Start() call ended because the player pressed Quit, rather than via Stop() - callers that chain loops (title screen -> game) use this to tell "move on" from "the whole app should exit".</summary>
+    public bool QuitRequested { get; private set; }
 
     /// <summary>
     /// beforeUpdate runs once per frame, before any GameObject.Update - e.g. to sync
@@ -32,10 +39,11 @@ public class EventLoop
     public void Start(List<GameObject> gameObjects, Camera camera, Action<float>? beforeUpdate = null, Action<float>? afterUpdate = null)
     {
         var quit = false;
+        _stopRequested = false;
         var frequency = SDL.GetPerformanceFrequency();
         var previousCounter = SDL.GetPerformanceCounter();
 
-        while (!quit)
+        while (!quit && !_stopRequested)
         {
             // main game loop
 
@@ -88,5 +96,7 @@ public class EventLoop
             RenderQueue.RenderSorted(gameObjects, camera);
             _renderer.Present();
         }
+
+        QuitRequested = quit;
     }
 }

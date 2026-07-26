@@ -2,6 +2,7 @@ using Majorsilence.Games.Core;
 using Majorsilence.Games.Core.Audio;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
+using Majorsilence.Games.Core.Physics;
 using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Core.Textures;
 using SDL3;
@@ -139,9 +140,29 @@ public class Game
     public List<GameObject> GameObjects { get; } = new();
     public Hud Hud { get; }
     public Room CurrentRoom { get; private set; } = null!;
+
+    private CloudSaveClient? _cloud;
+
+    /// <summary>Optional cloud-save backend (see CloudSaveClient) - null means "cloud sync disabled", and everything that touches it degrades to a no-op. Assigned once by Program.cs/AndroidGame after construction.</summary>
+    public CloudSaveClient? Cloud
+    {
+        get => _cloud;
+        set
+        {
+            if (_cloud is not null) _cloud.Notified -= OnCloudNotified;
+            _cloud = value;
+            if (_cloud is not null) _cloud.Notified += OnCloudNotified;
+        }
+    }
+
+    private void OnCloudNotified(string message) => ShowMessage(message, 2.5f);
     public VoyagePhase Phase { get; private set; } = VoyagePhase.Cruising;
     public bool IsGameOver { get; private set; }
+    #if DEBUG
     public int TixBalance { get; private set; } = 2100000000;
+    #else
+    public int TixBalance { get; private set; } = 2300;
+    #endif
     public string? CurrentRole { get; private set; }
 
     // Team-wide shop purchases (per-player ones live in PlayerSession.Inventory).
@@ -397,6 +418,9 @@ public class Game
     public WorldLabel CreateWorldLabel(string text, int x, int y, SDL.Color color) =>
         new(_renderer, "assets/fonts/Gidole-Regular.ttf", 12, color, text, x, y);
 
+    /// <summary>The rising-floodwater overlay for a platformer room (see WaterOverlay) - Room adds one to its own RoomObjects when built.</summary>
+    public WaterOverlay CreateWaterOverlay(Room room) => new(_renderer, room);
+
     /// <summary>Seconds elapsed since the scripted collision, or -1 before it has happened.</summary>
     public float SecondsSinceCollision() =>
         Phase == VoyagePhase.Cruising || Phase == VoyagePhase.Warning ? -1f : _voyageClock - CollisionAtSeconds;
@@ -597,6 +621,7 @@ public class Game
             : new Room(targetPath, this);
         CurrentRoom = room;
         GameObjects.AddRange(room.RoomObjects);
+        ConfigureRoomPresentation(room);
 
         // A freshly built Iceberg sprite starts unoffset at its baseline (near-bow)
         // position - reset the tracker so UpdateIcebergApproach computes a clean delta.
@@ -628,6 +653,55 @@ public class Game
         }
     }
 
+    /// <summary>
+    /// Configures the parts of the world that depend on which perspective the
+    /// just-loaded room is: side-view rooms give every player real gravity/tile
+    /// collision physics (and an axis-locked scrolling camera matching the
+    /// level's ScrollMode); isometric rooms restore the free-follow camera and
+    /// strip the physics back off, matching the classic top-down movement.
+    /// </summary>
+    private void ConfigureRoomPresentation(Room room)
+    {
+        foreach (var session in _sessions)
+        {
+            session.Player.Platformer = room.IsPlatformer
+                ? new PlatformerBody
+                {
+                    TileAt = room.KindAt,
+                    TileWidth = room.Level.TileWidth,
+                    TileHeight = room.Level.TileHeight,
+                    MapOriginX = room.FlatMap!.X,
+                    MapOriginY = room.FlatMap.Y
+                }
+                : null;
+        }
+
+        if (room.IsPlatformer)
+        {
+            Camera.Axis = room.Level.ScrollMode.Equals("vertical", StringComparison.OrdinalIgnoreCase)
+                ? ScrollAxis.Vertical
+                : ScrollAxis.Horizontal;
+            Camera.OneWay = room.Level.ScrollMode.Equals("forwardOnly", StringComparison.OrdinalIgnoreCase);
+            // Co-op forward-only platformer rooms gate on P1 only - a simplification
+            // (campaign content sticks to horizontal/vertical scroll for co-op rooms).
+            Camera.LeadingEdgeGate = Camera.OneWay ? _sessions[0].Player : null;
+            Camera.MinX = 0;
+            Camera.MaxX = room.FlatMap!.PixelWidth;
+            Camera.MinY = 0;
+            Camera.MaxY = room.FlatMap.PixelHeight;
+        }
+        else
+        {
+            Camera.Axis = ScrollAxis.Free;
+            Camera.OneWay = false;
+            Camera.LeadingEdgeGate = null;
+            Camera.MinX = null;
+            Camera.MaxX = null;
+            Camera.MinY = null;
+            Camera.MaxY = null;
+        }
+    }
+
     private void PlaceSessions((int Column, int Row) spawnTile)
     {
         // An escaped player is riding a launched lifeboat - never teleport them
@@ -637,6 +711,7 @@ public class Game
             var (x, y) = CurrentRoom.StandOnTile(spawnTile.Column, spawnTile.Row, 16, 32);
             _sessions[0].Player.SnapTo(x, y);
             _sessions[0].Player.Z = 0;
+            if (_sessions[0].Player.Platformer is { } body0) body0.VelocityY = 0f;
             _sessions[0].LastGoodX = x;
             _sessions[0].LastGoodY = y;
             _sessions[0].EntrySpawnTile = spawnTile;
@@ -651,6 +726,7 @@ public class Game
             var (x2, y2) = CurrentRoom.StandOnTile(secondTile.Item1, secondTile.Item2, 16, 32);
             _sessions[1].Player.SnapTo(x2, y2);
             _sessions[1].Player.Z = 0;
+            if (_sessions[1].Player.Platformer is { } body1) body1.VelocityY = 0f;
             _sessions[1].LastGoodX = x2;
             _sessions[1].LastGoodY = y2;
             _sessions[1].EntrySpawnTile = secondTile;
@@ -670,14 +746,10 @@ public class Game
     /// <summary>
     /// Generalized form of the anchor-inversion above - width/height are the
     /// sprite's own footprint (16x32 for both the player and every NpcKind), so
-    /// Game.UpdateNpcWander can reuse the same math for NPC wall collision.
+    /// Game.UpdateNpcWander can reuse the same math for NPC wall collision. The
+    /// actual isometric-vs-flat math lives on Room, which knows which one it is.
     /// </summary>
-    private (int Column, int Row) TileUnder(int x, int y, int width, int height)
-    {
-        var feetX = x + (width - CurrentRoom.Grid.TileWidth) / 2 - CurrentRoom.Tilemap.X;
-        var feetY = y + height - CurrentRoom.Grid.TileHeight - CurrentRoom.Tilemap.Y;
-        return CurrentRoom.Grid.WorldToTile(feetX, feetY);
-    }
+    private (int Column, int Row) TileUnder(int x, int y, int width, int height) => CurrentRoom.TileUnder(x, y, width, height);
 
     /// <summary>
     /// Advances the ship's persisted drift total (if the current room drifts) and
@@ -744,10 +816,27 @@ public class Game
         UpdateRescueShip(deltaTime);
         UpdateLaunchedBoats(deltaTime);
         UpdatePlayerSpeeds(deltaTime);
+        CurrentRoom.AdvanceWaterLine(deltaTime);
 
         foreach (var session in _sessions)
         {
             if (session.Escaped) continue;
+
+            if (CurrentRoom.IsPlatformer)
+            {
+                // Flat rooms never overlap sprites in a meaningful depth order -
+                // a fixed offset is enough, unlike the isometric elevation dressing
+                // below. PlatformerBody owns height/collision directly; GroundZ
+                // (the isometric Z-hop's ground reference) plays no part here.
+                session.Player.SortOffsetY = 0;
+                if (session.Player.Platformer is { } body)
+                {
+                    body.WaterLineY = CurrentRoom.WaterLineY;
+                    body.Buoyant = session.Inventory.HasLifeJacket || session.Inventory.HazardGraceSeconds > 0f;
+                }
+                continue;
+            }
+
             var (column, row) = TileUnderPlayer(session.Player);
             var ownElevation = CurrentRoom.GetElevationPixels(column, row);
             session.Player.GroundZ = ownElevation;
@@ -793,7 +882,9 @@ public class Game
             // She approaches broadside-on, off the starboard (+column) side of
             // the stern - the same outboard axis launched lifeboats row along -
             // never along the hull, which would park her on the wreck itself.
-            var (originX, originY) = CurrentRoom.Grid.TileToWorld(0, 0);
+            // (Drifting rooms are always the isometric exterior hull, never a
+            // platformer room, so Grid is guaranteed non-null here.)
+            var (originX, originY) = CurrentRoom.Grid!.TileToWorld(0, 0);
             var (stepX, stepY) = CurrentRoom.Grid.TileToWorld(1, 0);
             float axisX = stepX - originX, axisY = stepY - originY;
             var length = MathF.Sqrt(axisX * axisX + axisY * axisY);
@@ -874,7 +965,7 @@ public class Game
             var sheet = GetSheet(path, width, height);
             // Afloat on open water: like launched boats, the sort footprint must
             // clear the flat water tiles around the hull or they'd clip it.
-            _rescueShip.Sprite = new Sprite(sheet) { ZIndex = 1, SortOffsetY = height + CurrentRoom.Grid.TileHeight };
+            _rescueShip.Sprite = new Sprite(sheet) { ZIndex = 1, SortOffsetY = height + CurrentRoom.Level.TileHeight };
             GameObjects.Add(_rescueShip.Sprite);
         }
         SyncRescueShipSprite();
@@ -1007,7 +1098,7 @@ public class Game
         _shimmerTimer -= deltaTime;
         if (_shimmerTimer > 0f) return;
         _shimmerTimer = WaterShimmerInterval;
-        CurrentRoom.Tilemap.AnimationPhase++;
+        if (CurrentRoom.Tilemap is { } tilemap) tilemap.AnimationPhase++;
     }
 
     private void StartShake(float amplitude, float seconds)
@@ -1163,7 +1254,7 @@ public class Game
                 var wakeSheet = GetSheet(WakeIconPath, 16, 8);
                 // SortOffsetY must exceed a tile's own depth-sort height (TileHeight,
                 // see IsometricTilemap) or the tile this sits on always paints over it.
-                var wake = new Particle(wakeSheet, WakeLifespanSeconds) { X = wakeX, Y = wakeY, SortOffsetY = CurrentRoom.Grid.TileHeight };
+                var wake = new Particle(wakeSheet, WakeLifespanSeconds) { X = wakeX, Y = wakeY, SortOffsetY = CurrentRoom.Level.TileHeight };
                 _particles.Add(wake);
                 GameObjects.Add(wake);
             }
@@ -1179,7 +1270,7 @@ public class Game
                 {
                     X = sprayX + _random.Next(-10, 11),
                     Y = sprayY + _random.Next(-4, 5),
-                    SortOffsetY = CurrentRoom.Grid.TileHeight
+                    SortOffsetY = CurrentRoom.Level.TileHeight
                 };
                 _particles.Add(spray);
                 GameObjects.Add(spray);
@@ -1247,9 +1338,16 @@ public class Game
                     continue;
                 }
 
-                var (column, row) = TileUnderPlayer(session.Player);
                 var inventory = session.Inventory;
                 if (inventory.HazardGraceSeconds > 0f) inventory.HazardGraceSeconds -= deltaTime;
+
+                if (CurrentRoom.IsPlatformer)
+                {
+                    UpdatePlatformerHazard(session, deltaTime);
+                    continue;
+                }
+
+                var (column, row) = TileUnderPlayer(session.Player);
 
                 if (CurrentRoom.IsSolid(column, row))
                 {
@@ -1531,9 +1629,9 @@ public class Game
     {
         if (CurrentRoom.ShopTile is null) return null;
         var (shopColumn, shopRow) = CurrentRoom.ShopTile.Value;
-        var (tileX, tileY) = CurrentRoom.Grid.TileToWorld(shopColumn, shopRow);
-        var shopX = tileX + CurrentRoom.Grid.TileWidth / 2f;
-        var shopY = tileY + CurrentRoom.Grid.TileHeight;
+        var (originX, originY) = CurrentRoom.TileOrigin(shopColumn, shopRow);
+        var shopX = originX + CurrentRoom.Level.TileWidth / 2f;
+        var shopY = originY + CurrentRoom.Level.TileHeight;
         var dx = session.Player.X - shopX;
         var dy = session.Player.Y - shopY;
         return MathF.Sqrt(dx * dx + dy * dy);
@@ -1767,19 +1865,26 @@ public class Game
             if (!SessionJustPressed(session, InputAction.Fire)) continue;
             var inventory = session.Inventory;
 
-            if (SessionPressed(session, InputAction.Jump) && inventory.TntCharges.Count > 0)
+            // Jump is a real action key in platformer rooms (the actual jump
+            // button), so the TNT chord swaps to Down there instead of doubling
+            // up on it; the flare is exterior-topside only (you need line of
+            // sight to fire one), and Up+Fire becomes the snack chord instead.
+            var isPlatformer = CurrentRoom.IsPlatformer;
+            var tntChord = isPlatformer ? InputAction.MoveDown : InputAction.Jump;
+            if (SessionPressed(session, tntChord) && inventory.TntCharges.Count > 0)
             {
                 PlaceTnt(session);
                 continue;
             }
 
-            if (SessionPressed(session, InputAction.MoveUp) && FlareGunOwned && !FlareGunFired)
+            if (!isPlatformer && SessionPressed(session, InputAction.MoveUp) && FlareGunOwned && !FlareGunFired)
             {
                 TryFireFlareGun();
                 continue;
             }
 
-            var wantsSnack = !inventory.HasTixLauncher || SessionPressed(session, InputAction.MoveDown);
+            var snackChord = isPlatformer ? InputAction.MoveUp : InputAction.MoveDown;
+            var wantsSnack = !inventory.HasTixLauncher || SessionPressed(session, snackChord);
             if (wantsSnack && inventory.Snacks.Count > 0)
             {
                 EatSnack(session);
@@ -1884,7 +1989,7 @@ public class Game
                 X = charge.X + _random.Next(-6, 7),
                 Y = charge.Y + _random.Next(-4, 5),
                 ZIndex = 3,
-                SortOffsetY = CurrentRoom.Grid.TileHeight * 2,
+                SortOffsetY = CurrentRoom.Level.TileHeight * 2,
                 VelocityX = MathF.Cos(angle) * speed,
                 VelocityY = MathF.Sin(angle) * speed * 0.5f,
                 RiseSpeed = 30f
@@ -1895,7 +2000,7 @@ public class Game
 
         // Anyone standing too close is caught in the blast - the life jacket is
         // no help here, though a carried blanket still absorbs it (TriggerDeath).
-        var blastPixels = radiusTiles * CurrentRoom.Grid.TileWidth;
+        var blastPixels = radiusTiles * CurrentRoom.Level.TileWidth;
         foreach (var session in _sessions)
         {
             if (session.Escaped || session.IsDying) continue;
@@ -1949,7 +2054,7 @@ public class Game
         {
             X = session.Player.X,
             Y = session.Player.Y + 24,
-            SortOffsetY = CurrentRoom.Grid.TileHeight + 8
+            SortOffsetY = CurrentRoom.Level.TileHeight + 8
         };
         _particles.Add(foam);
         GameObjects.Add(foam);
@@ -2047,7 +2152,7 @@ public class Game
         // depth-sort height is TileHeight, so anything floating on water needs its
         // SortOffsetY pushed at least that far past its sprite height, or tiles
         // "in front" clip the hull and the passenger's legs.
-        boat.SortOffsetY += CurrentRoom.Grid.TileHeight;
+        boat.SortOffsetY += CurrentRoom.Level.TileHeight;
 
         // The passenger is snapped to (boat.Y - 12) every frame (see
         // UpdateLaunchedBoats), which - combined with the boat's own SortOffsetY
@@ -2057,12 +2162,14 @@ public class Game
         // (it flips with unrelated array churn like particle spawns), flickering the
         // passenger's legs in and out from behind the boat. The +1 guarantees the
         // passenger always sorts after (renders on top of) their own boat.
-        session.Player.SortOffsetY = PlayerBaseSortOffsetY + CurrentRoom.Grid.TileHeight + 1;
+        session.Player.SortOffsetY = PlayerBaseSortOffsetY + CurrentRoom.Level.TileHeight + 1;
 
         // Row straight away from the hull: out along the column (port/starboard)
         // axis, on whichever side of the ship's centerline the boat hangs.
+        // (Lifeboats only ever exist on the isometric exterior hull, so Grid/
+        // Tilemap are guaranteed non-null here.)
         var (_, boatWidth, boatHeight) = PropKinds["lifeboat"];
-        var feetX = boat.X + (boatWidth - CurrentRoom.Grid.TileWidth) / 2 - CurrentRoom.Tilemap.X;
+        var feetX = boat.X + (boatWidth - CurrentRoom.Grid!.TileWidth) / 2 - CurrentRoom.Tilemap!.X;
         var feetY = boat.Y + boatHeight - CurrentRoom.Grid.TileHeight - CurrentRoom.Tilemap.Y;
         var (boatColumn, _) = CurrentRoom.Grid.WorldToTile(feetX, feetY);
         var centerColumn = CurrentRoom.Level.Tiles.Length > 0 ? (CurrentRoom.Level.Tiles[0].Length - 1) / 2f : 0f;
@@ -2120,6 +2227,7 @@ public class Game
             Players = _sessions.Select(s => InventorySave.From(s.Inventory)).ToList(),
         };
         save.Save();
+        Cloud?.QueueUpload(save);
     }
 
     /// <summary>
@@ -2137,6 +2245,46 @@ public class Game
             if (_voyageCleared && _voyageIndex < Campaign.Voyages.Count - 1) _voyageIndex++;
             ResetVoyage(Campaign.Voyages[_voyageIndex]);
             return;
+        }
+    }
+
+    /// <summary>
+    /// The platformer-room counterpart of the isometric hazard block above:
+    /// wall/floor collision is already fully resolved by PlatformerBody, so
+    /// there's no IsSolid revert here - just tile hazards (steam vents etc.,
+    /// only while actually standing on one) and the rising floodwater, which
+    /// PlatformerBody.InWater already computes from the player's own feet
+    /// position vs Room.WaterLineY.
+    /// </summary>
+    private void UpdatePlatformerHazard(PlayerSession session, float deltaTime)
+    {
+        var inventory = session.Inventory;
+        var body = session.Player.Platformer;
+        if (body is null) return;
+
+        session.LastGoodX = session.Player.X;
+        session.LastGoodY = session.Player.Y;
+
+        var (column, row) = TileUnderPlayer(session.Player);
+        var hazardKind = "";
+        var tileHazard = body.OnGround && CurrentRoom.TryGetHazard(column, row, out hazardKind);
+        var drowning = body.InWater;
+
+        if (tileHazard || drowning)
+        {
+            if (inventory.HasLifeJacket || inventory.HazardGraceSeconds > 0f)
+            {
+                inventory.IsSwimming = drowning;
+                if (drowning) SpawnSwimFoam(session, deltaTime);
+            }
+            else
+            {
+                TriggerDeath(session, drowning ? "drown" : hazardKind);
+            }
+        }
+        else
+        {
+            inventory.IsSwimming = false;
         }
     }
 
@@ -2167,6 +2315,7 @@ public class Game
         {
             "freeze" => "froze in the North Atlantic",
             "blast" => "were blown off your feet by the TNT",
+            "steam" => "were scalded by a ruptured steam line",
             _ => "drowned in the flooding compartment"
         };
         ShowMessage($"You {verb}... ({TixPenaltyOnDeath} tix lost)", DeathFreezeSeconds);
@@ -2195,6 +2344,7 @@ public class Game
 
         var (x, y) = CurrentRoom.StandOnTile(column, row, 16, 32);
         session.Player.SnapTo(x, y);
+        if (session.Player.Platformer is { } body) body.VelocityY = 0f;
         session.LastGoodX = x;
         session.LastGoodY = y;
     }

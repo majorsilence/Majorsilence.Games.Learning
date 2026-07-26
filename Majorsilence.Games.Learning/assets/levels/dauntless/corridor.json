@@ -112,6 +112,23 @@
       "type": "crate",
       "column": 18,
       "row": 2
+    },
+    {
+      "type": "door",
+      "column": 6,
+      "row": 6,
+      "properties": {
+        "target": "assets/levels/dauntless/stokehold.json",
+        "spawn": "fromCorridor"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 6,
+      "row": 5,
+      "properties": {
+        "name": "fromStokehold"
+      }
     }
   ],
   "floodDelaySeconds": 45

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Link Titanic Devices</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; background: #10141d; color: #d6dbe6; }
+  h1 { font-size: 1.4rem; color: #ffd23c; }
+  p { color: #9aa2b1; line-height: 1.5; }
+  label { display: block; margin-top: 16px; font-size: 0.9rem; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 4px; font-size: 1.4rem; letter-spacing: 2px; text-transform: uppercase; background: #1a2030; border: 1px solid #333c4f; color: #fff; border-radius: 4px; }
+  button { margin-top: 20px; padding: 10px 18px; font-size: 1rem; background: #ffd23c; color: #10141d; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #result { margin-top: 20px; padding: 12px; border-radius: 4px; display: none; }
+  #result.ok { display: block; background: #163a24; color: #7be08a; }
+  #result.err { display: block; background: #3a1620; color: #e0827b; }
+</style>
+</head>
+<body>
+<h1>Link two devices</h1>
+<p>
+  Each device shows an 8-character code on its title screen (Link Device).
+  Enter both codes here to merge them into one account, keeping whichever
+  device's progress is newer.
+</p>
+<label for="codeA">Code from device A</label>
+<input id="codeA" maxlength="8" autocomplete="off" placeholder="ABCD2345">
+<label for="codeB">Code from device B</label>
+<input id="codeB" maxlength="8" autocomplete="off" placeholder="WXYZ6789">
+<button id="submit">Link devices</button>
+<div id="result"></div>
+<script>
+  const submit = document.getElementById('submit');
+  const result = document.getElementById('result');
+  submit.addEventListener('click', async () => {
+    const codeA = document.getElementById('codeA').value.trim().toUpperCase();
+    const codeB = document.getElementById('codeB').value.trim().toUpperCase();
+    result.className = '';
+    result.style.display = 'none';
+    if (codeA.length !== 8 || codeB.length !== 8) {
+      result.textContent = 'Both codes must be 8 characters.';
+      result.className = 'err';
+      return;
+    }
+    submit.disabled = true;
+    try {
+      const res = await fetch('/api/v1/link/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codeA, codeB })
+      });
+      const body = await res.json();
+      if (body.merged) {
+        result.textContent = 'Devices linked! Progress is now shared between them.';
+        result.className = 'ok';
+      } else {
+        result.textContent = body.error || 'Could not link those devices.';
+        result.className = 'err';
+      }
+    } catch (e) {
+      result.textContent = 'Network error - try again.';
+      result.className = 'err';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

@@ -32,6 +32,16 @@ public class FlatTilemap : GameObject
     public int PixelWidth => _tiles.GetLength(1) * _tileWidth;
     public int PixelHeight => _tiles.GetLength(0) * _tileHeight;
 
+    public int Rows => _tiles.GetLength(0);
+    public int Columns => _tiles.GetLength(1);
+
+    /// <summary>Rewrites one tile's frame index (below zero = empty) - runtime map mutation, e.g. a TNT blast opening a wall.</summary>
+    public void SetTile(int column, int row, int frameIndex)
+    {
+        if (row < 0 || row >= Rows || column < 0 || column >= Columns) return;
+        _tiles[row, column] = frameIndex;
+    }
+
     public override void Update(float deltaTime)
     {
         // Tile layout is static; nothing to update.

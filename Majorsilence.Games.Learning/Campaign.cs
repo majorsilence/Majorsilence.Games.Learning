@@ -159,6 +159,9 @@ public class CampaignSave
     public int Bank { get; set; } = 300;
     public List<InventorySave> Players { get; set; } = new();
 
+    /// <summary>When this save was last written - the sole tiebreaker CloudSaveClient/the server use to decide which of two copies (local vs cloud, or two devices') wins.</summary>
+    public DateTimeOffset UpdatedUtc { get; set; } = DateTimeOffset.MinValue;
+
     private static string SavePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "majorsilence-titanic", "campaign.json");
@@ -179,6 +182,7 @@ public class CampaignSave
 
     public void Save()
     {
+        UpdatedUtc = DateTimeOffset.UtcNow;
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(SavePath)!);

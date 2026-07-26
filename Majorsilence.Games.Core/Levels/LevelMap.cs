@@ -54,6 +54,20 @@ public class LevelMap
     public List<string> Solid { get; set; } = new();
 
     /// <summary>
+    /// Sidescroll levels: tile-type names acting as one-way platforms - they
+    /// catch a body falling onto them from above but can be jumped through from
+    /// below and dropped through (Down+Jump). Ignored for isometric levels.
+    /// </summary>
+    public List<string> Platforms { get; set; } = new();
+
+    /// <summary>
+    /// Sidescroll levels: tile-type names that are climbable ladders (gravity
+    /// off, Up/Down climbs while overlapping; also standable on from above like
+    /// a platform). Ignored for isometric levels.
+    /// </summary>
+    public List<string> Climbable { get; set; } = new();
+
+    /// <summary>
     /// Tile-type names that are lethal to stand on, mapped to a hazard kind
     /// (e.g. "freeze", "drown") a game interprets. Empty means no hazards.
     /// </summary>

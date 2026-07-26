@@ -42,6 +42,23 @@ public class Texture : IDisposable
     }
 
     /// <summary>
+    /// Render a sub-region of the texture at its native size, optionally
+    /// mirrored horizontally (side-view sprites facing left/right).
+    /// </summary>
+    public virtual void Render(int x, int y, SDL.Rect srcRect, bool flipHorizontal)
+    {
+        if (!flipHorizontal)
+        {
+            Render(x, y, srcRect);
+            return;
+        }
+
+        SDL.FRect srcFRect = new SDL.FRect { X = srcRect.X, Y = srcRect.Y, W = srcRect.W, H = srcRect.H };
+        SDL.FRect dstRect = new SDL.FRect { X = x, Y = y, W = srcRect.W, H = srcRect.H };
+        SDL.RenderTextureRotated(_renderer, _texture, in srcFRect, in dstRect, 0d, IntPtr.Zero, SDL.FlipMode.Horizontal);
+    }
+
+    /// <summary>
     /// Render a sub-region of the texture (e.g. a single frame of a sprite sheet or tileset)
     /// scaled to the given destination size.
     /// </summary>

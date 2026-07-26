@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="../Version.props" />
+
     <PropertyGroup>
         <TargetFramework>net10.0-android</TargetFramework>
         <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
         <OutputType>Exe</OutputType>
         <ApplicationId>com.majorsilence.games.titanic</ApplicationId>
-        <ApplicationVersion>1</ApplicationVersion>
-        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -21,12 +21,27 @@
         <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     </PropertyGroup>
 
+    <!-- Release signing, entirely env-driven so no keystore or password ever
+         touches source control. Unset -> Release stays debug-signed (fine for
+         local testing, per build-android.sh); set all four to sign for real
+         (Play Console upload or manual distribution). Generate a keystore
+         once with:
+           keytool -genkeypair -v -keystore titanic-release.keystore -alias titanic -keyalg RSA -keysize 2048 -validity 10000
+         then export ANDROID_SIGNING_KEY_STORE/ALIAS/STORE_PASS/KEY_PASS before building. -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(ANDROID_SIGNING_KEY_STORE)' != ''">
+        <AndroidSigningKeyStore>$(ANDROID_SIGNING_KEY_STORE)</AndroidSigningKeyStore>
+        <AndroidSigningKeyAlias>$(ANDROID_SIGNING_KEY_ALIAS)</AndroidSigningKeyAlias>
+        <AndroidSigningStorePass>$(ANDROID_SIGNING_STORE_PASS)</AndroidSigningStorePass>
+        <AndroidSigningKeyPass>$(ANDROID_SIGNING_KEY_PASS)</AndroidSigningKeyPass>
+    </PropertyGroup>
+
     <ItemGroup>
         <!-- The whole game (Game, Room, EventLoop, ...) is shared with the desktop
              project by linking its sources; only Program.cs (console bootstrap,
              level chooser prompts) is desktop-specific and excluded. -->
         <Compile Include="../Majorsilence.Games.Learning/*.cs" Exclude="../Majorsilence.Games.Learning/Program.cs" />
         <ProjectReference Include="../Majorsilence.Games.Core/Majorsilence.Games.Core.csproj" />
+        <ProjectReference Include="../Majorsilence.Games.Shared/Majorsilence.Games.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>
