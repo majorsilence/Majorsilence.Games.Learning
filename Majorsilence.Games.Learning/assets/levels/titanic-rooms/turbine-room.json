@@ -1,0 +1,112 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "perspective": "sidescroll",
+  "scrollMode": "horizontal",
+  "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
+  "tileFrames": {
+    "empty": -1,
+    "floor": 0,
+    "wall": 1,
+    "grating": 2,
+    "ladder": 3,
+    "pipe": 4,
+    "porthole": 5,
+    "steam": 6,
+    "crate": 7
+  },
+  "legend": {
+    "P": "grating",
+    ".": "empty",
+    "S": "steam",
+    "W": "wall",
+    "F": "floor",
+    "C": "crate"
+  },
+  "solid": [
+    "wall",
+    "floor",
+    "crate"
+  ],
+  "platforms": [
+    "grating",
+    "steam"
+  ],
+  "climbable": [
+    "ladder"
+  ],
+  "hazards": {
+    "steam": "steam"
+  },
+  "floodDelaySeconds": 20,
+  "tiles": [
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "W..........................................W",
+    "W..........................................W",
+    "W..........................................W",
+    "W..........................................W",
+    "W.......................PPPP...............W",
+    "W...PPPP.......PPPP...........PPPP.........W",
+    "W................CC.......CC...............W",
+    "WFFFFFFFSFF....FFFFFSFFFFFFFFFFFSFF...FFSFFW"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 8,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/a-deck-corridor.json",
+        "spawn": "fromTurbineRoom"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 8,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 6,
+      "properties": {
+        "value": "30"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 16,
+      "row": 6,
+      "properties": {
+        "value": "30"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 25,
+      "row": 5,
+      "properties": {
+        "value": "35"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 31,
+      "row": 6,
+      "properties": {
+        "value": "30"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 41,
+      "row": 8,
+      "properties": {
+        "value": "20"
+      }
+    }
+  ]
+}

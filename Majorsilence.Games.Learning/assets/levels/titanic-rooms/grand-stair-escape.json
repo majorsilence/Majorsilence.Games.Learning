@@ -1,0 +1,147 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "perspective": "sidescroll",
+  "scrollMode": "vertical",
+  "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
+  "tileFrames": {
+    "empty": -1,
+    "floor": 0,
+    "wall": 1,
+    "grating": 2,
+    "ladder": 3,
+    "pipe": 4,
+    "porthole": 5,
+    "steam": 6,
+    "crate": 7
+  },
+  "legend": {
+    "P": "grating",
+    ".": "empty",
+    "L": "ladder",
+    "W": "wall",
+    "F": "floor"
+  },
+  "solid": [
+    "wall",
+    "floor",
+    "crate"
+  ],
+  "platforms": [
+    "grating",
+    "steam"
+  ],
+  "climbable": [
+    "ladder"
+  ],
+  "hazards": {
+    "steam": "steam"
+  },
+  "floodDelaySeconds": 12,
+  "tiles": [
+    "WWWWWWWWWWWW",
+    "WFFFFFFFFFFW",
+    "W..........W",
+    "W..........W",
+    "W..........W",
+    "W..........W",
+    "W..L....PPPP",
+    "W..L.......W",
+    "W..L.......W",
+    "W..L.......W",
+    "W..L.......W",
+    "W.PLPP...L.W",
+    "W........L.W",
+    "W........L.W",
+    "W........L.W",
+    "W........L.W",
+    "W..L....PLPP",
+    "W..L.......W",
+    "W..L.......W",
+    "W..L.......W",
+    "W..L.......W",
+    "W.PLPP...L.W",
+    "W........L.W",
+    "W........L.W",
+    "W........L.W",
+    "W........L.W",
+    "W..L....PLPP",
+    "WFFFFFFFFFFW"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 4,
+      "row": 27,
+      "properties": {
+        "target": "assets/levels/titanic-rooms/a-deck-corridor.json",
+        "spawn": "fromGrandStair"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 6,
+      "row": 27,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "door",
+      "column": 6,
+      "row": 1,
+      "properties": {
+        "target": "assets/levels/titanic.json",
+        "spawn": "fromGrandStair"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 1,
+      "properties": {
+        "name": "fromBoatDeckTop"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 25,
+      "properties": {
+        "value": "30"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 20,
+      "properties": {
+        "value": "40"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 4,
+      "row": 15,
+      "properties": {
+        "value": "50"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 9,
+      "row": 10,
+      "properties": {
+        "value": "60"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 5,
+      "row": 2,
+      "properties": {
+        "value": "80"
+      }
+    }
+  ]
+}

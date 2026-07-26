@@ -1,0 +1,94 @@
+{
+  "tileWidth": 32,
+  "tileHeight": 32,
+  "perspective": "sidescroll",
+  "scrollMode": "forwardOnly",
+  "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
+  "tileFrames": {
+    "empty": -1,
+    "floor": 0,
+    "wall": 1,
+    "grating": 2,
+    "ladder": 3,
+    "pipe": 4,
+    "porthole": 5,
+    "steam": 6,
+    "crate": 7
+  },
+  "legend": {
+    "P": "grating",
+    ".": "empty",
+    "W": "wall",
+    "F": "floor",
+    "C": "crate"
+  },
+  "solid": [
+    "wall",
+    "floor",
+    "crate"
+  ],
+  "platforms": [
+    "grating",
+    "steam"
+  ],
+  "climbable": [
+    "ladder"
+  ],
+  "hazards": {
+    "steam": "steam"
+  },
+  "floodDelaySeconds": 30,
+  "tiles": [
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "W............................W",
+    "W............................W",
+    "W.PPPP..................PPPP.W",
+    "W............................W",
+    "W............................W",
+    "W.....CC............CCC......W",
+    "WFFFFFFFFFFFFF...FFFFFFFFFFFFW"
+  ],
+  "entities": [
+    {
+      "type": "door",
+      "column": 2,
+      "row": 7,
+      "properties": {
+        "target": "assets/levels/meridian/corridor.json",
+        "spawn": "fromCargoHold"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 4,
+      "row": 7,
+      "properties": {
+        "name": "fromCorridor"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 3,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 25,
+      "row": 2,
+      "properties": {
+        "value": "20"
+      }
+    },
+    {
+      "type": "tix",
+      "column": 18,
+      "row": 7,
+      "properties": {
+        "value": "10"
+      }
+    }
+  ]
+}
