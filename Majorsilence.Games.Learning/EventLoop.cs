@@ -58,7 +58,9 @@ public class EventLoop
             // event loop is done this way because SDL_PollEvent was extremely slow
             // when developing on mac book air
 
-            if (InputActions.IsPressed(InputAction.Quit))
+            // The player can leave either way: the Quit key, or closing the
+            // window (title bar button, or the session asking the app to stop).
+            if (InputActions.IsPressed(InputAction.Quit) || InputManager.CloseRequested)
             {
                 quit = true;
             }

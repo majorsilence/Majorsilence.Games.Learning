@@ -11,6 +11,15 @@ public static class InputManager
     public static event Action? WindowResized;
 
     /// <summary>
+    /// True once the player has asked to close the game - the window's close
+    /// button, or an app-level quit event. Latched, because the request is
+    /// never withdrawn and a game loop only reads it once a frame. Update()
+    /// consumes every SDL event, so without recording it here the close button
+    /// is simply swallowed and does nothing at all.
+    /// </summary>
+    public static bool CloseRequested { get; private set; }
+
+    /// <summary>
     /// Currently held touch points keyed by finger id, positions normalized 0..1
     /// relative to the window (SDL finger-event convention). Empty on devices
     /// without a touchscreen. Consumed by e.g. an on-screen touch control overlay.
@@ -47,7 +56,11 @@ public static class InputManager
         // Handle all the SDL events
         while (SDL.PollEvent(out var e))
         {
-            if (e.Type == (uint)SDL.EventType.KeyDown)
+            if (e.Type == (uint)SDL.EventType.Quit || e.Type == (uint)SDL.EventType.WindowCloseRequested)
+            {
+                CloseRequested = true;
+            }
+            else if (e.Type == (uint)SDL.EventType.KeyDown)
             {
                 currentKeyStates[(int)e.Key.Scancode] = true;
             }
