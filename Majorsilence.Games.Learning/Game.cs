@@ -2094,9 +2094,15 @@ public class Game
             var coin = new LaunchedTix(sheet, velocityX, velocityY, velocityZ)
             {
                 X = session.Player.X,
-                Y = session.Player.Y,
+                // Anchored exactly like a tix placed on a tile (Room.StandOnTile):
+                // top-left one sprite height above the ground line, sorting on
+                // that line. The player's own anchor is their head, so a coin
+                // spawned there sorted 24px behind where it actually lay, and
+                // the deck tiles in front of it painted over all but its top
+                // edge - the coins were landing all but invisible.
+                Y = session.Player.Y + 16,
                 ZIndex = 2,
-                SortOffsetY = 8,
+                SortOffsetY = 16,
                 Value = 1
             };
             CurrentRoom.TixPickups.Add(coin);
