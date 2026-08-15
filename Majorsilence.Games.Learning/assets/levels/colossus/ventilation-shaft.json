@@ -43,14 +43,14 @@
     "W..........W",
     "W..........W",
     "W..L.......W",
-    "W..PPPP....W",
+    "W..LPPP....W",
     "W..L.......W",
     "W..L.......W",
     "W..L.....L.W",
-    "W..L..PPPP.W",
+    "W..L..PPPL.W",
     "W..L.....L.W",
     "W..L.....L.W",
-    "W.PPPP...L.W",
+    "W.PLPP...L.W",
     "W..L.....L.W",
     "W..L.....L.W",
     "W..L.....L.W",
@@ -63,7 +63,7 @@
   "entities": [
     {
       "type": "door",
-      "column": 4,
+      "column": 2,
       "row": 19,
       "properties": {
         "target": "assets/levels/colossus/corridor.json",

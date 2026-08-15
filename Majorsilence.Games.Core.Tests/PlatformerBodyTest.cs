@@ -22,13 +22,15 @@ public class PlatformerBodyTest
         "##########"
     };
 
-    private static PlatformerBody MakeBody() => new()
+    private static PlatformerBody MakeBody() => MakeBody(Grid);
+
+    private static PlatformerBody MakeBody(string[] grid) => new()
     {
         TileAt = (column, row) =>
         {
-            if (column < 0 || column >= Grid[0].Length) return TileKind.Solid;
-            if (row < 0 || row >= Grid.Length) return TileKind.Empty;
-            return Grid[row][column] switch
+            if (column < 0 || column >= grid[0].Length) return TileKind.Solid;
+            if (row < 0 || row >= grid.Length) return TileKind.Empty;
+            return grid[row][column] switch
             {
                 '#' => TileKind.Solid,
                 '-' => TileKind.OneWay,
@@ -65,7 +67,77 @@ public class PlatformerBodyTest
         DropsThroughOneWay();
         ClimbsLadder();
         CoyoteJumpAfterLedge();
+        JumpBudgetIsTwoTiles();
         Console.WriteLine("PlatformerBodyTest passed.");
+    }
+
+    /// <summary>
+    /// Pins the reach a jump actually has at the player's walking speed, because
+    /// every side-view level is laid out against it: gravity 1500 and a -480
+    /// launch give a 0.64s flight and a 76.8px arc, which is two tiles of height
+    /// and two tiles of gap - and emphatically not three. A level whose platforms
+    /// are spaced beyond this is unfinishable, so if these numbers are ever
+    /// retuned, the level grids have to be re-walked with them.
+    /// </summary>
+    private void JumpBudgetIsTwoTiles()
+    {
+        const float walkSpeed = 120f; // Game.BasePlayerSpeed, no boots/snack buff
+
+        // Two-tile gap, taken off from the very lip of the ledge.
+        var crossable = MakeBody(new[]
+        {
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+            "###..#####",
+        });
+        var x = 3 * 32f - crossable.Width - crossable.OffsetX; // box right edge on the ledge lip
+        var y = 4 * 32f - crossable.Height - crossable.OffsetY;
+        Step(crossable, ref x, ref y, 0, 0, 0f, 0.05f);
+        Debug.Assert(crossable.OnGround, "setup: should start standing on the ledge");
+        crossable.Jump();
+        Step(crossable, ref x, ref y, 1, 0, walkSpeed, 0.8f);
+        Debug.Assert(crossable.OnGround, "a jump at walking speed must clear a two-tile gap");
+        Debug.Assert(Math.Abs(y + crossable.OffsetY + crossable.Height - 4 * 32) < 0.01f,
+            "should have landed back on the floor row, not fallen past it");
+
+        // The same jump over three tiles falls short - the budget's upper bound.
+        var tooWide = MakeBody(new[]
+        {
+            "..........",
+            "..........",
+            "..........",
+            "..........",
+            "###...####",
+        });
+        x = 3 * 32f - tooWide.Width - tooWide.OffsetX;
+        y = 4 * 32f - tooWide.Height - tooWide.OffsetY;
+        Step(tooWide, ref x, ref y, 0, 0, 0f, 0.05f);
+        tooWide.Jump();
+        Step(tooWide, ref x, ref y, 1, 0, walkSpeed, 0.8f);
+        Debug.Assert(!tooWide.OnGround && y + tooWide.OffsetY + tooWide.Height > 5 * 32,
+            "a three-tile gap must be out of reach - level pits are sized against this");
+
+        // Two tiles of height: a platform whose surface is 64px up is reachable.
+        var upward = MakeBody(new[]
+        {
+            "..........",
+            "..........",
+            "..........",
+            "....---...",
+            "..........",
+            "##########",
+        });
+        x = 4 * 32f + (32 - upward.Width) / 2f - upward.OffsetX;
+        y = 5 * 32f - upward.Height - upward.OffsetY;
+        Step(upward, ref x, ref y, 0, 0, 0f, 0.05f);
+        Debug.Assert(upward.OnGround, "setup: should start standing on the floor");
+        upward.Jump();
+        Step(upward, ref x, ref y, 0, 0, 0f, 0.8f);
+        Debug.Assert(upward.OnGround, "a jump must reach a platform two tiles up");
+        Debug.Assert(Math.Abs(y + upward.OffsetY + upward.Height - 3 * 32) < 0.01f,
+            "should be resting on the raised platform, not back on the floor");
     }
 
     private void FallsAndLands()

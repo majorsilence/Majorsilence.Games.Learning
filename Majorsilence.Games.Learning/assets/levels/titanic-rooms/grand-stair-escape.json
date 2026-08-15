@@ -40,32 +40,32 @@
   "floodDelaySeconds": 12,
   "tiles": [
     "WWWWWWWWWWWW",
-    "WFFFFFFFFFFW",
-    "W..........W",
-    "W..........W",
-    "W..........W",
-    "W..........W",
-    "W..L....PPPP",
-    "W..L.......W",
-    "W..L.......W",
-    "W..L.......W",
-    "W..L.......W",
-    "W.PLPP...L.W",
+    "WFFFFFLFFFFW",
+    "W.....L....W",
+    "W.....L....W",
+    "W.....L....W",
+    "W.....L....W",
+    "W.....L....W",
+    "W.LPPPLPPP.W",
+    "W.L........W",
+    "W.L........W",
+    "W.L........W",
+    "W.L........W",
+    "W.PPPPPPPL.W",
     "W........L.W",
     "W........L.W",
     "W........L.W",
     "W........L.W",
-    "W..L....PLPP",
+    "W.PLPPPPPP.W",
     "W..L.......W",
     "W..L.......W",
     "W..L.......W",
     "W..L.......W",
-    "W.PLPP...L.W",
-    "W........L.W",
-    "W........L.W",
-    "W........L.W",
-    "W........L.W",
-    "W..L....PLPP",
+    "W.PPPPPPLP.W",
+    "W.......L..W",
+    "W.......L..W",
+    "W.......L..W",
+    "W.......L..W",
     "WFFFFFFFFFFW"
   ],
   "entities": [
@@ -98,7 +98,7 @@
     {
       "type": "spawnPoint",
       "column": 4,
-      "row": 1,
+      "row": 7,
       "properties": {
         "name": "fromBoatDeckTop"
       }
@@ -106,39 +106,39 @@
     {
       "type": "tix",
       "column": 4,
-      "row": 25,
+      "row": 22,
       "properties": {
         "value": "30"
       }
     },
     {
       "type": "tix",
-      "column": 9,
-      "row": 20,
+      "column": 5,
+      "row": 17,
       "properties": {
         "value": "40"
       }
     },
     {
       "type": "tix",
-      "column": 4,
-      "row": 15,
+      "column": 7,
+      "row": 12,
       "properties": {
         "value": "50"
       }
     },
     {
       "type": "tix",
-      "column": 9,
-      "row": 10,
+      "column": 8,
+      "row": 7,
       "properties": {
         "value": "60"
       }
     },
     {
       "type": "tix",
-      "column": 5,
-      "row": 2,
+      "column": 6,
+      "row": 3,
       "properties": {
         "value": "80"
       }

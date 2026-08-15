@@ -186,17 +186,47 @@ public class Room
         }
     }
 
+    /// <summary>
+    /// Resolves an authored entity tile to the tile that entity actually
+    /// occupies, which in a side-view room is not the same thing. Level data
+    /// anchors interior entities on the surface they rest on - a door or spawn
+    /// point on the deck's floor row, a tix on the grating it sits on - but in a
+    /// platformer that tile *is* the ground: StandOnTile would plant the sprite's
+    /// feet on the tile's bottom edge, i.e. buried inside solid floor with
+    /// nothing under it, so a spawned player falls straight out of the world and
+    /// a door never matches the tile a standing player is really in (one row
+    /// higher). Shifting up to the first open tile puts entities where a body
+    /// standing there belongs. Isometric rooms - where the tile you stand on is
+    /// the floor - and entities already authored in open space are unchanged.
+    /// </summary>
+    public (int Column, int Row) EntityTile(int column, int row)
+    {
+        if (!IsPlatformer) return (column, row);
+
+        var open = row;
+        while (open >= 0 && KindAt(column, open) is TileKind.Solid or TileKind.OneWay) open--;
+
+        // A tile buried under solid rock all the way to the ceiling has no
+        // sensible standing spot - leave it authored as-is rather than guess.
+        return open < 0 ? (column, row) : (column, open);
+    }
+
     private void BuildEntities(Game game)
     {
         foreach (var entity in Level.Entities)
         {
+            // Where this entity really stands (see EntityTile) - always use these,
+            // never entity.Column/entity.Row, so a side-view room's placement,
+            // door matching and spawn points all agree on one tile.
+            var (column, row) = EntityTile(entity.Column, entity.Row);
+
             switch (entity.Type)
             {
                 case "door":
                     Doors.Add(new Door
                     {
-                        Column = entity.Column,
-                        Row = entity.Row,
+                        Column = column,
+                        Row = row,
                         Target = entity.Properties.GetValueOrDefault("target", ""),
                         Spawn = entity.Properties.GetValueOrDefault("spawn", "")
                     });
@@ -206,15 +236,15 @@ public class Room
                     // only by accident.
                     var doorKind = game.PropKinds["doorway"];
                     var doorSheet = game.GetSheet(doorKind.ImagePath, doorKind.Width, doorKind.Height);
-                    var (doorX, doorY, doorSortOffset) = StandOnTileElevated(entity.Column, entity.Row, doorKind.Width, doorKind.Height);
+                    var (doorX, doorY, doorSortOffset) = StandOnTileElevated(column, row, doorKind.Width, doorKind.Height);
                     var doorSprite = new Sprite(doorSheet) { X = doorX, Y = doorY, ZIndex = 1, SortOffsetY = doorSortOffset };
                     RoomObjects.Add(doorSprite);
-                    _rowAnchoredObjects.Add((entity.Row, doorSprite));
+                    _rowAnchoredObjects.Add((row, doorSprite));
                     break;
 
                 case "spawnPoint":
                     var spawnName = entity.Properties.GetValueOrDefault("name", "");
-                    if (spawnName != "") SpawnPoints[spawnName] = (entity.Column, entity.Row);
+                    if (spawnName != "") SpawnPoints[spawnName] = (column, row);
                     break;
 
                 case "npc":
@@ -222,40 +252,40 @@ public class Room
                     if (game.NpcKinds.TryGetValue(role, out var npcKind))
                     {
                         var npcSheet = game.GetSheet(npcKind.ImagePath, npcKind.Width, npcKind.Height);
-                        var (npcX, npcY, npcSortOffset) = StandOnTileElevated(entity.Column, entity.Row, npcKind.Width, npcKind.Height);
+                        var (npcX, npcY, npcSortOffset) = StandOnTileElevated(column, row, npcKind.Width, npcKind.Height);
                         var lines = game.NpcLines.GetValueOrDefault(role, new[] { "..." });
                         var npc = new Npc(npcSheet, role, lines) { ZIndex = 1, SortOffsetY = npcSortOffset };
                         npc.SetHome(npcX, npcY);
                         Npcs.Add(npc);
                         RoomObjects.Add(npc);
-                        _rowAnchoredObjects.Add((entity.Row, npc));
+                        _rowAnchoredObjects.Add((row, npc));
                     }
                     break;
 
                 case "tix":
                     var value = int.TryParse(entity.Properties.GetValueOrDefault("value", ""), out var parsedValue) ? parsedValue : 10;
                     var tixSheet = game.GetSheet(game.TixIconPath, 16, 16);
-                    var (tixX, tixY, tixSortOffset) = StandOnTileElevated(entity.Column, entity.Row, 16, 16);
+                    var (tixX, tixY, tixSortOffset) = StandOnTileElevated(column, row, 16, 16);
                     var tix = new TixPickup(tixSheet) { X = tixX, Y = tixY, ZIndex = 1, SortOffsetY = tixSortOffset, Value = value };
                     TixPickups.Add(tix);
                     RoomObjects.Add(tix);
-                    _rowAnchoredObjects.Add((entity.Row, tix));
+                    _rowAnchoredObjects.Add((row, tix));
                     break;
 
                 case "shop":
-                    ShopTile = (entity.Column, entity.Row);
+                    ShopTile = (column, row);
 
                     // A floating sign above the counter, always visible (not just
                     // once the player is close enough to interact) - the shop is
                     // otherwise indistinguishable from any other prop-filled room
                     // until you stumble right up to it.
-                    var (originX, originY) = TileOrigin(entity.Column, entity.Row);
+                    var (originX, originY) = TileOrigin(column, row);
                     var labelX = originX + Level.TileWidth / 2;
                     var labelY = originY - 40;
                     var shopLabel = game.CreateWorldLabel("SHOP", labelX, labelY,
                         new SDL.Color { A = 0, R = 255, G = 210, B = 60 });
                     RoomObjects.Add(shopLabel);
-                    _rowAnchoredObjects.Add((entity.Row, shopLabel));
+                    _rowAnchoredObjects.Add((row, shopLabel));
                     break;
 
                 case "playerStart":
@@ -266,7 +296,7 @@ public class Room
                 {
                     var propKind = game.PropKinds[entity.Type];
                     var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
-                    var (propX, propY) = StandOnTile(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var (propX, propY) = StandOnTile(column, row, propKind.Width, propKind.Height);
                     var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = propKind.Height };
                     Iceberg = sprite;
                     RoomObjects.Add(sprite);
@@ -277,11 +307,11 @@ public class Room
                 {
                     var propKind = game.PropKinds[entity.Type];
                     var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
-                    var (propX, propY, sortOffset) = StandOnTileElevated(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var (propX, propY, sortOffset) = StandOnTileElevated(column, row, propKind.Width, propKind.Height);
                     var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = sortOffset };
                     Funnels.Add(sprite);
                     RoomObjects.Add(sprite);
-                    _rowAnchoredObjects.Add((entity.Row, sprite));
+                    _rowAnchoredObjects.Add((row, sprite));
                     break;
                 }
 
@@ -289,11 +319,11 @@ public class Room
                 {
                     var propKind = game.PropKinds[entity.Type];
                     var sheet = game.GetSheet(propKind.ImagePath, propKind.Width, propKind.Height);
-                    var (propX, propY, sortOffset) = StandOnTileElevated(entity.Column, entity.Row, propKind.Width, propKind.Height);
+                    var (propX, propY, sortOffset) = StandOnTileElevated(column, row, propKind.Width, propKind.Height);
                     var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = sortOffset };
                     Lifeboats.Add(sprite);
                     RoomObjects.Add(sprite);
-                    _rowAnchoredObjects.Add((entity.Row, sprite));
+                    _rowAnchoredObjects.Add((row, sprite));
                     break;
                 }
 
@@ -301,10 +331,10 @@ public class Room
                     if (game.PropKinds.TryGetValue(entity.Type, out var propKind2))
                     {
                         var sheet = game.GetSheet(propKind2.ImagePath, propKind2.Width, propKind2.Height);
-                        var (propX, propY, sortOffset) = StandOnTileElevated(entity.Column, entity.Row, propKind2.Width, propKind2.Height);
+                        var (propX, propY, sortOffset) = StandOnTileElevated(column, row, propKind2.Width, propKind2.Height);
                         var sprite = new Sprite(sheet) { X = propX, Y = propY, ZIndex = 1, SortOffsetY = sortOffset };
                         RoomObjects.Add(sprite);
-                        _rowAnchoredObjects.Add((entity.Row, sprite));
+                        _rowAnchoredObjects.Add((row, sprite));
                     }
                     break;
             }

@@ -640,8 +640,10 @@ public class Game
         }
         else
         {
+            // playerStart is the one entity Room doesn't build (nothing is placed
+            // for it), so resolve its real standing tile here the same way.
             var playerStart = room.Level.Entities.FirstOrDefault(e => e.Type == "playerStart");
-            spawnTile = playerStart is not null ? (playerStart.Column, playerStart.Row) : (0, 0);
+            spawnTile = playerStart is not null ? room.EntityTile(playerStart.Column, playerStart.Row) : (0, 0);
         }
 
         PlaceSessions(spawnTile);
@@ -1891,7 +1893,17 @@ public class Game
                 continue;
             }
 
-            if (!inventory.HasTixLauncher) continue;
+            if (!inventory.HasTixLauncher)
+            {
+                // Never a dead press. Carrying none of the three things this key
+                // uses, it says what it is for instead of doing nothing at all -
+                // which on the Android head, where it is a permanent on-screen
+                // TIX button, just reads as a broken control.
+                ShowMessage(inventory.TntCharges.Count > 0
+                    ? $"Hold {(isPlatformer ? "Down" : "Jump")} and press again to plant your TNT."
+                    : "Nothing to fire yet - the purser sells snacks, TNT and the Tix Launcher.", 2.5f);
+                continue;
+            }
 
             if (TixBalance < LauncherFireCost)
             {
@@ -2262,12 +2274,27 @@ public class Game
         var body = session.Player.Platformer;
         if (body is null) return;
 
+        // Nothing catches a body below the grid, and a side-view camera only
+        // scrolls on its one axis - so a missed jump into a pit would otherwise
+        // fall forever, off-screen, with the game still running. Leaving the map
+        // through the bottom is the death it already looks like (and never the
+        // kind a blanket can save you from - you are out of the world, and the
+        // fall would just keep triggering until every blanket was spent).
+        if (CurrentRoom.FlatMap is { } map && session.Player.Y > map.Y + map.PixelHeight)
+        {
+            TriggerDeath(session, "fall", allowRescue: false);
+            return;
+        }
+
         session.LastGoodX = session.Player.X;
         session.LastGoodY = session.Player.Y;
 
         var (column, row) = TileUnderPlayer(session.Player);
         var hazardKind = "";
-        var tileHazard = body.OnGround && CurrentRoom.TryGetHazard(column, row, out hazardKind);
+        // TileUnderPlayer resolves the tile the body *occupies*; what's dangerous
+        // in side view is the surface it stands on, one row below (a steam vent
+        // is part of the deck plating, not the air above it).
+        var tileHazard = body.OnGround && CurrentRoom.TryGetHazard(column, row + 1, out hazardKind);
         var drowning = body.InWater;
 
         if (tileHazard || drowning)
@@ -2288,13 +2315,18 @@ public class Game
         }
     }
 
-    private void TriggerDeath(PlayerSession session, string hazard)
+    /// <summary>
+    /// Kills (or, with a blanket, spares) a player. allowRescue: false forces the
+    /// death through for hazards a blanket can't help with - see the pit fall in
+    /// UpdatePlatformerHazard.
+    /// </summary>
+    private void TriggerDeath(PlayerSession session, string hazard, bool allowRescue = true)
     {
         // A carried blanket cancels the death outright (any death - icy water,
         // floodwater, even a TNT blast) and buys a short window of hazard
         // immunity to scramble clear in.
         var inventory = session.Inventory;
-        if (inventory.Blankets > 0)
+        if (allowRescue && inventory.Blankets > 0)
         {
             inventory.Blankets--;
             inventory.HazardGraceSeconds = BlanketGraceSeconds;
@@ -2316,6 +2348,7 @@ public class Game
             "freeze" => "froze in the North Atlantic",
             "blast" => "were blown off your feet by the TNT",
             "steam" => "were scalded by a ruptured steam line",
+            "fall" => "missed the jump and fell into the bilges",
             _ => "drowned in the flooding compartment"
         };
         ShowMessage($"You {verb}... ({TixPenaltyOnDeath} tix lost)", DeathFreezeSeconds);

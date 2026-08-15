@@ -126,7 +126,7 @@ public class PlatformerBody
         if (_coyoteTimer > 0f) _coyoteTimer -= deltaTime;
         if (_dropThroughTimer > 0f) _dropThroughTimer -= deltaTime;
 
-        UpdateLadderState(preciseX, preciseY, climbDir);
+        UpdateLadderState(preciseX, ref preciseY, climbDir);
 
         var inWater = WaterLineY is not null && BottomY(preciseY) > WaterLineY.Value;
 
@@ -171,13 +171,30 @@ public class PlatformerBody
         _lastPreciseY = preciseY;
     }
 
-    private void UpdateLadderState(float preciseX, float preciseY, int climbDir)
+    private void UpdateLadderState(float preciseX, ref float preciseY, int climbDir)
     {
         var overlapping = LadderAtCenter(preciseX, preciseY);
 
         if (OnLadder)
         {
-            if (!overlapping) OnLadder = false;
+            if (overlapping) return;
+            OnLadder = false;
+
+            // Topping out. The body's center clears the last rung half a body
+            // height before its feet do, so a climber reaching the top detaches
+            // while still standing inside that rung's own tile - too low for the
+            // one-way landing rule (which only catches feet coming from above)
+            // to hold them, leaving them re-grabbing and re-detaching every
+            // frame instead of ever getting off the ladder. Plant them on the
+            // rung's top face instead: a ladder is standable from above anyway,
+            // and its top tile is normally part of the landing it leads to.
+            if (VelocityY <= 0f && LadderAtFeet(preciseX, preciseY, out var rungRow))
+            {
+                preciseY = MapOriginY + rungRow * TileHeight - Height - OffsetY;
+                VelocityY = 0f;
+                OnGround = true;
+            }
+
             return;
         }
 
@@ -201,6 +218,14 @@ public class PlatformerBody
         var centerX = preciseX + OffsetX + Width / 2f;
         var centerY = preciseY + OffsetY + Height / 2f;
         return TileAt(ToColumn(centerX), ToRow(centerY)) == TileKind.Ladder;
+    }
+
+    /// <summary>The rung the body is standing in, if its lowest pixel is inside a ladder tile - see the top-out in UpdateLadderState.</summary>
+    private bool LadderAtFeet(float preciseX, float preciseY, out int row)
+    {
+        var centerX = preciseX + OffsetX + Width / 2f;
+        row = ToRow(BottomY(preciseY) - 1f);
+        return TileAt(ToColumn(centerX), row) == TileKind.Ladder;
     }
 
     private bool LadderJustBelowFeet(float preciseX, float preciseY)
