@@ -26,6 +26,24 @@ public class Renderer : IDisposable
     /// </summary>
     public (int Width, int Height) LogicalSize { get; private set; }
 
+    /// <summary>
+    /// Output pixels per logical pixel under the active logical presentation
+    /// (see SyncLogicalPresentationToWindow). Anything that rasterizes its own
+    /// detail - text above all - should build at this scale and draw at logical
+    /// size; rasterized in logical space it would be magnified from a small
+    /// bitmap by the presentation zoom and come out mushy.
+    /// </summary>
+    public float PixelsPerLogicalUnit
+    {
+        get
+        {
+            var logicalWidth = LogicalSize.Width;
+            if (logicalWidth <= 0) return 1f;
+            var outputWidth = Size.Width;
+            return outputWidth <= 0 ? 1f : outputWidth / (float)logicalWidth;
+        }
+    }
+
     public static implicit operator IntPtr(Renderer ap)
     {
         if (ap._disposed) return IntPtr.Zero;

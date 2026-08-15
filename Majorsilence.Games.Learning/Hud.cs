@@ -19,6 +19,7 @@ public class Hud : GameObject
     private readonly SDL.Color _color;
     private Texture? _texture;
     private string _lastText = "";
+    private float _lastScale;
 
     public Hud(Renderer renderer, string fontPath, int size, SDL.Color color)
     {
@@ -37,8 +38,13 @@ public class Hud : GameObject
     public void SetText(string text)
     {
         Text = text;
-        if (text == _lastText) return;
+        // Resizing the window changes how many real pixels a logical one is
+        // worth, so the text has to be re-rasterized to stay sharp - not just
+        // when the string itself changes.
+        var scale = _renderer.PixelsPerLogicalUnit;
+        if (text == _lastText && scale == _lastScale) return;
         _lastText = text;
+        _lastScale = scale;
         _texture?.Dispose();
         _texture = string.IsNullOrEmpty(text) ? null : Texture.CreateTextTexture(_renderer, _fontPath, _size, _color, text);
     }

@@ -78,7 +78,9 @@ public class ShopMenu : GameObject
 
     private void RebuildIfChanged()
     {
-        var signature = $"{_title}{_selectedIndex}{string.Join("", _rows)}";
+        // The render scale is part of the signature: a resized window needs the
+        // rows re-rasterized for its new pixel density, not just new content.
+        var signature = $"{_renderer.PixelsPerLogicalUnit}|{_title}{_selectedIndex}{string.Join("", _rows)}";
         if (signature == _builtSignature) return;
         _builtSignature = signature;
 

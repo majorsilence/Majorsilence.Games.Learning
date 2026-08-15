@@ -146,7 +146,8 @@ public class TitleMenu : GameObject
 
     private void RebuildIfChanged()
     {
-        var signature = $"{_selectedIndex}{string.Join("", _rows.ConvertAll(r => r.Label))}";
+        // Scale included so a window resize re-rasterizes the rows (see ShopMenu).
+        var signature = $"{_renderer.PixelsPerLogicalUnit}|{_selectedIndex}{string.Join("", _rows.ConvertAll(r => r.Label))}";
         if (signature == _builtSignature) return;
         _builtSignature = signature;
 

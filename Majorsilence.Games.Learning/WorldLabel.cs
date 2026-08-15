@@ -43,6 +43,8 @@ public class WorldLabel : GameObject
         // this were ever placed in a drifting room), un-clobbered frame to frame.
         var bob = (int)MathF.Round(MathF.Sin(_bobTime * 2f) * 3f);
         var (screenX, screenY) = camera.WorldToScreen(X, Y - bob);
-        _texture.Render(screenX - _texture.Rect.W / 2, screenY);
+        // LogicalWidth, not Rect.W: a text texture is rasterized at display
+        // resolution, so its pixel width is a multiple of what it covers here.
+        _texture.Render(screenX - _texture.LogicalWidth / 2, screenY);
     }
 }

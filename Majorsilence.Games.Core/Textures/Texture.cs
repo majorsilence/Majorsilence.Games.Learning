@@ -11,6 +11,18 @@ public class Texture : IDisposable
 
     public SDL.Rect Rect { get; set; }
 
+    /// <summary>
+    /// Texture pixels per logical pixel: 1 for ordinary art, which is authored
+    /// at the size it draws, and higher for anything rasterized at the display's
+    /// real resolution (see CreateTextTexture). Render(x, y) divides by it, so
+    /// callers position and measure in logical units either way.
+    /// </summary>
+    public float PixelScale { get; private set; } = 1f;
+
+    /// <summary>This texture's size in logical pixels - what it actually covers on screen. Same as Rect for unscaled art.</summary>
+    public int LogicalWidth => (int)MathF.Round(Rect.W / PixelScale);
+    public int LogicalHeight => (int)MathF.Round(Rect.H / PixelScale);
+
     public Texture(Renderer renderer, Surfaces.Surface surface)
     {
         _texture = SDL.CreateTextureFromSurface(renderer, surface);
@@ -27,7 +39,7 @@ public class Texture : IDisposable
     public virtual void Render(int x, int y)
     {
         SDL.GetTextureSize(_texture, out float texW, out float texH);
-        SDL.FRect dstrect2 = new SDL.FRect { X = x, Y = y, W = texW, H = texH };
+        SDL.FRect dstrect2 = new SDL.FRect { X = x, Y = y, W = texW / PixelScale, H = texH / PixelScale };
 
         SDL.RenderTexture(_renderer, _texture, IntPtr.Zero, dstrect2);
     }
@@ -101,11 +113,24 @@ public class Texture : IDisposable
         return new Texture(renderer, image);
     }
 
+    /// <summary>
+    /// Renders text to a texture sized in logical pixels, as if the font were
+    /// `size` points in the game's coordinate space - but rasterized at the
+    /// display's real resolution. The game zooms its logical presentation to
+    /// keep sprites a readable fraction of any screen (Renderer.
+    /// SyncLogicalPresentationToWindow), and glyphs rasterized at logical size
+    /// would be blown up by that same zoom from a ~12px bitmap, which is what
+    /// made the HUD and menus hard to read. Text rebuilt after the window
+    /// changes size picks up the new scale; until then it stays correctly
+    /// sized, just rasterized for the old one.
+    /// </summary>
     public static Texture CreateTextTexture(Renderer renderer, string fontPath, int size,
         SDL.Color color, string textValue)
     {
-        using var font = new Fonts(fontPath, size);
+        var pixelSize = Math.Max(size, (int)MathF.Round(size * renderer.PixelsPerLogicalUnit));
+        using var font = new Fonts(fontPath, pixelSize);
         using var text = new TextSurface(font, color, textValue);
-        return new Texture(renderer, text);
+        // The achieved scale, not the requested one - integer point sizes round.
+        return new Texture(renderer, text) { PixelScale = pixelSize / (float)size };
     }
 }
