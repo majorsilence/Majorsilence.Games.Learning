@@ -2,7 +2,7 @@
   "tileWidth": 32,
   "tileHeight": 32,
   "perspective": "sidescroll",
-  "scrollMode": "forwardOnly",
+  "scrollMode": "horizontal",
   "tilesetPath": "assets/artwork/titanic-demo/platformer-tileset.png",
   "tileFrames": {
     "empty": -1,

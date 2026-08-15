@@ -683,7 +683,15 @@ public class Game
             Camera.Axis = room.Level.ScrollMode.Equals("vertical", StringComparison.OrdinalIgnoreCase)
                 ? ScrollAxis.Vertical
                 : ScrollAxis.Horizontal;
-            Camera.OneWay = room.Level.ScrollMode.Equals("forwardOnly", StringComparison.OrdinalIgnoreCase);
+            // A one-way camera doesn't just refuse to scroll back - it fences the
+            // player against the trailing edge, so any ground left behind is gone
+            // for good. That's fine for a self-contained run, but a room you enter
+            // through a door is a room you have to walk back out of, and fencing
+            // the player away from that door leaves them with no way out at all.
+            // Rooms with doors therefore always scroll both ways, whatever the
+            // level asks for.
+            Camera.OneWay = room.Doors.Count == 0 &&
+                room.Level.ScrollMode.Equals("forwardOnly", StringComparison.OrdinalIgnoreCase);
             // Co-op forward-only platformer rooms gate on P1 only - a simplification
             // (campaign content sticks to horizontal/vertical scroll for co-op rooms).
             Camera.LeadingEdgeGate = Camera.OneWay ? _sessions[0].Player : null;
