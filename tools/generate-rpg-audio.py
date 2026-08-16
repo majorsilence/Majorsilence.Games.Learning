@@ -12,6 +12,8 @@ Outputs, all mono 22050Hz 16-bit to match the rest of the repo's audio:
   assets/audio/rpg/hearth.wav    - inn interior: slow, warm, no drums
   assets/audio/rpg/market.wav    - store interior: brisk and businesslike
   assets/audio/rpg/valeroad.wav  - the overworld road: marching, minor, open
+  assets/audio/rpg/battle.wav    - a fight: fast, E minor, relentless bass
+  assets/audio/rpg/victory.wav   - the flourish after a win (does not loop)
   assets/audio/rpg/confirm.wav   - menu/dialogue accept
   assets/audio/rpg/cancel.wav    - menu/dialogue back out
   assets/audio/rpg/door.wav      - passing through a doorway
@@ -347,6 +349,60 @@ def market():
     return buf
 
 
+def battle():
+    """A fight. E minor, fast, and built on a bass that never lets go of the beat."""
+    bpm = 152
+
+    lead = (
+        "e5:.5 e5:.5 g5:.5 e5:.5 | b5:1 a5:1 | g5:.5 f#5:.5 e5:1 | d5:2 "
+        "e5:.5 e5:.5 g5:.5 b5:.5 | c6:1 b5:1 | a5:.5 g5:.5 f#5:1 | e5:2 "
+        "b5:1 c6:1 | d6:.5 c6:.5 b5:1 | a5:1 g5:1 | f#5:2 "
+        "g5:.5 a5:.5 b5:1 | a5:.5 g5:.5 f#5:1 | e5:1 d5:1 | e5:2 "
+    )
+    counter = (
+        "e4:1 b4:1 | e4:1 b4:1 | c5:1 g4:1 | d5:1 a4:1 "
+        "e4:1 b4:1 | e4:1 b4:1 | c5:1 g4:1 | b4:1 e4:1 "
+        "g4:1 d5:1 | g4:1 d5:1 | c5:1 g4:1 | d5:1 a4:1 "
+        "c5:1 g4:1 | d5:1 a4:1 | b4:1 f#4:1 | e4:2 "
+    )
+
+    def bar(root, high, fifth):
+        return f"{root}:.25 {root}:.25 {high}:.25 {root}:.25 {fifth}:.25 {root}:.25 {high}:.25 {fifth}:.25 "
+
+    bass = "".join(bar(*roots) for roots in [
+        ("e2", "e3", "b2"), ("e2", "e3", "b2"), ("c2", "c3", "g2"), ("d2", "d3", "a2"),
+        ("e2", "e3", "b2"), ("e2", "e3", "b2"), ("c2", "c3", "g2"), ("b1", "b2", "f#2"),
+        ("g2", "g3", "d3"), ("g2", "g3", "d3"), ("c2", "c3", "g2"), ("d2", "d3", "a2"),
+        ("c2", "c3", "g2"), ("d2", "d3", "a2"), ("b1", "b2", "f#2"), ("e2", "e3", "b2"),
+    ])
+
+    buf = buffer_for([lead, counter, bass], bpm)
+    drums = repeat("k:.5 h:.25 h:.25 s:.5 h:.25 k:.25 ", beats_of(lead))
+
+    render(buf, lead, bpm, pulse(0.25), 0.30, env="flat", gap=0.03)
+    render(buf, counter, bpm, pulse(0.125), 0.15, env="pluck")
+    render(buf, bass, bpm, triangle, 0.42, env="flat", gap=0.015)
+    render_drums(buf, drums, bpm, 0.20)
+    return buf
+
+
+def victory():
+    """The flourish after a win. Short, major, and over before it outstays its welcome - this one does not loop."""
+    bpm = 150
+
+    lead = "e5:.5 e5:.5 e5:.5 e5:2 | c5:.5 d5:.5 e5:1 g5:2 "
+    counter = "c5:.5 c5:.5 c5:.5 c5:2 | e4:.5 f4:.5 g4:1 e5:2 "
+    bass = "c2:1 c3:1 | c2:1 g2:1 | c2:1 e2:1 | g2:1 c3:2 "
+
+    buf = buffer_for([lead, counter, bass], bpm, tail=0.3)
+
+    render(buf, lead, bpm, pulse(0.5), 0.32, env="flat", gap=0.03)
+    render(buf, counter, bpm, pulse(0.25), 0.18, env="flat", gap=0.03)
+    render(buf, bass, bpm, triangle, 0.40, env="flat", gap=0.03)
+    render_drums(buf, repeat("k:.5 h:.5 ", beats_of(lead)), bpm, 0.18)
+    return buf
+
+
 # ------------------------------------------------------------- effects ----
 #
 # Short, dry and unmistakable from each other with the music playing over them,
@@ -389,6 +445,8 @@ TRACKS = {
     "valeroad": valeroad,
     "hearth": hearth,
     "market": market,
+    "battle": battle,
+    "victory": victory,
     "confirm": confirm,
     "cancel": cancel,
     "door": door,

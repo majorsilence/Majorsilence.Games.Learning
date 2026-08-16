@@ -1,0 +1,52 @@
+{
+  "ash-wolf": {
+    "name": "Ash-wolf",
+    "health": 16,
+    "attack": 7,
+    "defense": 2,
+    "agility": 10,
+    "experience": 5,
+    "frame": 0,
+    "maxGroup": 3
+  },
+  "cinder-crow": {
+    "name": "Cinder-crow",
+    "health": 11,
+    "attack": 6,
+    "defense": 1,
+    "agility": 13,
+    "experience": 4,
+    "frame": 1,
+    "maxGroup": 3
+  },
+  "slagling": {
+    "name": "Slagling",
+    "health": 22,
+    "attack": 8,
+    "defense": 6,
+    "agility": 4,
+    "experience": 7,
+    "frame": 2,
+    "maxGroup": 2
+  },
+  "ridge-bandit": {
+    "name": "Ridge bandit",
+    "health": 20,
+    "attack": 9,
+    "defense": 4,
+    "agility": 9,
+    "experience": 9,
+    "frame": 3,
+    "maxGroup": 2
+  },
+  "ash-wraith": {
+    "name": "Ash-wraith",
+    "health": 30,
+    "attack": 12,
+    "defense": 5,
+    "agility": 11,
+    "experience": 18,
+    "frame": 4,
+    "maxGroup": 1
+  }
+}

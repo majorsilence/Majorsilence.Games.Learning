@@ -9,6 +9,7 @@ Outputs, all 16x16 frames laid out left to right:
   assets/artwork/rpg/tileset.png  - 18 terrain/structure frames
   assets/artwork/rpg/hero.png     - 8 frames: down/up/left/right x 2 walk poses
   assets/artwork/rpg/folk.png     - 24 frames: 3 townsfolk palettes, same poses
+  assets/artwork/rpg/monsters.png - 5 battle sprites, 32x32 (see monsters.json)
 
 Tileset frame order (referenced by level JSON tileFrames maps):
 
@@ -257,12 +258,120 @@ def build_folk(path, palettes):
     return path
 
 
+# ------------------------------------------------------------- monsters ----
+#
+# Battle sprites are 32x32 - four times the map tile, which is the size the
+# format needs before a creature reads as anything but a blob. Frame order is
+# the "frame" field in assets/monsters.json.
+
+MONSTER = 32
+
+ASH = (150, 146, 140)
+ASH_D = (96, 94, 92)
+ASH_L = (198, 194, 188)
+EMBER = (240, 128, 48)
+EMBER_L = (252, 208, 96)
+SOOT = (44, 40, 48)
+SOOT_L = (78, 72, 84)
+SLAG = (72, 60, 60)
+CLOAK = (72, 64, 96)
+CLOAK_D = (44, 38, 64)
+
+
+def ash_wolf(d, x):
+    """0 - lean grey hunter, ember where the eye should be."""
+    y = 4
+    d.ellipse([x + 6, y + 8, x + 25, y + 19], fill=ASH)          # body
+    d.ellipse([x + 2, y + 5, x + 13, y + 15], fill=ASH_L)        # head
+    d.polygon([(x + 4, y + 6), (x + 6, y + 0), (x + 8, y + 6)], fill=ASH)   # ears
+    d.polygon([(x + 9, y + 6), (x + 11, y + 1), (x + 13, y + 6)], fill=ASH)
+    d.point((x + 5, y + 10), fill=EMBER)                          # eye
+    d.point((x + 6, y + 10), fill=EMBER_L)
+    d.polygon([(x + 2, y + 12), (x + 6, y + 11), (x + 6, y + 14)], fill=ASH_D)  # muzzle
+    for leg in (8, 13, 19, 23):                                   # legs
+        d.rectangle([x + leg, y + 17, x + leg + 2, y + 24], fill=ASH_D)
+    d.polygon([(x + 25, y + 11), (x + 31, y + 5), (x + 28, y + 14)], fill=ASH_D)  # tail
+
+
+def cinder_crow(d, x):
+    """1 - soot-black bird whose feathers have not finished burning."""
+    y = 5
+    d.polygon([(x + 15, y + 8), (x + 1, y + 2), (x + 5, y + 13)], fill=SOOT)   # wings
+    d.polygon([(x + 17, y + 8), (x + 31, y + 2), (x + 27, y + 13)], fill=SOOT)
+    d.line([(x + 1, y + 2), (x + 5, y + 13)], fill=EMBER)
+    d.line([(x + 31, y + 2), (x + 27, y + 13)], fill=EMBER)
+    d.ellipse([x + 12, y + 6, x + 20, y + 20], fill=SOOT_L)       # body
+    d.ellipse([x + 13, y + 1, x + 19, y + 8], fill=SOOT)          # head
+    d.polygon([(x + 19, y + 4), (x + 25, y + 5), (x + 19, y + 7)], fill=EMBER_L)  # beak
+    d.point((x + 15, y + 4), fill=EMBER)
+    d.rectangle([x + 13, y + 20, x + 14, y + 24], fill=EMBER_L)   # legs
+    d.rectangle([x + 18, y + 20, x + 19, y + 24], fill=EMBER_L)
+
+
+def slagling(d, x):
+    """2 - a lump of the ridge that got up and started moving. Slow, hard, hot inside."""
+    y = 6
+    d.polygon([(x + 4, y + 23), (x + 8, y + 6), (x + 23, y + 4), (x + 28, y + 22)], fill=SLAG)
+    d.polygon([(x + 9, y + 21), (x + 12, y + 10), (x + 20, y + 9), (x + 23, y + 20)], fill=ASH_D)
+    for a, b, c, e in ((11, 12, 14, 19), (17, 10, 21, 17), (13, 16, 19, 22)):
+        d.line([(x + a, y + b), (x + c, y + e)], fill=EMBER)      # glowing cracks
+    d.point((x + 12, y + 11), fill=EMBER_L)
+    d.point((x + 21, y + 10), fill=EMBER_L)
+    d.rectangle([x + 7, y + 23, x + 12, y + 25], fill=SLAG)       # feet
+    d.rectangle([x + 20, y + 23, x + 25, y + 25], fill=SLAG)
+
+
+def ridge_bandit(d, x):
+    """3 - the only thing on this road that wants your money rather than your attention."""
+    y = 3
+    d.ellipse([x + 11, y + 2, x + 21, y + 12], fill=SKIN)         # head
+    d.polygon([(x + 10, y + 8), (x + 16, y + 0), (x + 22, y + 8)], fill=BRICK_D)  # hood
+    d.rectangle([x + 11, y + 8, x + 21, y + 10], fill=SOOT)       # mask
+    d.point((x + 13, y + 9), fill=EMBER_L)
+    d.point((x + 19, y + 9), fill=EMBER_L)
+    d.polygon([(x + 8, y + 26), (x + 11, y + 12), (x + 21, y + 12), (x + 24, y + 26)], fill=(104, 84, 72))
+    d.rectangle([x + 6, y + 14, x + 10, y + 16], fill=SKIN)       # arm
+    d.polygon([(x + 2, y + 10), (x + 7, y + 15), (x + 5, y + 16)], fill=ASH_L)  # knife
+    d.rectangle([x + 12, y + 26, x + 15, y + 29], fill=SOOT)      # boots
+    d.rectangle([x + 18, y + 26, x + 21, y + 29], fill=SOOT)
+
+
+def ash_wraith(d, x):
+    """4 - whatever is coming down off the eastern ridge. Nobody has described it twice the same way."""
+    y = 1
+    d.polygon([(x + 5, y + 29), (x + 10, y + 6), (x + 22, y + 6), (x + 27, y + 29)], fill=CLOAK)
+    d.polygon([(x + 10, y + 8), (x + 16, y + 1), (x + 22, y + 8)], fill=CLOAK_D)  # hood
+    d.ellipse([x + 12, y + 7, x + 20, y + 15], fill=SOOT)         # hollow face
+    d.point((x + 14, y + 10), fill=EMBER_L)
+    d.point((x + 15, y + 10), fill=EMBER)
+    d.point((x + 18, y + 10), fill=EMBER_L)
+    d.point((x + 17, y + 10), fill=EMBER)
+    d.polygon([(x + 4, y + 16), (x + 10, y + 13), (x + 9, y + 18)], fill=CLOAK_D)  # sleeves
+    d.polygon([(x + 28, y + 16), (x + 22, y + 13), (x + 23, y + 18)], fill=CLOAK_D)
+    # a hem that frays into ash rather than ending
+    for i in range(5, 28, 3):
+        d.line([(x + i, y + 29), (x + i, y + 29 - (i % 4))], fill=ASH_D)
+
+
+MONSTERS = (ash_wolf, cinder_crow, slagling, ridge_bandit, ash_wraith)
+
+
+def build_monsters(path):
+    img = Image.new("RGBA", (MONSTER * len(MONSTERS), MONSTER), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    for index, draw_one in enumerate(MONSTERS):
+        draw_one(d, index * MONSTER)
+    img.save(path)
+    return path
+
+
 here = os.path.dirname(os.path.abspath(__file__))
 out = os.path.join(here, "..", "Majorsilence.Games.Rpg", "assets", "artwork", "rpg")
 os.makedirs(out, exist_ok=True)
 
 print(build_tileset(os.path.join(out, "tileset.png")))
 print(build_character(os.path.join(out, "hero.png"), (64, 112, 208), (40, 72, 152), HAIR))
+print(build_monsters(os.path.join(out, "monsters.png")))
 print(build_folk(os.path.join(out, "folk.png"), [
     ((192, 88, 72), (136, 56, 48), (56, 44, 40)),    # 0 villager, red
     ((120, 96, 176), (80, 60, 128), (200, 200, 192)),  # 1 elder, purple + white hair

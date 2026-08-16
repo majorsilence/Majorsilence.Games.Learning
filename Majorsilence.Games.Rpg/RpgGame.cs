@@ -29,6 +29,12 @@ public class RpgGame : IDisposable
     private const float WalkSpeed = 64f;
     private const float DoorCooldownSeconds = 0.4f;
 
+    private const string BattleMusicPath = "assets/audio/rpg/battle.wav";
+
+    /// <summary>Where a defeat puts you back: the town square you started from.</summary>
+    private const string DefeatMap = "assets/levels/ashholt.json";
+    private const string DefeatSpawn = "";
+
     /// <summary>
     /// How many tiles ahead a "talk" reaches. Two, not one, so the hero can lean
     /// over a shop counter to the keeper behind it - but the second tile only
@@ -51,17 +57,53 @@ public class RpgGame : IDisposable
     private readonly Sound? _confirmSound;
     private readonly Sound? _cancelSound;
     private readonly Sound? _doorSound;
+    private readonly Sound? _victorySound;
+    private readonly MonsterBook _monsterBook;
+    private readonly Random _random;
     private float _doorCooldown;
     private Folk? _talkingTo;
 
-    public RpgGame(Renderer renderer, string fontPath, AudioDevice? audio = null)
+    /// <summary>What this map can throw at you, and how often - both from the level file.</summary>
+    private List<string> _encounterTable = new();
+    private float _encounterRate;
+    private string _mapMusic = "";
+
+    /// <summary>
+    /// The tile the last encounter check ran on. Encounters are rolled per tile
+    /// entered rather than per frame, so standing still is safe and walking is
+    /// what carries the risk.
+    /// </summary>
+    private (int Column, int Row) _lastEncounterTile = (-1, -1);
+    private bool _victoryPlayed;
+
+    public RpgGame(Renderer renderer, string fontPath, AudioDevice? audio = null, int? seed = null)
     {
         _renderer = renderer;
         _fontPath = fontPath;
+        // Seeded on request so a scripted run fights a reproducible battle;
+        // otherwise every run rolls its own.
+        _random = seed is { } value ? new Random(value) : new Random();
         Camera = new Camera { Axis = ScrollAxis.Free };
         Dialogue = new DialogueBox(renderer, fontPath);
         Hero = new Walker(GetSheet("assets/artwork/rpg/hero.png")) { Speed = WalkSpeed, ZIndex = 1 };
         Music = new MusicDirector(audio);
+
+        _monsterBook = MonsterBook.Load("assets/monsters.json");
+        BattleScreen = new BattleScreen(renderer, fontPath,
+            new SpriteSheet(Texture.CreateImageTexture(renderer, "assets/artwork/rpg/monsters.png"), 32, 32));
+
+        // Starting numbers for the one character there is. Levels, MP and a
+        // party are the next slice; these are what a first fight is balanced
+        // against.
+        Champion = new Combatant
+        {
+            Name = "Wren",
+            MaxHealth = 28,
+            Health = 28,
+            Attack = 9,
+            Defense = 4,
+            Agility = 8
+        };
 
         // Sound is optional the same way it is in the Titanic game: no audio
         // device (a test run, a machine with no card) means a silent game, not a
@@ -71,10 +113,22 @@ public class RpgGame : IDisposable
             _confirmSound = new Sound(audio, "assets/audio/rpg/confirm.wav") { Volume = 0.5f };
             _cancelSound = new Sound(audio, "assets/audio/rpg/cancel.wav") { Volume = 0.5f };
             _doorSound = new Sound(audio, "assets/audio/rpg/door.wav") { Volume = 0.6f };
+            _victorySound = new Sound(audio, "assets/audio/rpg/victory.wav") { Volume = 0.6f };
         }
     }
 
     public MusicDirector Music { get; }
+
+    /// <summary>The hero's fighting self - the same character the Walker draws, kept separately because battle cares about numbers and the map cares about pixels.</summary>
+    public Combatant Champion { get; }
+
+    public BattleScreen BattleScreen { get; }
+
+    /// <summary>The fight in progress, or null when out on the map. Non-null means walking is suspended.</summary>
+    public Battle? Battle => BattleScreen.Battle;
+
+    /// <summary>Banked experience. Nothing spends it yet - levels arrive with the stats slice.</summary>
+    public int Experience { get; private set; }
 
     public Camera Camera { get; }
     public DialogueBox Dialogue { get; }
@@ -144,6 +198,10 @@ public class RpgGame : IDisposable
         };
         GameObjects.Add(Hero);
         GameObjects.Add(Dialogue);
+        GameObjects.Add(BattleScreen);
+
+        _encounterRate = _level.EncounterRate;
+        _encounterTable = _level.Encounters.Where(_monsterBook.Contains).ToList();
 
         var start = ResolveStart(spawnName);
         Hero.SnapTo(start.Column * _level.TileWidth, start.Row * _level.TileHeight);
@@ -156,9 +214,13 @@ public class RpgGame : IDisposable
         Camera.Update();
 
         // After the map is up, so a track named by a level that fails to load
-        // never starts playing over a broken screen.
-        Music.Play(_level.MusicPath);
+        // never starts playing over a broken screen. A map loaded while a fight
+        // is on keeps the battle music - the map is only being staged behind it.
+        _mapMusic = _level.MusicPath;
+        if (Battle is null) Music.Play(_mapMusic);
 
+        // Arriving somewhere doesn't roll for an encounter; the first step does.
+        _lastEncounterTile = HeroTile;
         _doorCooldown = DoorCooldownSeconds;
     }
 
@@ -227,6 +289,12 @@ public class RpgGame : IDisposable
     {
         if (_doorCooldown > 0f) _doorCooldown -= deltaTime;
 
+        if (Battle is { } battle)
+        {
+            UpdateBattle(battle);
+            return;
+        }
+
         if (Dialogue.IsOpen)
         {
             // Conversation holds the world still: no walking, no re-triggering
@@ -250,6 +318,55 @@ public class RpgGame : IDisposable
         ReadWalkInput();
 
         if (InputActions.IsJustPressed(InputAction.Confirm)) TryTalk();
+    }
+
+    /// <summary>
+    /// Battle input. Up/Down move the command cursor, Left/Right pick a target,
+    /// Confirm commits whatever is in front of you, Cancel steps back out of
+    /// target selection. Both cursor calls are safe to make in either phase -
+    /// each ignores input meant for the other.
+    /// </summary>
+    private void UpdateBattle(Battle battle)
+    {
+        Hero.DirectionX = 0;
+        Hero.DirectionY = 0;
+
+        if (battle.Phase == BattlePhase.Over)
+        {
+            EndBattle(battle);
+            return;
+        }
+
+        if (InputActions.IsJustPressed(InputAction.MoveUp))
+        {
+            battle.MoveCommand(-1);
+            battle.MoveTarget(-1);
+        }
+        if (InputActions.IsJustPressed(InputAction.MoveDown))
+        {
+            battle.MoveCommand(1);
+            battle.MoveTarget(1);
+        }
+        if (InputActions.IsJustPressed(InputAction.MoveLeft)) battle.MoveTarget(-1);
+        if (InputActions.IsJustPressed(InputAction.MoveRight)) battle.MoveTarget(1);
+
+        if (InputActions.IsJustPressed(InputAction.Confirm))
+        {
+            _confirmSound?.Play();
+            battle.Confirm();
+
+            if (battle.Outcome == BattleOutcome.Victory && !_victoryPlayed)
+            {
+                _victoryPlayed = true;
+                Music.Play("");
+                _victorySound?.Play();
+            }
+        }
+        else if (InputActions.IsJustPressed(InputAction.Cancel))
+        {
+            _cancelSound?.Play();
+            battle.Cancel();
+        }
     }
 
     /// <summary>
@@ -322,6 +439,67 @@ public class RpgGame : IDisposable
         }
     }
 
+    /// <summary>
+    /// Rolls for a random encounter, once per tile the hero steps onto. Runs
+    /// after movement alongside CheckDoors. Safe places declare no encounter
+    /// rate, so towns and interiors never call the dice at all.
+    /// </summary>
+    public bool CheckEncounters()
+    {
+        if (Battle is not null || Dialogue.IsOpen || Hero.Body is null) return false;
+        if (_encounterRate <= 0f || _encounterTable.Count == 0) return false;
+
+        var tile = Hero.Body.CenterTile(Hero.PreciseX, Hero.PreciseY);
+        if (tile == _lastEncounterTile) return false;
+        _lastEncounterTile = tile;
+
+        if (_random.NextDouble() >= _encounterRate) return false;
+
+        StartBattle(_monsterBook.RollGroup(_encounterTable, _random));
+        return true;
+    }
+
+    /// <summary>Stages a fight against named monsters from the book - how a scripted run gets into a specific battle without walking the road until one turns up.</summary>
+    public void StartBattle(IEnumerable<string> monsterKeys) =>
+        StartBattle(monsterKeys.Select(key => _monsterBook[key].Spawn()).ToList());
+
+    /// <summary>Drops the hero into a fight with the given group.</summary>
+    public void StartBattle(List<Combatant> monsters)
+    {
+        if (monsters.Count == 0) return;
+
+        Dialogue.Close();
+        _talkingTo = null;
+        Hero.DirectionX = 0;
+        Hero.DirectionY = 0;
+
+        _victoryPlayed = false;
+        BattleScreen.Battle = new Battle(Champion, monsters, _random);
+        Music.Play(BattleMusicPath);
+    }
+
+    private void EndBattle(Battle battle)
+    {
+        BattleScreen.Battle = null;
+
+        if (battle.Outcome == BattleOutcome.Victory) Experience += battle.ExperienceEarned;
+
+        if (battle.Outcome == BattleOutcome.Defeat)
+        {
+            // Losing costs you the road rather than the save: you wake back in
+            // Ashholt, whole. A harsher rule can come with saving, when there is
+            // something to reload.
+            Champion.Health = Champion.MaxHealth;
+            LoadMap(DefeatMap, DefeatSpawn);
+            return;
+        }
+
+        // Back to whatever this map plays. The encounter tile is already the one
+        // underfoot, so surviving a fight doesn't immediately start another.
+        Music.Play(_mapMusic);
+        _lastEncounterTile = HeroTile;
+    }
+
     /// <summary>Walking onto a doorway tile loads the map behind it. Runs after movement, so it sees where the hero actually ended up this frame.</summary>
     public bool CheckDoors()
     {
@@ -342,6 +520,7 @@ public class RpgGame : IDisposable
         _confirmSound?.Dispose();
         _cancelSound?.Dispose();
         _doorSound?.Dispose();
+        _victorySound?.Dispose();
     }
 
     private SpriteSheet GetSheet(string path)

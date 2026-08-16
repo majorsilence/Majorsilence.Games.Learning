@@ -4,6 +4,17 @@
   "perspective": "topdown",
   "tilesetPath": "assets/artwork/rpg/tileset.png",
   "musicPath": "assets/audio/rpg/valeroad.wav",
+  "encounterRate": 0.06,
+  "encounters": [
+    "ash-wolf",
+    "ash-wolf",
+    "ash-wolf",
+    "cinder-crow",
+    "cinder-crow",
+    "slagling",
+    "ridge-bandit",
+    "ash-wraith"
+  ],
   "tileFrames": {
     "grass": 0,
     "tree": 1,

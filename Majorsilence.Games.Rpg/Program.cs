@@ -15,6 +15,10 @@ using Majorsilence.Games.Rpg;
 //                            (see ScriptedInput), for hands-off checks
 //   RPG_SHOT_AT="4.5"        take RPG_SCREENSHOT that many seconds in instead,
 //                            e.g. at the end of a script rather than at the start
+//   RPG_SEED="7"             fix the random seed, so a scripted fight plays out
+//                            the same way every run
+//   RPG_BATTLE="ash-wolf,.." start in a fight with these monsters, instead of
+//                            walking the road until one turns up
 const string StartMap = "assets/levels/ashholt.json";
 const string FontPath = "assets/fonts/Gidole-Regular.ttf";
 
@@ -29,7 +33,10 @@ using var renderer = new Renderer(window);
 // a scripted verification run - should play the game silently rather than fail
 // to start.
 using var audioDevice = OpenAudio();
-using var game = new RpgGame(renderer, FontPath, audioDevice);
+var seed = Environment.GetEnvironmentVariable("RPG_SEED") is { } s && int.TryParse(s, out var parsed)
+    ? parsed
+    : (int?)null;
+using var game = new RpgGame(renderer, FontPath, audioDevice, seed);
 
 static AudioDevice? OpenAudio()
 {
@@ -66,6 +73,11 @@ else
     game.LoadMap(StartMap);
 }
 
+if (Environment.GetEnvironmentVariable("RPG_BATTLE") is { Length: > 0 } battleSpec)
+{
+    game.StartBattle(battleSpec.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(key => key.Trim()));
+}
+
 var screenshotPath = Environment.GetEnvironmentVariable("RPG_SCREENSHOT");
 var shotAt = Environment.GetEnvironmentVariable("RPG_SHOT_AT") is { } at ? float.Parse(at) : (float?)null;
 var frames = 0;
@@ -92,6 +104,7 @@ loop.Start(game.GameObjects, game.Camera,
     {
         clock += deltaTime;
         game.CheckDoors();
+        game.CheckEncounters();
 
         if (scripted is not null && clock >= traceNext)
         {
@@ -99,7 +112,12 @@ loop.Start(game.GameObjects, game.Camera,
             var (column, row) = game.HeroTile;
             var track = Path.GetFileNameWithoutExtension(game.Music.NowPlaying);
             Console.WriteLine($"t={clock:0.0} map={game.MapName} tile=({column},{row}) at=({game.Hero.PreciseX:0.0},{game.Hero.PreciseY:0.0}) facing={game.Hero.Facing} music={(track == "" ? "-" : track)}"
-                + (game.Dialogue.IsOpen ? " [talking]" : ""));
+                + (game.Dialogue.IsOpen ? " [talking]" : "")
+                + (game.Battle is { } fight
+                    ? $" [battle {fight.Phase} hp={fight.Hero.Health}/{fight.Hero.MaxHealth}"
+                      + $" foes={string.Join("/", fight.Monsters.Select(m => m.Health))}"
+                      + (fight.Message == "" ? "" : $" \"{fight.Message}\"") + "]"
+                    : $" xp={game.Experience}"));
         }
 
         if (screenshotPath is not null)

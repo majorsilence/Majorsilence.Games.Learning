@@ -23,6 +23,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Majorsilence.Games.Learning\Majorsilence.Games.Learning.csproj" />
+      <ProjectReference Include="..\Majorsilence.Games.Rpg\Majorsilence.Games.Rpg.csproj" />
     </ItemGroup>
     <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
         <PackageReference Include="SDL3-CS.Linux" Version="3.4.10.5" />

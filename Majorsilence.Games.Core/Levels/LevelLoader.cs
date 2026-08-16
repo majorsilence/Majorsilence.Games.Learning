@@ -26,6 +26,8 @@ public static class LevelLoader
         public string[]? Heights { get; set; }
         public string TilesetPath { get; set; } = "";
         public string MusicPath { get; set; } = "";
+        public float EncounterRate { get; set; }
+        public List<string> Encounters { get; set; } = new();
         public Dictionary<string, int> TileFrames { get; set; } = new();
         public List<string> Solid { get; set; } = new();
         public List<string> Platforms { get; set; } = new();
@@ -157,6 +159,8 @@ public static class LevelLoader
             Heights = raw.Heights,
             TilesetPath = raw.TilesetPath,
             MusicPath = raw.MusicPath,
+            EncounterRate = raw.EncounterRate,
+            Encounters = raw.Encounters,
             TileFrames = raw.TileFrames,
             Solid = raw.Solid,
             Platforms = raw.Platforms,

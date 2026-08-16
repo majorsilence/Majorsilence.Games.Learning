@@ -53,6 +53,21 @@ public class LevelMap
     public string MusicPath { get; set; } = "";
 
     /// <summary>
+    /// Chance per tile stepped that walking here starts a fight. 0 - the default
+    /// - means this place is safe, which is what every town, interior and
+    /// pre-existing level wants.
+    /// </summary>
+    public float EncounterRate { get; set; }
+
+    /// <summary>
+    /// Names of what can be met here, weighted by repetition: listing a monster
+    /// twice makes it twice as likely. Empty means nothing is met regardless of
+    /// EncounterRate. The names are the game's to interpret - the loader has no
+    /// idea what a monster is.
+    /// </summary>
+    public List<string> Encounters { get; set; } = new();
+
+    /// <summary>
     /// Maps this level's semantic tile-type names (from its legend) to TilesetPath's
     /// frame order. Empty means "use the caller's default" mapping, same fallback
     /// rule as TilesetPath.
