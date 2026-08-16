@@ -8,8 +8,19 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+
     </PropertyGroup>
-    
+
+    <ItemGroup>
+      <!-- The mtp-v2 flavour of xunit.v3, not the plain one: it builds the test
+           assembly as a Microsoft.Testing.Platform application, which is what
+           `dotnet test` drives on the .NET 10 SDK. The plain xunit.v3 package
+           ships its own console runner instead, which `dotnet test` cannot talk
+           to - it reports "Zero tests ran" against a suite that is fine. The
+           matching opt-in lives in global.json at the repo root. -->
+      <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.0" />
+    </ItemGroup>
+
     <ItemGroup>
       <ProjectReference Include="..\Majorsilence.Games.Learning\Majorsilence.Games.Learning.csproj" />
     </ItemGroup>

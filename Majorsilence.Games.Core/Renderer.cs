@@ -103,9 +103,20 @@ public class Renderer : IDisposable
     }
 
     public bool IsFullscreen => (SDL.GetWindowFlags(_window) & SDL.WindowFlags.Fullscreen) != 0;
+
+    /// <summary>
+    /// Toggles fullscreen and waits for the change to actually take effect.
+    ///
+    /// On Wayland (and other compositor-driven backends) SDL_SetWindowFullscreen
+    /// only *requests* the change - the compositor grants it later, so reading
+    /// IsFullscreen straight afterwards reports the old state. SDL_SyncWindow
+    /// blocks until the pending window changes have been applied, which makes
+    /// this call mean what it looks like it means.
+    /// </summary>
     public void SetFullscreen(bool fullscreen)
     {
         SDL.SetWindowFullscreen(_window, fullscreen);
+        SDL.SyncWindow(_window);
     }
 
     private bool _disposed;

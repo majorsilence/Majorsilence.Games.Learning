@@ -1,7 +1,14 @@
 using Majorsilence.Games.Core.Levels;
+using Xunit;
 
 namespace Majorsilence.Games.Core.Tests;
 
+/// <summary>
+/// Parsing checks for the level JSON format. Several of these pin backward
+/// compatibility: a level file that omits a field has to keep meaning what it
+/// meant before that field existed, because the shipped level files predate
+/// most of them.
+/// </summary>
 public class LevelLoaderTest
 {
     private const string ValidJson = """
@@ -69,11 +76,22 @@ public class LevelLoaderTest
     }
     """;
 
+    private const string TopDownJson = """
+    {
+      "tileWidth": 16,
+      "tileHeight": 16,
+      "perspective": "topdown",
+      "legend": { "G": "grass" },
+      "tiles": ["GG"],
+      "entities": []
+    }
+    """;
+
     private const string BadPerspectiveJson = """
     {
       "tileWidth": 32,
       "tileHeight": 16,
-      "perspective": "topdown",
+      "perspective": "birdseye",
       "legend": { "G": "grass" },
       "tiles": ["GG"],
       "entities": []
@@ -127,112 +145,157 @@ public class LevelLoaderTest
     }
     """;
 
-    public void Test1()
+    [Fact]
+    public void ParsesDimensionsLegendAndEntities()
     {
         var level = LevelLoader.Parse(ValidJson, "valid-fixture");
 
-        System.Diagnostics.Debug.Assert(level.TileWidth == 32);
-        System.Diagnostics.Debug.Assert(level.TileHeight == 16);
-        System.Diagnostics.Debug.Assert(level.Tiles.Length == 2);
-        System.Diagnostics.Debug.Assert(level.Legend['G'] == "grass");
-        System.Diagnostics.Debug.Assert(level.Legend['W'] == "water");
-        System.Diagnostics.Debug.Assert(level.Entities.Count == 1);
-        System.Diagnostics.Debug.Assert(level.Entities[0].Type == "playerStart");
-        System.Diagnostics.Debug.Assert(level.Entities[0].Column == 1);
-        System.Diagnostics.Debug.Assert(level.Entities[0].Row == 0);
+        Assert.Equal(32, level.TileWidth);
+        Assert.Equal(16, level.TileHeight);
+        Assert.Equal(2, level.Tiles.Length);
+        Assert.Equal("grass", level.Legend['G']);
+        Assert.Equal("water", level.Legend['W']);
 
-        var frameIndex = new Dictionary<string, int> { ["grass"] = 0, ["water"] = 1 };
-        var tiles = LevelLoader.ResolveTileIndices(level, frameIndex);
-
-        System.Diagnostics.Debug.Assert(tiles[0, 0] == 0); // G
-        System.Diagnostics.Debug.Assert(tiles[0, 1] == 1); // W
-        System.Diagnostics.Debug.Assert(tiles[1, 0] == 1); // W
-        System.Diagnostics.Debug.Assert(tiles[1, 1] == 0); // G
-
-        AssertThrows(() => LevelLoader.Parse(RaggedRowJson, "ragged-fixture"));
-        AssertThrows(() => LevelLoader.Parse(UndefinedLegendCharJson, "undefined-char-fixture"));
-        AssertThrows(() => LevelLoader.Parse("not json", "invalid-json-fixture"));
-
-        // backward compatibility: a level with no perspective/scrollMode/heights fields
-        // (like ValidJson above) defaults to isometric/horizontal/flat
-        System.Diagnostics.Debug.Assert(level.Perspective == "isometric");
-        System.Diagnostics.Debug.Assert(level.ScrollMode == "horizontal");
-        System.Diagnostics.Debug.Assert(level.Heights is null);
-        var flatElevations = LevelLoader.ResolveElevations(level);
-        System.Diagnostics.Debug.Assert(flatElevations[0, 0] == 0 && flatElevations[1, 1] == 0);
-
-        var elevated = LevelLoader.Parse(ElevatedJson, "elevated-fixture");
-        var elevations = LevelLoader.ResolveElevations(elevated);
-        System.Diagnostics.Debug.Assert(elevations[0, 0] == 0);  // '0' * step 16
-        System.Diagnostics.Debug.Assert(elevations[0, 1] == 16); // '1' * step 16
-        System.Diagnostics.Debug.Assert(elevations[1, 0] == 16);
-        System.Diagnostics.Debug.Assert(elevations[1, 1] == 0);
-
-        var sideScroll = LevelLoader.Parse(SideScrollJson, "sidescroll-fixture");
-        System.Diagnostics.Debug.Assert(sideScroll.Perspective == "sidescroll");
-        System.Diagnostics.Debug.Assert(sideScroll.ScrollMode == "forwardOnly");
-
-        AssertThrows(() => LevelLoader.Parse(BadHeightsCharJson, "bad-heights-char-fixture"));
-        AssertThrows(() => LevelLoader.Parse(BadPerspectiveJson, "bad-perspective-fixture"));
-
-        // backward compatibility: no tilesetPath/tileFrames means "caller decides"
-        System.Diagnostics.Debug.Assert(level.TilesetPath == "");
-        System.Diagnostics.Debug.Assert(level.TileFrames.Count == 0);
-
-        var customTileset = LevelLoader.Parse(CustomTilesetJson, "custom-tileset-fixture");
-        System.Diagnostics.Debug.Assert(customTileset.TilesetPath == "assets/artwork/titanic-demo/tileset.png");
-        System.Diagnostics.Debug.Assert(customTileset.TileFrames["deck"] == 0);
-        System.Diagnostics.Debug.Assert(customTileset.TileFrames["water"] == 1);
-        var customTiles = LevelLoader.ResolveTileIndices(customTileset, customTileset.TileFrames);
-        System.Diagnostics.Debug.Assert(customTiles[0, 0] == 0); // D
-        System.Diagnostics.Debug.Assert(customTiles[0, 1] == 1); // W
-
-        // backward compatibility: no solid/hazards/floodDelaySeconds/coop means
-        // "no collision, no hazards, never floods, single player"
-        System.Diagnostics.Debug.Assert(level.Solid.Count == 0);
-        System.Diagnostics.Debug.Assert(level.Hazards.Count == 0);
-        System.Diagnostics.Debug.Assert(level.FloodDelaySeconds < 0);
-        System.Diagnostics.Debug.Assert(level.Coop == false);
-        System.Diagnostics.Debug.Assert(level.Entities[0].Properties.Count == 0);
-
-        var roomFeatures = LevelLoader.Parse(RoomFeaturesJson, "room-features-fixture");
-        System.Diagnostics.Debug.Assert(roomFeatures.Solid.Contains("wall"));
-        System.Diagnostics.Debug.Assert(roomFeatures.Hazards["water"] == "freeze");
-        System.Diagnostics.Debug.Assert(Math.Abs(roomFeatures.FloodDelaySeconds - 45.5f) < 0.001f);
-        System.Diagnostics.Debug.Assert(roomFeatures.Coop);
-        var door = roomFeatures.Entities[0];
-        System.Diagnostics.Debug.Assert(door.Type == "door");
-        System.Diagnostics.Debug.Assert(door.Properties["target"] == "assets/levels/titanic-rooms/bridge.json");
-        System.Diagnostics.Debug.Assert(door.Properties["spawn"] == "fromBoatDeck");
-
-        // backward compatibility: no world bounds/fallback/drift means "the level's
-        // world is exactly its Tiles array, stationary" - RoomFeaturesJson never sets them
-        System.Diagnostics.Debug.Assert(roomFeatures.WorldMinColumn == 0 && roomFeatures.WorldMaxColumn == 0);
-        System.Diagnostics.Debug.Assert(roomFeatures.FallbackTileType == "");
-        System.Diagnostics.Debug.Assert(roomFeatures.DriftSpeedX == 0f && roomFeatures.DriftSpeedY == 0f);
-
-        var ocean = LevelLoader.Parse(OceanWorldJson, "ocean-world-fixture");
-        System.Diagnostics.Debug.Assert(ocean.WorldMinColumn == -1000 && ocean.WorldMaxColumn == 1000);
-        System.Diagnostics.Debug.Assert(ocean.WorldMinRow == -1000 && ocean.WorldMaxRow == 1000);
-        System.Diagnostics.Debug.Assert(ocean.FallbackTileType == "water");
-        System.Diagnostics.Debug.Assert(Math.Abs(ocean.DriftSpeedX - 6f) < 0.001f);
-        System.Diagnostics.Debug.Assert(Math.Abs(ocean.DriftSpeedY - (-3f)) < 0.001f);
-        System.Diagnostics.Debug.Assert(ocean.TileVariants["water"].SequenceEqual(new[] { 1, 3, 4 }));
-        System.Diagnostics.Debug.Assert(ocean.WallProps["railing"] == "hullSide");
-        System.Diagnostics.Debug.Assert(roomFeatures.TileVariants.Count == 0); // backward compatible default
-        System.Diagnostics.Debug.Assert(roomFeatures.WallProps.Count == 0); // backward compatible default
+        var entity = Assert.Single(level.Entities);
+        Assert.Equal("playerStart", entity.Type);
+        Assert.Equal(1, entity.Column);
+        Assert.Equal(0, entity.Row);
     }
 
-    private static void AssertThrows(Action action)
+    [Fact]
+    public void ResolvesTileIndicesThroughTheLegend()
     {
-        try
-        {
-            action();
-            System.Diagnostics.Debug.Assert(false, "expected a MajorsilenceException to be thrown");
-        }
-        catch (MajorsilenceException)
-        {
-            // expected
-        }
+        var level = LevelLoader.Parse(ValidJson, "valid-fixture");
+        var frameIndex = new Dictionary<string, int> { ["grass"] = 0, ["water"] = 1 };
+
+        var tiles = LevelLoader.ResolveTileIndices(level, frameIndex);
+
+        Assert.Equal(0, tiles[0, 0]); // G
+        Assert.Equal(1, tiles[0, 1]); // W
+        Assert.Equal(1, tiles[1, 0]); // W
+        Assert.Equal(0, tiles[1, 1]); // G
+    }
+
+    [Theory]
+    [InlineData(RaggedRowJson, "rows of differing length")]
+    [InlineData(UndefinedLegendCharJson, "a tile char with no legend entry")]
+    [InlineData("not json", "malformed JSON")]
+    [InlineData(BadHeightsCharJson, "a non-digit in the heights grid")]
+    [InlineData(BadPerspectiveJson, "an unknown perspective")]
+    public void RejectsMalformedLevels(string json, string because)
+    {
+        var error = Assert.Throws<MajorsilenceException>(() => LevelLoader.Parse(json, "bad-fixture"));
+        Assert.False(string.IsNullOrWhiteSpace(error.Message), $"rejecting {because} should explain why");
+    }
+
+    /// <summary>
+    /// A level file that sets none of the optional fields has to behave like the
+    /// format did before they existed: isometric, horizontally scrolling, flat,
+    /// no collision, no hazards, never floods, single player, caller-supplied
+    /// tileset, and a world no bigger than its own tile grid.
+    /// </summary>
+    [Fact]
+    public void OmittedFieldsKeepTheirPreFeatureMeaning()
+    {
+        var level = LevelLoader.Parse(ValidJson, "valid-fixture");
+
+        Assert.Equal("isometric", level.Perspective);
+        Assert.Equal("horizontal", level.ScrollMode);
+        Assert.Null(level.Heights);
+
+        var flat = LevelLoader.ResolveElevations(level);
+        Assert.Equal(0, flat[0, 0]);
+        Assert.Equal(0, flat[1, 1]);
+
+        Assert.Equal("", level.TilesetPath);
+        Assert.Empty(level.TileFrames);
+        Assert.Empty(level.Solid);
+        Assert.Empty(level.Hazards);
+        Assert.True(level.FloodDelaySeconds < 0, "no floodDelaySeconds should mean 'never floods'");
+        Assert.False(level.Coop);
+        Assert.Empty(level.Entities[0].Properties);
+
+        var room = LevelLoader.Parse(RoomFeaturesJson, "room-features-fixture");
+        Assert.Equal(0, room.WorldMinColumn);
+        Assert.Equal(0, room.WorldMaxColumn);
+        Assert.Equal("", room.FallbackTileType);
+        Assert.Equal(0f, room.DriftSpeedX);
+        Assert.Equal(0f, room.DriftSpeedY);
+        Assert.Empty(room.TileVariants);
+        Assert.Empty(room.WallProps);
+    }
+
+    [Fact]
+    public void ResolvesElevationsAgainstTheStep()
+    {
+        var level = LevelLoader.Parse(ElevatedJson, "elevated-fixture");
+        var elevations = LevelLoader.ResolveElevations(level);
+
+        Assert.Equal(0, elevations[0, 0]);  // '0' * step 16
+        Assert.Equal(16, elevations[0, 1]); // '1' * step 16
+        Assert.Equal(16, elevations[1, 0]);
+        Assert.Equal(0, elevations[1, 1]);
+    }
+
+    [Theory]
+    [InlineData(SideScrollJson, "sidescroll")]
+    [InlineData(TopDownJson, "topdown")]
+    public void AcceptsEverySupportedPerspective(string json, string expected)
+    {
+        var level = LevelLoader.Parse(json, "perspective-fixture");
+        Assert.Equal(expected, level.Perspective);
+    }
+
+    [Fact]
+    public void ParsesScrollMode()
+    {
+        var level = LevelLoader.Parse(SideScrollJson, "sidescroll-fixture");
+        Assert.Equal("forwardOnly", level.ScrollMode);
+    }
+
+    [Fact]
+    public void ParsesTilesetPathAndFrameNames()
+    {
+        var level = LevelLoader.Parse(CustomTilesetJson, "custom-tileset-fixture");
+
+        Assert.Equal("assets/artwork/titanic-demo/tileset.png", level.TilesetPath);
+        Assert.Equal(0, level.TileFrames["deck"]);
+        Assert.Equal(1, level.TileFrames["water"]);
+
+        var tiles = LevelLoader.ResolveTileIndices(level, level.TileFrames);
+        Assert.Equal(0, tiles[0, 0]); // D
+        Assert.Equal(1, tiles[0, 1]); // W
+    }
+
+    [Fact]
+    public void ParsesRoomFeaturesAndDoorProperties()
+    {
+        var level = LevelLoader.Parse(RoomFeaturesJson, "room-features-fixture");
+
+        Assert.Contains("wall", level.Solid);
+        Assert.Equal("freeze", level.Hazards["water"]);
+        Assert.Equal(45.5f, level.FloodDelaySeconds, 3);
+        Assert.True(level.Coop);
+
+        var door = Assert.Single(level.Entities);
+        Assert.Equal("door", door.Type);
+        Assert.Equal("assets/levels/titanic-rooms/bridge.json", door.Properties["target"]);
+        Assert.Equal("fromBoatDeck", door.Properties["spawn"]);
+    }
+
+    [Fact]
+    public void ParsesUnboundedDriftingWorlds()
+    {
+        var level = LevelLoader.Parse(OceanWorldJson, "ocean-world-fixture");
+
+        Assert.Equal(-1000, level.WorldMinColumn);
+        Assert.Equal(1000, level.WorldMaxColumn);
+        Assert.Equal(-1000, level.WorldMinRow);
+        Assert.Equal(1000, level.WorldMaxRow);
+        Assert.Equal("water", level.FallbackTileType);
+        Assert.Equal(6f, level.DriftSpeedX, 3);
+        Assert.Equal(-3f, level.DriftSpeedY, 3);
+        Assert.Equal(new[] { 1, 3, 4 }, level.TileVariants["water"]);
+        Assert.Equal("hullSide", level.WallProps["railing"]);
     }
 }

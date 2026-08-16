@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Majorsilence.Games.Core.Physics;
+using Xunit;
 
 namespace Majorsilence.Games.Core.Tests;
 
@@ -59,18 +59,6 @@ public class PlatformerBodyTest
             body.MoveAndCollide(ref x, ref y, dirX, climbDir, speed, 1f / 120f);
     }
 
-    public void Test1()
-    {
-        FallsAndLands();
-        WallStopsHorizontal();
-        JumpsThroughOneWayFromBelowThenLands();
-        DropsThroughOneWay();
-        ClimbsLadder();
-        CoyoteJumpAfterLedge();
-        JumpBudgetIsTwoTiles();
-        Console.WriteLine("PlatformerBodyTest passed.");
-    }
-
     /// <summary>
     /// Pins the reach a jump actually has at the player's walking speed, because
     /// every side-view level is laid out against it: gravity 1500 and a -480
@@ -79,7 +67,8 @@ public class PlatformerBodyTest
     /// are spaced beyond this is unfinishable, so if these numbers are ever
     /// retuned, the level grids have to be re-walked with them.
     /// </summary>
-    private void JumpBudgetIsTwoTiles()
+    [Fact]
+    public void JumpBudgetIsTwoTiles()
     {
         const float walkSpeed = 120f; // Game.BasePlayerSpeed, no boots/snack buff
 
@@ -95,11 +84,11 @@ public class PlatformerBodyTest
         var x = 3 * 32f - crossable.Width - crossable.OffsetX; // box right edge on the ledge lip
         var y = 4 * 32f - crossable.Height - crossable.OffsetY;
         Step(crossable, ref x, ref y, 0, 0, 0f, 0.05f);
-        Debug.Assert(crossable.OnGround, "setup: should start standing on the ledge");
+        Assert.True(crossable.OnGround, "setup: should start standing on the ledge");
         crossable.Jump();
         Step(crossable, ref x, ref y, 1, 0, walkSpeed, 0.8f);
-        Debug.Assert(crossable.OnGround, "a jump at walking speed must clear a two-tile gap");
-        Debug.Assert(Math.Abs(y + crossable.OffsetY + crossable.Height - 4 * 32) < 0.01f,
+        Assert.True(crossable.OnGround, "a jump at walking speed must clear a two-tile gap");
+        Assert.True(Math.Abs(y + crossable.OffsetY + crossable.Height - 4 * 32) < 0.01f,
             "should have landed back on the floor row, not fallen past it");
 
         // The same jump over three tiles falls short - the budget's upper bound.
@@ -116,7 +105,7 @@ public class PlatformerBodyTest
         Step(tooWide, ref x, ref y, 0, 0, 0f, 0.05f);
         tooWide.Jump();
         Step(tooWide, ref x, ref y, 1, 0, walkSpeed, 0.8f);
-        Debug.Assert(!tooWide.OnGround && y + tooWide.OffsetY + tooWide.Height > 5 * 32,
+        Assert.True(!tooWide.OnGround && y + tooWide.OffsetY + tooWide.Height > 5 * 32,
             "a three-tile gap must be out of reach - level pits are sized against this");
 
         // Two tiles of height: a platform whose surface is 64px up is reachable.
@@ -132,36 +121,39 @@ public class PlatformerBodyTest
         x = 4 * 32f + (32 - upward.Width) / 2f - upward.OffsetX;
         y = 5 * 32f - upward.Height - upward.OffsetY;
         Step(upward, ref x, ref y, 0, 0, 0f, 0.05f);
-        Debug.Assert(upward.OnGround, "setup: should start standing on the floor");
+        Assert.True(upward.OnGround, "setup: should start standing on the floor");
         upward.Jump();
         Step(upward, ref x, ref y, 0, 0, 0f, 0.8f);
-        Debug.Assert(upward.OnGround, "a jump must reach a platform two tiles up");
-        Debug.Assert(Math.Abs(y + upward.OffsetY + upward.Height - 3 * 32) < 0.01f,
+        Assert.True(upward.OnGround, "a jump must reach a platform two tiles up");
+        Assert.True(Math.Abs(y + upward.OffsetY + upward.Height - 3 * 32) < 0.01f,
             "should be resting on the raised platform, not back on the floor");
     }
 
-    private void FallsAndLands()
+    [Fact]
+    public void FallsAndLands()
     {
         var body = MakeBody();
         var (x, y) = StandOn(body, 6, 7);
         y -= 80f; // start mid-air above the floor
         Step(body, ref x, ref y, 0, 0, 0f, 1.0f);
-        Debug.Assert(body.OnGround, "body should have landed on the solid floor");
-        Debug.Assert(Math.Abs(y + body.OffsetY + body.Height - 7 * 32) < 0.01f, "feet should rest exactly on the floor top");
-        Debug.Assert(body.VelocityY == 0f, "landing should zero vertical velocity");
+        Assert.True(body.OnGround, "body should have landed on the solid floor");
+        Assert.True(Math.Abs(y + body.OffsetY + body.Height - 7 * 32) < 0.01f, "feet should rest exactly on the floor top");
+        Assert.True(body.VelocityY == 0f, "landing should zero vertical velocity");
     }
 
-    private void WallStopsHorizontal()
+    [Fact]
+    public void WallStopsHorizontal()
     {
         var body = MakeBody();
         var (x, y) = StandOn(body, 5, 7);
         Step(body, ref x, ref y, -1, 0, 120f, 1.5f); // walk left into the column-2 wall
         var bodyLeft = x + body.OffsetX;
-        Debug.Assert(Math.Abs(bodyLeft - 3 * 32) < 0.01f, $"wall should stop the body at x=96, got {bodyLeft}");
-        Debug.Assert(body.OnGround, "should still be grounded while pushing a wall");
+        Assert.True(Math.Abs(bodyLeft - 3 * 32) < 0.01f, $"wall should stop the body at x=96, got {bodyLeft}");
+        Assert.True(body.OnGround, "should still be grounded while pushing a wall");
     }
 
-    private void JumpsThroughOneWayFromBelowThenLands()
+    [Fact]
+    public void JumpsThroughOneWayFromBelowThenLands()
     {
         var body = MakeBody();
         var (x, y) = StandOn(body, 4, 7);
@@ -169,18 +161,19 @@ public class PlatformerBodyTest
         y = 2 * 32 - body.Height - body.OffsetY - 40f;
         body.VelocityY = 0f;
         Step(body, ref x, ref y, 0, 0, 0f, 1.0f);
-        Debug.Assert(body.OnGround, "body should land on the one-way platform from above");
-        Debug.Assert(Math.Abs(y + body.OffsetY + body.Height - 2 * 32) < 0.01f, "feet should rest on the platform top");
+        Assert.True(body.OnGround, "body should land on the one-way platform from above");
+        Assert.True(Math.Abs(y + body.OffsetY + body.Height - 2 * 32) < 0.01f, "feet should rest on the platform top");
 
         // From below: place just under the platform moving up - must NOT collide.
         var below = 2 * 32 + 10f; // feet inside the tile under the platform surface
         y = below - body.Height - body.OffsetY;
         body.VelocityY = -300f;
         body.MoveAndCollide(ref x, ref y, 0, 0, 0f, 1f / 120f);
-        Debug.Assert(body.VelocityY < 0f, "moving up through a one-way platform must not stop the body");
+        Assert.True(body.VelocityY < 0f, "moving up through a one-way platform must not stop the body");
     }
 
-    private void DropsThroughOneWay()
+    [Fact]
+    public void DropsThroughOneWay()
     {
         var body = MakeBody();
         // column 5: platform above, clear air below (no ladder in the way)
@@ -188,17 +181,18 @@ public class PlatformerBodyTest
         // land on the platform first
         y = 2 * 32 - body.Height - body.OffsetY;
         Step(body, ref x, ref y, 0, 0, 0f, 0.1f);
-        Debug.Assert(body.OnGround, "setup: should be standing on the one-way platform");
+        Assert.True(body.OnGround, "setup: should be standing on the one-way platform");
         body.RequestDropThrough();
         Step(body, ref x, ref y, 0, 0, 0f, 0.15f);
-        Debug.Assert(!body.OnGround || y + body.OffsetY + body.Height > 2 * 32 + 4,
+        Assert.True(!body.OnGround || y + body.OffsetY + body.Height > 2 * 32 + 4,
             "drop-through should let the body fall past the platform");
         Step(body, ref x, ref y, 0, 0, 0f, 1.5f);
-        Debug.Assert(body.OnGround, "body should eventually land on the floor below");
-        Debug.Assert(Math.Abs(y + body.OffsetY + body.Height - 7 * 32) < 0.01f, "feet should rest on the solid floor");
+        Assert.True(body.OnGround, "body should eventually land on the floor below");
+        Assert.True(Math.Abs(y + body.OffsetY + body.Height - 7 * 32) < 0.01f, "feet should rest on the solid floor");
     }
 
-    private void ClimbsLadder()
+    [Fact]
+    public void ClimbsLadder()
     {
         var body = MakeBody();
         var (x, y) = StandOn(body, 4, 7); // floor tile right below the ladder column
@@ -206,12 +200,13 @@ public class PlatformerBodyTest
         // climb briefly - long enough to be clearly off the floor, short enough
         // not to top out and detach
         Step(body, ref x, ref y, 0, -1, 0f, 0.3f);
-        Debug.Assert(body.OnLadder, "holding up over a ladder should grab it");
+        Assert.True(body.OnLadder, "holding up over a ladder should grab it");
         var feet = y + body.OffsetY + body.Height;
-        Debug.Assert(feet < 7 * 32 - 20, $"body should have climbed well above the floor, feet at {feet}");
+        Assert.True(feet < 7 * 32 - 20, $"body should have climbed well above the floor, feet at {feet}");
     }
 
-    private void CoyoteJumpAfterLedge()
+    [Fact]
+    public void CoyoteJumpAfterLedge()
     {
         var body = MakeBody();
         var (x, y) = StandOn(body, 3, 7);
@@ -219,12 +214,12 @@ public class PlatformerBodyTest
         y = 2 * 32 - body.Height - body.OffsetY;
         x = 5 * 32 + (32 - body.Width) / 2f - body.OffsetX; // rightmost platform tile
         Step(body, ref x, ref y, 0, 0, 0f, 0.05f);
-        Debug.Assert(body.OnGround, "setup: standing on the platform edge");
+        Assert.True(body.OnGround, "setup: standing on the platform edge");
         // 0.15s at 200px/s carries the whole 12px-wide box past the platform
         // edge (~22px) with ~0.04s airborne - inside the 0.1s coyote window
         Step(body, ref x, ref y, 1, 0, 200f, 0.15f);
-        Debug.Assert(!body.OnGround, "should be airborne after leaving the ledge");
+        Assert.True(!body.OnGround, "should be airborne after leaving the ledge");
         body.Jump();
-        Debug.Assert(body.VelocityY < -400f, "coyote window should still allow a full jump just after the ledge");
+        Assert.True(body.VelocityY < -400f, "coyote window should still allow a full jump just after the ledge");
     }
 }
