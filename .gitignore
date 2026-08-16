@@ -1,3 +1,4 @@
+working-dir/
 # Steam dev-only appid marker (see docs/store-checklist.md) - never committed,
 # every developer running a -p:EnableSteam=true build drops their own copy.
 steam_appid.txt

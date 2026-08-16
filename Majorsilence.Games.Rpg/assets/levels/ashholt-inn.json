@@ -1,0 +1,116 @@
+{
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "perspective": "topdown",
+  "tilesetPath": "assets/artwork/rpg/tileset.png",
+  "tileFrames": {
+    "grass": 0,
+    "tree": 1,
+    "water": 2,
+    "sand": 3,
+    "mountain": 4,
+    "road": 5,
+    "wall": 6,
+    "roof": 7,
+    "door": 8,
+    "floor": 9,
+    "counter": 10,
+    "chest": 11,
+    "sign": 12,
+    "bridge": 13,
+    "flowers": 14,
+    "cave": 15,
+    "bedHead": 16,
+    "bedFoot": 17
+  },
+  "legend": {
+    ".": "grass",
+    "T": "tree",
+    "~": "water",
+    "s": "sand",
+    "^": "mountain",
+    "#": "road",
+    "W": "wall",
+    "R": "roof",
+    "D": "door",
+    "f": "floor",
+    "C": "counter",
+    "X": "chest",
+    "i": "sign",
+    "B": "bridge",
+    "*": "flowers",
+    "O": "cave",
+    "h": "bedHead",
+    "u": "bedFoot"
+  },
+  "solid": [
+    "tree",
+    "water",
+    "mountain",
+    "wall",
+    "roof",
+    "counter",
+    "chest",
+    "sign",
+    "bedHead",
+    "bedFoot"
+  ],
+  "tiles": [
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WffffffffffffffffffW",
+    "WffCCCCCCffffhfhfhfW",
+    "WffffffffffffufufufW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffhfhfhfW",
+    "WffffffffffffufufufW",
+    "WffffffffffffffffffW",
+    "WXffffffffffffffffXW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WWWWWWWWWDWWWWWWWWWW"
+  ],
+  "entities": [
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 13,
+      "properties": {
+        "name": "fromTown"
+      }
+    },
+    {
+      "type": "door",
+      "column": 9,
+      "row": 14,
+      "properties": {
+        "target": "assets/levels/ashholt.json",
+        "spawn": "fromInn"
+      }
+    },
+    {
+      "type": "npc",
+      "column": 5,
+      "row": 1,
+      "properties": {
+        "name": "Innkeeper Sorrel",
+        "look": "1",
+        "facing": "1",
+        "says": "A bed's four coin and the shutters bar from inside. Cheap at twice the price this month.|Travellers came through from the east ridge yesterday. Wouldn't sit. Wouldn't eat. Paid in old money and left before dark."
+      }
+    },
+    {
+      "type": "npc",
+      "column": 16,
+      "row": 5,
+      "properties": {
+        "name": "A tired courier",
+        "look": "0",
+        "facing": "1",
+        "says": "Don't take the ridge road. I've carried letters over that pass since I was fifteen and I've never seen it so quiet.|No birds. That's what got me. Fourteen miles of pine and not one bird in it."
+      }
+    }
+  ]
+}

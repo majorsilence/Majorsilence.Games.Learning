@@ -14,7 +14,7 @@ public class LevelMap
     public string[] Tiles { get; set; } = Array.Empty<string>();
     public List<LevelEntity> Entities { get; set; } = new();
 
-    /// <summary>"isometric" or "sidescroll" - which Camera/Tilemap setup a loader should build.</summary>
+    /// <summary>"isometric", "sidescroll" or "topdown" - which Camera/Tilemap setup a loader should build. Both flat perspectives render through FlatTilemap; they differ in how a body moves over it (side-view gravity vs. free four-way walking).</summary>
     public string Perspective { get; set; } = "isometric";
 
     /// <summary>

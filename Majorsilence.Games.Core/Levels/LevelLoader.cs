@@ -8,7 +8,7 @@ namespace Majorsilence.Games.Core.Levels;
 /// </summary>
 public static class LevelLoader
 {
-    private static readonly string[] ValidPerspectives = { "isometric", "sidescroll" };
+    private static readonly string[] ValidPerspectives = { "isometric", "sidescroll", "topdown" };
     private static readonly string[] ValidScrollModes = { "horizontal", "forwardOnly", "vertical" };
 
     // Mirrors the JSON shape. Legend keys are single-character strings here (JSON

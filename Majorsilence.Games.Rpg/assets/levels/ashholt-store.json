@@ -1,0 +1,105 @@
+{
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "perspective": "topdown",
+  "tilesetPath": "assets/artwork/rpg/tileset.png",
+  "tileFrames": {
+    "grass": 0,
+    "tree": 1,
+    "water": 2,
+    "sand": 3,
+    "mountain": 4,
+    "road": 5,
+    "wall": 6,
+    "roof": 7,
+    "door": 8,
+    "floor": 9,
+    "counter": 10,
+    "chest": 11,
+    "sign": 12,
+    "bridge": 13,
+    "flowers": 14,
+    "cave": 15,
+    "bedHead": 16,
+    "bedFoot": 17
+  },
+  "legend": {
+    ".": "grass",
+    "T": "tree",
+    "~": "water",
+    "s": "sand",
+    "^": "mountain",
+    "#": "road",
+    "W": "wall",
+    "R": "roof",
+    "D": "door",
+    "f": "floor",
+    "C": "counter",
+    "X": "chest",
+    "i": "sign",
+    "B": "bridge",
+    "*": "flowers",
+    "O": "cave",
+    "h": "bedHead",
+    "u": "bedFoot"
+  },
+  "solid": [
+    "tree",
+    "water",
+    "mountain",
+    "wall",
+    "roof",
+    "counter",
+    "chest",
+    "sign",
+    "bedHead",
+    "bedFoot"
+  ],
+  "tiles": [
+    "WWWWWWWWWWWWWWWWWWWW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WfCCCCCCCCCCCCCCCCfW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WXffffffffffffffffXW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WffffffffffffffffffW",
+    "WWWWWWWWWDWWWWWWWWWW"
+  ],
+  "entities": [
+    {
+      "type": "spawnPoint",
+      "column": 9,
+      "row": 13,
+      "properties": {
+        "name": "fromTown"
+      }
+    },
+    {
+      "type": "door",
+      "column": 9,
+      "row": 14,
+      "properties": {
+        "target": "assets/levels/ashholt.json",
+        "spawn": "fromStore"
+      }
+    },
+    {
+      "type": "npc",
+      "column": 9,
+      "row": 2,
+      "properties": {
+        "name": "Quartermaster Rhen",
+        "look": "2",
+        "facing": "1",
+        "says": "Rope, lamp oil, dried fish. If you're going east take all three and a second lamp.|Coin's no use to me if the road stays shut. Buy something and tell your friends the store still stands."
+      }
+    }
+  ]
+}

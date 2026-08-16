@@ -1,0 +1,170 @@
+{
+  "tileWidth": 16,
+  "tileHeight": 16,
+  "perspective": "topdown",
+  "tilesetPath": "assets/artwork/rpg/tileset.png",
+  "tileFrames": {
+    "grass": 0,
+    "tree": 1,
+    "water": 2,
+    "sand": 3,
+    "mountain": 4,
+    "road": 5,
+    "wall": 6,
+    "roof": 7,
+    "door": 8,
+    "floor": 9,
+    "counter": 10,
+    "chest": 11,
+    "sign": 12,
+    "bridge": 13,
+    "flowers": 14,
+    "cave": 15,
+    "bedHead": 16,
+    "bedFoot": 17
+  },
+  "legend": {
+    ".": "grass",
+    "T": "tree",
+    "~": "water",
+    "s": "sand",
+    "^": "mountain",
+    "#": "road",
+    "W": "wall",
+    "R": "roof",
+    "D": "door",
+    "f": "floor",
+    "C": "counter",
+    "X": "chest",
+    "i": "sign",
+    "B": "bridge",
+    "*": "flowers",
+    "O": "cave",
+    "h": "bedHead",
+    "u": "bedFoot"
+  },
+  "solid": [
+    "tree",
+    "water",
+    "mountain",
+    "wall",
+    "roof",
+    "counter",
+    "chest",
+    "sign",
+    "bedHead",
+    "bedFoot"
+  ],
+  "tiles": [
+    "TTTTTTTTTTTTTTTTTTTTTTTT",
+    "T......................T",
+    "T..RRRR......RRRR......T",
+    "T..RRRR......RRRR......T",
+    "T..WWDW......WWDW......T",
+    "T....#..........#......T",
+    "T....############......T",
+    "T.......#......#.......T",
+    "T*......#......#......*T",
+    "T.......#......#.......T",
+    "T..RRRR.#......#.RRRR..T",
+    "T..RRRR.#......#.RRRR..T",
+    "T..WWDW.#......#.WWDW..T",
+    "T....#..#......#...#...T",
+    "T....####......#####...T",
+    "T.........#####........T",
+    "T*........#..#........*T",
+    "T.........#..#.........T",
+    "TTTTTTTTTT#TTTTTTTTTTTTT"
+  ],
+  "entities": [
+    {
+      "type": "playerStart",
+      "column": 10,
+      "row": 16
+    },
+    {
+      "type": "spawnPoint",
+      "column": 10,
+      "row": 17,
+      "properties": {
+        "name": "fromRoad"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 5,
+      "row": 5,
+      "properties": {
+        "name": "fromInn"
+      }
+    },
+    {
+      "type": "spawnPoint",
+      "column": 15,
+      "row": 5,
+      "properties": {
+        "name": "fromStore"
+      }
+    },
+    {
+      "type": "door",
+      "column": 10,
+      "row": 18,
+      "properties": {
+        "target": "assets/levels/valeroad.json",
+        "spawn": "fromAshholt"
+      }
+    },
+    {
+      "type": "door",
+      "column": 5,
+      "row": 4,
+      "properties": {
+        "target": "assets/levels/ashholt-inn.json",
+        "spawn": "fromTown"
+      }
+    },
+    {
+      "type": "door",
+      "column": 15,
+      "row": 4,
+      "properties": {
+        "target": "assets/levels/ashholt-store.json",
+        "spawn": "fromTown"
+      }
+    },
+    {
+      "type": "npc",
+      "column": 8,
+      "row": 5,
+      "properties": {
+        "name": "Warden Mella",
+        "look": "0",
+        "facing": "1",
+        "says": "Ashholt keeps its gate shut after dark. The road south is safe enough by day - past the bridge, less so.|You'll want a bed at the inn before you try the pass. Nobody crosses the Vale tired and lives to say it was easy."
+      }
+    },
+    {
+      "type": "npc",
+      "column": 14,
+      "row": 9,
+      "properties": {
+        "name": "Old Ferran",
+        "look": "1",
+        "facing": "1",
+        "says": "Sixty years I've swept this square. The mountains east were quiet for fifty-nine of them.|Ash falls on the eastern ridge now. Not from any fire I can find. Somebody ought to walk up there and look."
+      }
+    },
+    {
+      "type": "npc",
+      "column": 11,
+      "row": 13,
+      "properties": {
+        "name": "Bea",
+        "look": "2",
+        "facing": "0",
+        "says": "The store's up the north road, past the well. Say I sent you and it'll cost you exactly the same.|My brother went east with a lantern and good boots. That was eleven days ago. I'd count that a long errand."
+      }
+    }
+  ]
+}

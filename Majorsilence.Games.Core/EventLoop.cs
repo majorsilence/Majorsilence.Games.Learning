@@ -1,13 +1,12 @@
 using System;
 using System.Runtime.InteropServices;
-using Majorsilence.Games.Core;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Core.Textures;
 using SDL3;
 
-namespace Majorsilence.Games.Learning;
+namespace Majorsilence.Games.Core;
 
 public class EventLoop
 {

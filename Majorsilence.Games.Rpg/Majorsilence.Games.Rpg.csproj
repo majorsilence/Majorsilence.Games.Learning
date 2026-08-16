@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="../Version.props" />
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Majorsilence.Games.Rpg</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Update="assets\artwork\rpg\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="assets\levels\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <!-- The font is shared with the Titanic game rather than duplicated as a
+         second copy of the same binary. -->
+    <ItemGroup>
+        <None Include="$(MSBuildProjectDirectory)/../Majorsilence.Games.Learning/assets/fonts/*.ttf"
+              Link="assets/fonts/%(Filename)%(Extension)">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Majorsilence.Games.Core\Majorsilence.Games.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <PackageReference Include="SDL3-CS.Linux" Version="3.4.10.5" />
+        <PackageReference Include="SDL3-CS.Linux.Image" Version="3.4.4.5" />
+        <PackageReference Include="SDL3-CS.Linux.TTF" Version="3.2.2.5" />
+        <PackageReference Include="SDL3-CS.Linux.Mixer" Version="3.2.4.5" />
+    </ItemGroup>
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <PackageReference Include="SDL3-CS.Windows" Version="3.4.10.5" />
+        <PackageReference Include="SDL3-CS.Windows.Image" Version="3.4.4.5" />
+        <PackageReference Include="SDL3-CS.Windows.TTF" Version="3.2.2.5" />
+        <PackageReference Include="SDL3-CS.Windows.Mixer" Version="3.2.4.5" />
+    </ItemGroup>
+    <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <PackageReference Include="SDL3-CS.MacOS" Version="3.4.10.5" />
+        <PackageReference Include="SDL3-CS.MacOS.Image" Version="3.4.4.5" />
+        <PackageReference Include="SDL3-CS.MacOS.TTF" Version="3.2.2.5" />
+        <PackageReference Include="SDL3-CS.MacOS.Mixer" Version="3.2.4.5" />
+    </ItemGroup>
+</Project>
