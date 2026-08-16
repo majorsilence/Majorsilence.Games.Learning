@@ -1,4 +1,5 @@
 using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.Audio;
 using Majorsilence.Games.Core.GameObjects;
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Levels;
@@ -22,7 +23,7 @@ namespace Majorsilence.Games.Rpg;
 /// there's no partly-torn-down state to reason about - the same approach the
 /// Titanic game takes with its rooms.
 /// </summary>
-public class RpgGame
+public class RpgGame : IDisposable
 {
     private const int TileSize = 16;
     private const float WalkSpeed = 64f;
@@ -47,17 +48,33 @@ public class RpgGame
     private readonly List<Folk> _folk = new();
     private readonly Dictionary<string, (int Column, int Row)> _spawns = new();
     private readonly HashSet<(int Column, int Row)> _occupied = new();
+    private readonly Sound? _confirmSound;
+    private readonly Sound? _cancelSound;
+    private readonly Sound? _doorSound;
     private float _doorCooldown;
     private Folk? _talkingTo;
 
-    public RpgGame(Renderer renderer, string fontPath)
+    public RpgGame(Renderer renderer, string fontPath, AudioDevice? audio = null)
     {
         _renderer = renderer;
         _fontPath = fontPath;
         Camera = new Camera { Axis = ScrollAxis.Free };
         Dialogue = new DialogueBox(renderer, fontPath);
         Hero = new Walker(GetSheet("assets/artwork/rpg/hero.png")) { Speed = WalkSpeed, ZIndex = 1 };
+        Music = new MusicDirector(audio);
+
+        // Sound is optional the same way it is in the Titanic game: no audio
+        // device (a test run, a machine with no card) means a silent game, not a
+        // crashed one.
+        if (audio is not null)
+        {
+            _confirmSound = new Sound(audio, "assets/audio/rpg/confirm.wav") { Volume = 0.5f };
+            _cancelSound = new Sound(audio, "assets/audio/rpg/cancel.wav") { Volume = 0.5f };
+            _doorSound = new Sound(audio, "assets/audio/rpg/door.wav") { Volume = 0.6f };
+        }
     }
+
+    public MusicDirector Music { get; }
 
     public Camera Camera { get; }
     public DialogueBox Dialogue { get; }
@@ -138,6 +155,10 @@ public class RpgGame
         Camera.MaxY = _tilemap.PixelHeight;
         Camera.Update();
 
+        // After the map is up, so a track named by a level that fails to load
+        // never starts playing over a broken screen.
+        Music.Play(_level.MusicPath);
+
         _doorCooldown = DoorCooldownSeconds;
     }
 
@@ -212,10 +233,14 @@ public class RpgGame
             // the doorway underfoot, just paging through what's being said.
             Hero.DirectionX = 0;
             Hero.DirectionY = 0;
-            if (InputActions.IsJustPressed(InputAction.Confirm) && !Dialogue.Advance())
-                _talkingTo = null;
+            if (InputActions.IsJustPressed(InputAction.Confirm))
+            {
+                _confirmSound?.Play();
+                if (!Dialogue.Advance()) _talkingTo = null;
+            }
             if (InputActions.IsJustPressed(InputAction.Cancel))
             {
+                _cancelSound?.Play();
                 Dialogue.Close();
                 _talkingTo = null;
             }
@@ -285,6 +310,7 @@ public class RpgGame
                 Hero.FaceTowards(stepX, stepY);
                 folk.Walker.FaceTowards(-stepX, -stepY);
                 _talkingTo = folk;
+                _confirmSound?.Play();
                 Dialogue.Show(folk.Name, folk.Lines[folk.NextLine]);
                 folk.NextLine = (folk.NextLine + 1) % folk.Lines.Length;
                 return;
@@ -305,8 +331,17 @@ public class RpgGame
         var door = _doors.FirstOrDefault(d => d.Column == column && d.Row == row);
         if (door is null) return false;
 
+        _doorSound?.Play();
         LoadMap(door.Target, door.Spawn);
         return true;
+    }
+
+    public void Dispose()
+    {
+        Music.Dispose();
+        _confirmSound?.Dispose();
+        _cancelSound?.Dispose();
+        _doorSound?.Dispose();
     }
 
     private SpriteSheet GetSheet(string path)

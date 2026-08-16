@@ -44,6 +44,15 @@ public class LevelMap
     public string TilesetPath { get; set; } = "";
 
     /// <summary>
+    /// Path to the background track this level plays. Empty means "the caller
+    /// decides", which for levels that predate this field means silence - the
+    /// same fallback rule as TilesetPath. Naming the track here rather than in
+    /// game code means a new map arrives with its own music instead of needing a
+    /// matching entry in a lookup table somewhere else.
+    /// </summary>
+    public string MusicPath { get; set; } = "";
+
+    /// <summary>
     /// Maps this level's semantic tile-type names (from its legend) to TilesetPath's
     /// frame order. Empty means "use the caller's default" mapping, same fallback
     /// rule as TilesetPath.

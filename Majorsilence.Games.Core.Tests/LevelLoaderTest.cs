@@ -103,6 +103,7 @@ public class LevelLoaderTest
       "tileWidth": 32,
       "tileHeight": 16,
       "tilesetPath": "assets/artwork/titanic-demo/tileset.png",
+      "musicPath": "assets/audio/rpg/ashholt.wav",
       "tileFrames": { "deck": 0, "water": 1 },
       "legend": { "D": "deck", "W": "water" },
       "tiles": ["DW"],
@@ -208,6 +209,7 @@ public class LevelLoaderTest
         Assert.Equal(0, flat[1, 1]);
 
         Assert.Equal("", level.TilesetPath);
+        Assert.Equal("", level.MusicPath);
         Assert.Empty(level.TileFrames);
         Assert.Empty(level.Solid);
         Assert.Empty(level.Hazards);
@@ -259,6 +261,7 @@ public class LevelLoaderTest
         var level = LevelLoader.Parse(CustomTilesetJson, "custom-tileset-fixture");
 
         Assert.Equal("assets/artwork/titanic-demo/tileset.png", level.TilesetPath);
+        Assert.Equal("assets/audio/rpg/ashholt.wav", level.MusicPath);
         Assert.Equal(0, level.TileFrames["deck"]);
         Assert.Equal(1, level.TileFrames["water"]);
 

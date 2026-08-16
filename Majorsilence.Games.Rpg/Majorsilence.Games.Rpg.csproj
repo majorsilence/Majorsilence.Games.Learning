@@ -17,6 +17,9 @@
         <None Update="assets\levels\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="assets\audio\rpg\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <!-- The font is shared with the Titanic game rather than duplicated as a

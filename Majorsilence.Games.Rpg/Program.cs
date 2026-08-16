@@ -1,4 +1,5 @@
 using Majorsilence.Games.Core;
+using Majorsilence.Games.Core.Audio;
 using Majorsilence.Games.Core.Input;
 using Majorsilence.Games.Core.Rendering;
 using Majorsilence.Games.Rpg;
@@ -24,7 +25,24 @@ const int TargetViewShortSide = 240;
 using var window = new Window("Vale of Ash", 640, 480, highPixelDensity: true);
 using var renderer = new Renderer(window);
 
-var game = new RpgGame(renderer, FontPath);
+// Sound is optional. A machine with no audio device - a CI box, a container,
+// a scripted verification run - should play the game silently rather than fail
+// to start.
+using var audioDevice = OpenAudio();
+using var game = new RpgGame(renderer, FontPath, audioDevice);
+
+static AudioDevice? OpenAudio()
+{
+    try
+    {
+        return new AudioDevice();
+    }
+    catch (MajorsilenceException error)
+    {
+        Console.Error.WriteLine($"Audio unavailable, running silent: {error.Message}");
+        return null;
+    }
+}
 
 void SyncViewport()
 {
@@ -79,7 +97,8 @@ loop.Start(game.GameObjects, game.Camera,
         {
             traceNext += 0.5f;
             var (column, row) = game.HeroTile;
-            Console.WriteLine($"t={clock:0.0} map={game.MapName} tile=({column},{row}) at=({game.Hero.PreciseX:0.0},{game.Hero.PreciseY:0.0}) facing={game.Hero.Facing}"
+            var track = Path.GetFileNameWithoutExtension(game.Music.NowPlaying);
+            Console.WriteLine($"t={clock:0.0} map={game.MapName} tile=({column},{row}) at=({game.Hero.PreciseX:0.0},{game.Hero.PreciseY:0.0}) facing={game.Hero.Facing} music={(track == "" ? "-" : track)}"
                 + (game.Dialogue.IsOpen ? " [talking]" : ""));
         }
 

@@ -25,6 +25,7 @@ public static class LevelLoader
         public int ElevationStep { get; set; }
         public string[]? Heights { get; set; }
         public string TilesetPath { get; set; } = "";
+        public string MusicPath { get; set; } = "";
         public Dictionary<string, int> TileFrames { get; set; } = new();
         public List<string> Solid { get; set; } = new();
         public List<string> Platforms { get; set; } = new();
@@ -155,6 +156,7 @@ public static class LevelLoader
             ElevationStep = raw.ElevationStep,
             Heights = raw.Heights,
             TilesetPath = raw.TilesetPath,
+            MusicPath = raw.MusicPath,
             TileFrames = raw.TileFrames,
             Solid = raw.Solid,
             Platforms = raw.Platforms,

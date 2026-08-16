@@ -3,6 +3,7 @@
   "tileHeight": 16,
   "perspective": "topdown",
   "tilesetPath": "assets/artwork/rpg/tileset.png",
+  "musicPath": "assets/audio/rpg/market.wav",
   "tileFrames": {
     "grass": 0,
     "tree": 1,
