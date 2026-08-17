@@ -196,8 +196,15 @@ async Task RunTitanicShip(string entryLevelPath)
         game.LoadRoom(parts[0], parts.Length > 1 ? parts[1] : "");
     }
 
+    // TITANIC_SHOT_AT="30" takes the screenshot that many seconds in instead of
+    // ~1.5s, which is what it takes to see anything that depends on the sinking
+    // timeline - the flood rising, a respawn after drowning.
     var screenshotPath = Environment.GetEnvironmentVariable("TITANIC_SCREENSHOT");
+    var shotAt = Environment.GetEnvironmentVariable("TITANIC_SHOT_AT") is { } at
+        ? float.Parse(at)
+        : (float?)null;
     var screenshotFrame = 0;
+    var screenshotClock = 0f;
     Action<float> afterFrame = game.AfterFrame;
     if (screenshotPath is not null)
     {
@@ -205,7 +212,13 @@ async Task RunTitanicShip(string entryLevelPath)
         {
             game.AfterFrame(dt);
             screenshotFrame++;
-            if (screenshotFrame == 90) renderer.SaveScreenshot(screenshotPath);
+            screenshotClock += dt;
+            var due = shotAt is { } seconds ? screenshotClock >= seconds : screenshotFrame == 90;
+            if (due && screenshotPath is not null)
+            {
+                renderer.SaveScreenshot(screenshotPath);
+                screenshotPath = null;
+            }
         };
     }
 

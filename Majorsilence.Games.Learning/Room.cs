@@ -574,10 +574,36 @@ public class Room
     /// underwater during the sinking, instead of dropping the player straight back
     /// into the sea for an endless death loop. Null once nothing walkable remains.
     /// </summary>
+    /// <summary>
+    /// True when somebody standing on this tile would be in the water. The flood
+    /// rises after the collision, so a tile that was perfectly dry when the room
+    /// was authored can be well under by the time anyone respawns onto it.
+    /// Rooms that never flood have no water line and are never submerged.
+    /// </summary>
+    public bool IsSubmerged(int column, int row)
+    {
+        if (WaterLineY is not { } waterLine) return false;
+        var (_, y) = StandOnTile(column, row, 16, 32);
+        // Matches PlatformerBody.InWater: it is the feet that decide.
+        return y + 32 > waterLine;
+    }
+
+    /// <summary>
+    /// The best tile to put somebody back on: sternmost and near the centreline,
+    /// but above the water.
+    ///
+    /// The search runs bottom-up, which in a flooding room means it meets the
+    /// most submerged tiles first - so dry ones are required, and the highest
+    /// standable tile is kept as a fallback for a room that has gone under
+    /// entirely. Respawning into the water just drowns the player again, which
+    /// is a death loop rather than a setback.
+    /// </summary>
     public (int Column, int Row)? FindSafeTile()
     {
         var rows = _tileTypes.GetLength(0);
         var columns = rows == 0 ? 0 : _tileTypes.GetLength(1);
+        (int Column, int Row)? driest = null;
+
         for (var row = rows - 1; row >= 0; row--)
         {
             for (var offset = 0; offset < columns; offset++)
@@ -586,10 +612,16 @@ public class Room
                 if (column < 0 || column >= columns) continue;
                 var type = _tileTypes[row, column];
                 if (Level.Solid.Contains(type) || Level.Hazards.ContainsKey(type)) continue;
-                return (column, row);
+
+                if (!IsSubmerged(column, row)) return (column, row);
+
+                // Under water, but standable: remember it, since the scan works
+                // upward and each one found is drier than the last.
+                driest = (column, row);
             }
         }
-        return null;
+
+        return driest;
     }
 
     private int _submergedThroughRow = -1;

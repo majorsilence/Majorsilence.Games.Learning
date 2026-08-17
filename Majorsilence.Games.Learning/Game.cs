@@ -136,6 +136,13 @@ public class Game
     /// </summary>
     private const int PlayerBaseSortOffsetY = 32;
 
+    /// <summary>
+    /// Ground-line anchor for a launched coin: one 16px sprite height, matching
+    /// how a tix placed on a tile is anchored (Room.StandOnTile). Elevation is
+    /// added on top of it as the coin flies (see SyncLaunchedTixGround).
+    /// </summary>
+    private const int LaunchedTixSortOffsetY = 16;
+
     public Camera Camera { get; } = new();
     public List<GameObject> GameObjects { get; } = new();
     public Hud Hud { get; }
@@ -851,6 +858,32 @@ public class Game
             var ownElevation = CurrentRoom.GetElevationPixels(column, row);
             session.Player.GroundZ = ownElevation;
             session.Player.SortOffsetY = PlayerBaseSortOffsetY + PlayerAheadElevationBonus(column, row, ownElevation);
+        }
+
+        SyncLaunchedTixGround();
+    }
+
+    /// <summary>
+    /// Gives every coin still in the air the height of the ground it is
+    /// currently over, so it comes to rest on whatever it lands on. Without it a
+    /// coin thrown onto a raised terrace kept falling to the deck level it was
+    /// launched from and settled inside the terrace, out of sight and out of
+    /// reach. Flat rooms have no elevation, so there is nothing to do there.
+    /// </summary>
+    private void SyncLaunchedTixGround()
+    {
+        if (CurrentRoom.IsPlatformer) return;
+
+        foreach (var pickup in CurrentRoom.TixPickups)
+        {
+            if (pickup is not LaunchedTix { Landed: false } coin) continue;
+
+            var (column, row) = TileUnder(coin.X, coin.Y, 16, 16);
+            var elevation = CurrentRoom.GetElevationPixels(column, row);
+            coin.GroundZ = elevation;
+            // Landing higher means sorting later, exactly as it does for a
+            // player standing on the same tile.
+            coin.SortOffsetY = LaunchedTixSortOffsetY + elevation;
         }
     }
 
@@ -2102,7 +2135,7 @@ public class Game
                 // edge - the coins were landing all but invisible.
                 Y = session.Player.Y + 16,
                 ZIndex = 2,
-                SortOffsetY = 16,
+                SortOffsetY = LaunchedTixSortOffsetY,
                 Value = 1
             };
             CurrentRoom.TixPickups.Add(coin);
@@ -2379,7 +2412,11 @@ public class Game
         // The sinking can put the original entry spawn underwater - respawning
         // there would just kill the player again in an endless loop, so fall back
         // to the safest remaining deck tile (sternmost, near the centerline).
-        if (CurrentRoom.IsSolid(column, row) || CurrentRoom.TryGetHazard(column, row, out _))
+        // Flooding is a rising water line rather than a change of tile type, so
+        // a tile can become lethal without ever becoming a hazard.
+        if (CurrentRoom.IsSolid(column, row)
+            || CurrentRoom.TryGetHazard(column, row, out _)
+            || CurrentRoom.IsSubmerged(column, row))
         {
             var safe = CurrentRoom.FindSafeTile();
             if (safe is not null)

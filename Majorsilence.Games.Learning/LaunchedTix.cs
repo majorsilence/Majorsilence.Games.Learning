@@ -3,10 +3,15 @@ using Majorsilence.Games.Core.Textures;
 namespace Majorsilence.Games.Learning;
 
 /// <summary>
-/// A tix coin fired from the tix launcher: a short parabolic flight (its own
-/// tiny gravity integrator, independent of DynamicObject/GroundZ since it isn't
-/// tied to a tilemap's elevation) before settling into a normal, collectible
-/// TixPickup at its landing spot.
+/// A tix coin fired from the tix launcher: a short parabolic flight on its own
+/// tiny gravity integrator before settling into a normal, collectible TixPickup
+/// where it comes down.
+///
+/// It follows the engine's ground convention rather than DynamicObject's
+/// machinery: <see cref="GroundZ"/> is supplied from outside each frame, by
+/// whoever knows which tile the coin is currently over. A coin thrown onto a
+/// raised terrace has to come to rest on the terrace, not at the deck level it
+/// was launched from.
 /// </summary>
 public class LaunchedTix : TixPickup
 {
@@ -20,6 +25,13 @@ public class LaunchedTix : TixPickup
 
     public float Gravity { get; set; } = 900f;
     public bool Landed => _landed;
+
+    /// <summary>
+    /// Height of the ground beneath the coin right now, in the same units as Z.
+    /// Set each frame by game code from the tile the coin is over - the same
+    /// contract DynamicObject.GroundZ has with the player.
+    /// </summary>
+    public float GroundZ { get; set; }
 
     public LaunchedTix(SpriteSheet sheet, float velocityX, float velocityY, float velocityZ) : base(sheet)
     {
@@ -46,9 +58,9 @@ public class LaunchedTix : TixPickup
 
         _velocityZ -= Gravity * deltaTime;
         Z += _velocityZ * deltaTime;
-        if (Z <= 0f)
+        if (Z <= GroundZ)
         {
-            Z = 0f;
+            Z = GroundZ;
             _landed = true;
         }
     }
