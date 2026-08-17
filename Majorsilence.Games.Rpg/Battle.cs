@@ -8,6 +8,9 @@ public enum BattlePhase
     /// <summary>Waiting for a spell choice.</summary>
     Spell,
 
+    /// <summary>Waiting for an item choice.</summary>
+    Item,
+
     /// <summary>Waiting for which monster to hit.</summary>
     Target,
 
@@ -33,6 +36,7 @@ public enum BattleCommand
 {
     Fight,
     Magic,
+    Item,
     Run
 }
 
@@ -62,6 +66,7 @@ public class Battle
 
     private readonly Random _random;
     private readonly SpellBook _spells;
+    private readonly ItemBook _items;
     private readonly Party _party;
     private readonly Queue<string> _messages = new();
     private readonly Queue<PlannedAction> _turnQueue = new();
@@ -69,13 +74,14 @@ public class Battle
     private readonly List<Combatant> _monsters;
 
     /// <summary>An order given, waiting for its place in the turn order. A null Actor marks a monster's turn, decided when it comes round.</summary>
-    private record PlannedAction(Combatant Actor, BattleCommand Command, Spell? Spell, Combatant? Target);
+    private record PlannedAction(Combatant Actor, BattleCommand Command, Spell? Spell, Item? Item, Combatant? Target);
 
-    public Battle(Party party, IEnumerable<Combatant> monsters, SpellBook spells, Random random)
+    public Battle(Party party, IEnumerable<Combatant> monsters, SpellBook spells, ItemBook items, Random random)
     {
         _party = party;
         _monsters = monsters.ToList();
         _spells = spells;
+        _items = items;
         _random = random;
 
         Say(_monsters.Count == 1
@@ -106,6 +112,7 @@ public class Battle
 
     public int CommandIndex { get; private set; }
     public int SpellIndex { get; private set; }
+    public int ItemIndex { get; private set; }
     public int TargetIndex { get; private set; }
     public int AllyIndex { get; private set; }
 
@@ -118,7 +125,18 @@ public class Battle
     public Spell? SelectedSpell =>
         Planning is { } who && who.Spells.Count > 0 ? _spells[who.Spells[SpellIndex]] : null;
 
+    /// <summary>Looks an item up by key - so the screen can name and count every entry in the bag.</summary>
+    public Item ItemFor(string key) => _items[key];
+
+    /// <summary>The item under the cursor, or null when the bag is empty.</summary>
+    public Item? SelectedItem =>
+        Bag.Keys.Count > 0 ? _items[Bag.Keys[Math.Clamp(ItemIndex, 0, Bag.Keys.Count - 1)]] : null;
+
+    /// <summary>The party's bag, so the screen can show counts and coin.</summary>
+    public Inventory Bag => _party.Bag;
+
     public int ExperienceEarned { get; private set; }
+    public int CoinEarned { get; private set; }
 
     // ------------------------------------------------------------ input ----
 
@@ -138,8 +156,16 @@ public class Battle
                 SpellIndex = (SpellIndex + step + caster.Spells.Count) % caster.Spells.Count;
                 break;
 
+            case BattlePhase.Item when Bag.Keys.Count > 0:
+                ItemIndex = (ItemIndex + step + Bag.Keys.Count) % Bag.Keys.Count;
+                break;
+
             case BattlePhase.Target:
                 TargetIndex = StepToLiving(_monsters, TargetIndex, step);
+                break;
+
+            case BattlePhase.AllyTarget when SelectedItem is { TargetsTheFallen: true }:
+                AllyIndex = (AllyIndex + step + _party.Members.Count) % _party.Members.Count;
                 break;
 
             case BattlePhase.AllyTarget:
@@ -165,19 +191,26 @@ public class Battle
         switch (Phase)
         {
             case BattlePhase.Spell:
+            case BattlePhase.Item:
                 Phase = BattlePhase.Command;
                 break;
 
             case BattlePhase.Target:
             case BattlePhase.AllyTarget:
-                // Back to the spell list if that's where this came from.
-                Phase = Command == BattleCommand.Magic ? BattlePhase.Spell : BattlePhase.Command;
+                // Back to whichever list this came from.
+                Phase = Command switch
+                {
+                    BattleCommand.Magic => BattlePhase.Spell,
+                    BattleCommand.Item => BattlePhase.Item,
+                    _ => BattlePhase.Command
+                };
                 break;
 
             case BattlePhase.Command when _plans.Count > 0:
                 // Take back the last order given and plan that character again.
                 var previous = _plans[^1];
                 _plans.RemoveAt(_plans.Count - 1);
+                ReturnItem(previous);
                 Planning = previous.Actor;
                 Phase = BattlePhase.Command;
                 RefreshCommands();
@@ -202,12 +235,20 @@ public class Battle
                 ConfirmSpell();
                 break;
 
+            case BattlePhase.Item:
+                ConfirmItem();
+                break;
+
             case BattlePhase.Target:
-                PlanAction(Command == BattleCommand.Magic ? SelectedSpell : null, _monsters[TargetIndex]);
+                PlanAction(Command == BattleCommand.Magic ? SelectedSpell : null, null, _monsters[TargetIndex]);
+                break;
+
+            case BattlePhase.AllyTarget when Command == BattleCommand.Item:
+                PlanAction(null, SelectedItem, _party.Members[AllyIndex]);
                 break;
 
             case BattlePhase.AllyTarget:
-                PlanAction(SelectedSpell, _party.Members[AllyIndex]);
+                PlanAction(SelectedSpell, null, _party.Members[AllyIndex]);
                 break;
         }
     }
@@ -225,6 +266,11 @@ public class Battle
             case BattleCommand.Magic:
                 SpellIndex = 0;
                 Phase = BattlePhase.Spell;
+                break;
+
+            case BattleCommand.Item:
+                ItemIndex = 0;
+                Phase = BattlePhase.Item;
                 break;
 
             case BattleCommand.Run:
@@ -249,7 +295,7 @@ public class Battle
 
         if (spell.TargetsEveryone)
         {
-            PlanAction(spell, null);
+            PlanAction(spell, null, null);
             return;
         }
 
@@ -297,16 +343,54 @@ public class Battle
     {
         var commands = new List<BattleCommand> { BattleCommand.Fight };
         if (Planning is { CanCast: true }) commands.Add(BattleCommand.Magic);
+        if (Bag.Any) commands.Add(BattleCommand.Item);
         commands.Add(BattleCommand.Run);
         Commands = commands;
         CommandIndex = Math.Clamp(CommandIndex, 0, commands.Count - 1);
     }
 
-    private void PlanAction(Spell? spell, Combatant? target)
+    private void PlanAction(Spell? spell, Item? item, Combatant? target)
     {
         if (Planning is null) return;
-        _plans.Add(new PlannedAction(Planning, spell is null ? BattleCommand.Fight : BattleCommand.Magic, spell, target));
+
+        var command = item is not null ? BattleCommand.Item
+            : spell is not null ? BattleCommand.Magic
+            : BattleCommand.Fight;
+
+        // The item leaves the bag now, when the order is given, not when the
+        // turn runs - otherwise two characters could both be told to use the
+        // last salve in the same round.
+        if (item is not null && !Bag.Remove(item.Key)) return;
+
+        _plans.Add(new PlannedAction(Planning, command, spell, item, target));
         AdvancePlanning();
+    }
+
+    /// <summary>An order taken back has to put its item back in the bag.</summary>
+    private void ReturnItem(PlannedAction plan)
+    {
+        if (plan.Item is not null) Bag.Add(plan.Item.Key);
+    }
+
+    private void ConfirmItem()
+    {
+        var item = SelectedItem;
+        if (item is null || Planning is null) return;
+
+        if (!item.NeedsTarget)
+        {
+            PlanAction(null, item, null);
+            return;
+        }
+
+        // A revive is the one thing pointed at somebody already down, so its
+        // cursor starts on the first person who needs it.
+        AllyIndex = item.TargetsTheFallen
+            ? Math.Max(0, _party.Members.FindIndex(m => !m.IsAlive))
+            : _party.Members.FindIndex(m => m.IsAlive);
+        if (AllyIndex < 0) AllyIndex = 0;
+
+        Phase = BattlePhase.AllyTarget;
     }
 
     // -------------------------------------------------------- resolution ----
@@ -320,7 +404,7 @@ public class Battle
         // who goes next.
         var turns = new List<PlannedAction>(_plans);
         turns.AddRange(_monsters.Where(m => m.IsAlive)
-            .Select(m => new PlannedAction(m, BattleCommand.Fight, null, null)));
+            .Select(m => new PlannedAction(m, BattleCommand.Fight, null, null, null)));
 
         foreach (var turn in turns.OrderByDescending(t => t.Actor.Agility).ThenBy(_ => _random.Next()))
             _turnQueue.Enqueue(turn);
@@ -345,6 +429,7 @@ public class Battle
         // A failed escape costs the round: everyone's turn is spent on it, and
         // the monsters still get theirs.
         Say("There's no getting away.");
+        foreach (var plan in _plans) ReturnItem(plan);
         _plans.Clear();
         Planning = null;
         StartRound();
@@ -360,7 +445,8 @@ public class Battle
             return;
         }
 
-        if (turn.Spell is { } spell) CastSpell(actor, spell, turn.Target);
+        if (turn.Item is { } item) UseItem(actor, item, turn.Target);
+        else if (turn.Spell is { } spell) CastSpell(actor, spell, turn.Target);
         else PartyAttacks(actor, turn.Target);
     }
 
@@ -425,6 +511,56 @@ public class Battle
         }
     }
 
+    /// <summary>
+    /// Spends an item that has already left the bag. Nothing here can fail for
+    /// want of stock - that was settled when the order was given - so a wasted
+    /// item is only ever wasted on a target that stopped needing it.
+    /// </summary>
+    private void UseItem(Combatant user, Item item, Combatant? intended)
+    {
+        switch (item.Kind)
+        {
+            case ItemKind.Heal:
+            {
+                var ally = intended is { IsAlive: true } ? intended : user;
+                var amount = Restore(ally, Vary(item.Power));
+                Say($"{user.Name} {item.Verb} {ally.Name}: {amount} health.");
+                break;
+            }
+
+            case ItemKind.HealAll:
+            {
+                foreach (var ally in _party.Living) Restore(ally, Vary(item.Power));
+                Say($"{user.Name} {item.Verb} the party.");
+                break;
+            }
+
+            case ItemKind.Mana:
+            {
+                var ally = intended is { IsAlive: true } ? intended : user;
+                var before = ally.Mana;
+                ally.Mana = Math.Min(ally.MaxMana, ally.Mana + Vary(item.Power));
+                Say($"{user.Name} {item.Verb} {ally.Name}: {ally.Mana - before} mana.");
+                break;
+            }
+
+            case ItemKind.Revive:
+            {
+                var fallen = intended is { IsAlive: false } ? intended : _party.Members.FirstOrDefault(m => !m.IsAlive);
+                if (fallen is null)
+                {
+                    Say($"{user.Name} finds nobody who needs it.");
+                    break;
+                }
+
+                // Power is a percentage here, not a number of points.
+                fallen.Health = Math.Max(1, fallen.MaxHealth * item.Power / 100);
+                Say($"{user.Name} {item.Verb} {fallen.Name}, who comes round.");
+                break;
+            }
+        }
+    }
+
     private static int Restore(Combatant who, int amount)
     {
         var before = who.Health;
@@ -443,7 +579,10 @@ public class Battle
         if (_monsters.Any(m => m.IsAlive)) return;
 
         ExperienceEarned = _monsters.Sum(m => m.Experience);
-        Say($"The way is clear. {ExperienceEarned} experience.");
+        CoinEarned = _monsters.Sum(m => m.Coin);
+        _party.Bag.EarnCoin(CoinEarned);
+
+        Say($"The way is clear. {ExperienceEarned} experience, {CoinEarned} coin.");
         foreach (var announcement in _party.AwardExperience(ExperienceEarned)) Say(announcement);
         Outcome = BattleOutcome.Victory;
     }

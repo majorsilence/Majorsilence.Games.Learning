@@ -119,7 +119,10 @@ loop.Start(game.GameObjects, game.Camera,
                       + $" foes={string.Join("/", fight.Monsters.Select(m => m.Health))}"
                       + (fight.Planning is { } who ? $" planning={who.Name}" : "")
                       + (fight.Message == "" ? "" : $" \"{fight.Message}\"") + "]"
-                    : $" xp={game.Experience} levels={string.Join("/", game.Roster.Members.Select(m => m.Level))}"));
+                    : $" xp={game.Experience} levels={string.Join("/", game.Roster.Members.Select(m => m.Level))}"
+                      + $" coin={game.Roster.Bag.Coin}"
+                      + $" bag=[{string.Join(",", game.Roster.Bag.Keys.Select(k => $"{k}x{game.Roster.Bag.CountOf(k)}"))}]")
+                + (game.Shop is { } counter ? $" [shop {counter.Keeper} {counter.Phase} \"{counter.Message}\"]" : ""));
         }
 
         if (screenshotPath is not null)

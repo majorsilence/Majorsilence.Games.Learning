@@ -99,7 +99,8 @@
         "name": "Innkeeper Sorrel",
         "look": "1",
         "facing": "1",
-        "says": "A bed's four coin and the shutters bar from inside. Cheap at twice the price this month.|Travellers came through from the east ridge yesterday. Wouldn't sit. Wouldn't eat. Paid in old money and left before dark."
+        "says": "A bed's four coin and the shutters bar from inside. Cheap at twice the price this month.|Travellers came through from the east ridge yesterday. Wouldn't sit. Wouldn't eat. Paid in old money and left before dark.",
+        "inn": "8"
       }
     },
     {

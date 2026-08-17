@@ -6,6 +6,7 @@
     "defense": 2,
     "agility": 10,
     "experience": 5,
+    "coin": 4,
     "frame": 0,
     "maxGroup": 3
   },
@@ -16,6 +17,7 @@
     "defense": 1,
     "agility": 13,
     "experience": 4,
+    "coin": 3,
     "frame": 1,
     "maxGroup": 3
   },
@@ -26,6 +28,7 @@
     "defense": 6,
     "agility": 4,
     "experience": 7,
+    "coin": 6,
     "frame": 2,
     "maxGroup": 2
   },
@@ -36,6 +39,7 @@
     "defense": 4,
     "agility": 9,
     "experience": 9,
+    "coin": 14,
     "frame": 3,
     "maxGroup": 2
   },
@@ -46,6 +50,7 @@
     "defense": 5,
     "agility": 11,
     "experience": 18,
+    "coin": 22,
     "frame": 4,
     "maxGroup": 1
   }

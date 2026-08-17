@@ -60,6 +60,7 @@ public class RpgGame : IDisposable
     private readonly Sound? _victorySound;
     private readonly MonsterBook _monsterBook;
     private readonly SpellBook _spellBook;
+    private readonly ItemBook _itemBook;
     private readonly Random _random;
     private float _doorCooldown;
     private Folk? _talkingTo;
@@ -92,8 +93,10 @@ public class RpgGame : IDisposable
         _monsterBook = MonsterBook.Load("assets/monsters.json");
         BattleScreen = new BattleScreen(renderer, fontPath,
             new SpriteSheet(Texture.CreateImageTexture(renderer, "assets/artwork/rpg/monsters.png"), 32, 32));
+        ShopScreen = new ShopScreen(renderer, fontPath);
 
         _spellBook = SpellBook.Load("assets/spells.json");
+        _itemBook = ItemBook.Load("assets/items.json");
         Roster = Rpg.Party.Load("assets/party.json", _spellBook);
 
         // Sound is optional the same way it is in the Titanic game: no audio
@@ -118,6 +121,11 @@ public class RpgGame : IDisposable
     public Party Roster { get; }
 
     public BattleScreen BattleScreen { get; }
+
+    public ShopScreen ShopScreen { get; }
+
+    /// <summary>The counter being stood at, or null when free to walk. Non-null suspends walking, like a battle does.</summary>
+    public Shop? Shop => ShopScreen.Shop;
 
     /// <summary>The fight in progress, or null when out on the map. Non-null means walking is suspended.</summary>
     public Battle? Battle => BattleScreen.Battle;
@@ -154,6 +162,14 @@ public class RpgGame : IDisposable
         public required int Column { get; init; }
         public required int Row { get; init; }
         public int NextLine { get; set; }
+
+        /// <summary>Item keys this one sells. Empty for somebody who only talks.</summary>
+        public string[] Sells { get; init; } = Array.Empty<string>();
+
+        /// <summary>Price of a bed here, or 0 for somebody who isn't an innkeeper.</summary>
+        public int InnPrice { get; init; }
+
+        public bool Trades => Sells.Length > 0 || InnPrice > 0;
     }
 
     public void LoadMap(string path, string spawnName = "")
@@ -169,6 +185,7 @@ public class RpgGame : IDisposable
         _occupied.Clear();
         GameObjects.Clear();
         Dialogue.Close();
+        ShopScreen.Shop = null;
         _talkingTo = null;
 
         var rows = _level.Tiles.Length;
@@ -193,6 +210,7 @@ public class RpgGame : IDisposable
         };
         GameObjects.Add(Hero);
         GameObjects.Add(Dialogue);
+        GameObjects.Add(ShopScreen);
         GameObjects.Add(BattleScreen);
 
         _encounterRate = _level.EncounterRate;
@@ -256,7 +274,12 @@ public class RpgGame : IDisposable
                         Name = entity.Properties.GetValueOrDefault("name", ""),
                         Lines = entity.Properties.GetValueOrDefault("says", "...").Split('|'),
                         Column = entity.Column,
-                        Row = entity.Row
+                        Row = entity.Row,
+                        Sells = entity.Properties.GetValueOrDefault("sells", "")
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(key => key.Trim())
+                            .ToArray(),
+                        InnPrice = int.TryParse(entity.Properties.GetValueOrDefault("inn", "0"), out var bed) ? bed : 0
                     });
                     // A person is as solid as a wall to walk into - without this
                     // the hero strolls straight through the person they are
@@ -287,6 +310,12 @@ public class RpgGame : IDisposable
         if (Battle is { } battle)
         {
             UpdateBattle(battle);
+            return;
+        }
+
+        if (Shop is { } shop)
+        {
+            UpdateShop(shop);
             return;
         }
 
@@ -357,6 +386,44 @@ public class RpgGame : IDisposable
         }
     }
 
+    private void OpenShop(Folk keeper)
+    {
+        var kind = keeper.InnPrice > 0 ? ShopKind.Inn : ShopKind.Goods;
+        ShopScreen.Shop = new Shop(keeper.Name, kind, keeper.Sells, keeper.InnPrice, _itemBook, Roster);
+    }
+
+    /// <summary>Shop input: the cursor walks the list, Confirm buys or rests, Cancel backs out and then leaves.</summary>
+    private void UpdateShop(Shop shop)
+    {
+        Hero.DirectionX = 0;
+        Hero.DirectionY = 0;
+
+        if (shop.Phase == ShopPhase.Closed)
+        {
+            ShopScreen.Shop = null;
+            // Give the doorway a moment, so leaving a counter that stands on a
+            // door tile doesn't immediately walk back through it.
+            _doorCooldown = DoorCooldownSeconds;
+            return;
+        }
+
+        if (InputActions.IsJustPressed(InputAction.MoveUp) || InputActions.IsJustPressed(InputAction.MoveLeft))
+            shop.MoveCursor(-1);
+        if (InputActions.IsJustPressed(InputAction.MoveDown) || InputActions.IsJustPressed(InputAction.MoveRight))
+            shop.MoveCursor(1);
+
+        if (InputActions.IsJustPressed(InputAction.Confirm))
+        {
+            _confirmSound?.Play();
+            shop.Confirm();
+        }
+        else if (InputActions.IsJustPressed(InputAction.Cancel))
+        {
+            _cancelSound?.Play();
+            shop.Cancel();
+        }
+    }
+
     /// <summary>
     /// Four-way walking: the axes are mutually exclusive, the way a NES-era RPG
     /// moves. Holding two directions keeps the one pressed most recently, so
@@ -414,8 +481,15 @@ public class RpgGame : IDisposable
             {
                 Hero.FaceTowards(stepX, stepY);
                 folk.Walker.FaceTowards(-stepX, -stepY);
-                _talkingTo = folk;
                 _confirmSound?.Play();
+
+                if (folk.Trades)
+                {
+                    OpenShop(folk);
+                    return;
+                }
+
+                _talkingTo = folk;
                 Dialogue.Show(folk.Name, folk.Lines[folk.NextLine]);
                 folk.NextLine = (folk.NextLine + 1) % folk.Lines.Length;
                 return;
@@ -434,7 +508,7 @@ public class RpgGame : IDisposable
     /// </summary>
     public bool CheckEncounters()
     {
-        if (Battle is not null || Dialogue.IsOpen || Hero.Body is null) return false;
+        if (Battle is not null || Shop is not null || Dialogue.IsOpen || Hero.Body is null) return false;
         if (_encounterRate <= 0f || _encounterTable.Count == 0) return false;
 
         var tile = Hero.Body.CenterTile(Hero.PreciseX, Hero.PreciseY);
@@ -462,7 +536,7 @@ public class RpgGame : IDisposable
         Hero.DirectionY = 0;
 
         _victoryPlayed = false;
-        BattleScreen.Battle = new Battle(Roster, monsters, _spellBook, _random);
+        BattleScreen.Battle = new Battle(Roster, monsters, _spellBook, _itemBook, _random);
         Music.Play(BattleMusicPath);
     }
 
@@ -489,7 +563,7 @@ public class RpgGame : IDisposable
     /// <summary>Walking onto a doorway tile loads the map behind it. Runs after movement, so it sees where the hero actually ended up this frame.</summary>
     public bool CheckDoors()
     {
-        if (_doorCooldown > 0f || Dialogue.IsOpen || Hero.Body is null) return false;
+        if (_doorCooldown > 0f || Dialogue.IsOpen || Shop is not null || Hero.Body is null) return false;
 
         var (column, row) = Hero.Body.CenterTile(Hero.PreciseX, Hero.PreciseY);
         var door = _doors.FirstOrDefault(d => d.Column == column && d.Row == row);

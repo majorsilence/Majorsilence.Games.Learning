@@ -58,6 +58,9 @@ public class Combatant
     /// <summary>Experience this one is worth when defeated. Zero for party members.</summary>
     public int Experience { get; init; }
 
+    /// <summary>Coin this one is carrying. Zero for party members - the purse is the Inventory's.</summary>
+    public int Coin { get; init; }
+
     /// <summary>Frame in the monster sheet. Unused by party members, who are drawn from the walker sheet.</summary>
     public int Frame { get; init; }
 
@@ -88,6 +91,7 @@ public class Combatant
         Defense = Defense,
         Agility = Agility,
         Experience = Experience,
+        Coin = Coin,
         Frame = Frame,
         MaxGroup = MaxGroup
     };

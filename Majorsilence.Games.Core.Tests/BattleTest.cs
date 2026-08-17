@@ -27,6 +27,14 @@ public class BattleTest
 
     private static SpellBook Book() => SpellBook.Of(Ember, Scour, Mend, Rally);
 
+    private static readonly Item Salve = new()
+        { Key = "salve", Name = "Salve", Price = 12, Power = 25, Kind = ItemKind.Heal, Verb = "binds up" };
+
+    private static readonly Item WakingSalt = new()
+        { Key = "waking-salt", Name = "Waking Salt", Price = 60, Power = 50, Kind = ItemKind.Revive, Verb = "wakes" };
+
+    private static ItemBook Bag() => ItemBook.Of(Salve, WakingSalt);
+
     private static Combatant Fighter(string name, int health, int attack, int defense, int agility,
         int experience = 0, int mana = 0, params string[] spells) =>
         new()
@@ -53,7 +61,7 @@ public class BattleTest
         Fighter("Halt", 22, 5, 3, agility, mana: mana, spells: new[] { "mend", "rally" });
 
     private static Battle Start(Party party, params Combatant[] monsters) =>
-        new(party, monsters, Book(), new Random(20260816));
+        new(party, monsters, Book(), Bag(), new Random(20260816));
 
     /// <summary>Mashes Confirm - Fight, then the target, then the messages - until the fight ends.</summary>
     private static void FightToTheEnd(Battle battle, int maxPresses = 4000)
@@ -360,5 +368,127 @@ public class BattleTest
         var defender = Fighter("d", 10, 5, 0, defenderAgility);
 
         Assert.InRange(Battle.HitChance(attacker, defender), 0.55, 0.97);
+    }
+
+    // ----------------------------------------------------------- items ----
+
+    [Fact]
+    public void ItemIsOfferedOnlyWhenTheBagHasSomething()
+    {
+        var empty = Start(Party.Of(Warden()), Fighter("Ash-wolf", 200, 1, 0, 1));
+        ClearMessages(empty);
+        Assert.DoesNotContain(BattleCommand.Item, empty.Commands);
+
+        var party = Party.Of(Warden());
+        party.Bag.Add("salve");
+        var stocked = Start(party, Fighter("Ash-wolf", 200, 1, 0, 1));
+        ClearMessages(stocked);
+        Assert.Contains(BattleCommand.Item, stocked.Commands);
+    }
+
+    [Fact]
+    public void UsingAnItemSpendsItAndHeals()
+    {
+        var warden = Warden();
+        warden.Health = 4;
+        var party = Party.Of(warden);
+        party.Bag.Add("salve", 2);
+
+        var battle = Start(party, Fighter("Ash-wolf", 400, 1, 0, 1));
+        ClearMessages(battle);
+
+        battle.MoveCursor(1);   // Fight -> Item
+        Assert.Equal(BattleCommand.Item, battle.Command);
+        battle.Confirm();       // open the bag
+        Assert.Equal(BattlePhase.Item, battle.Phase);
+        battle.Confirm();       // Salve, which asks who for
+        Assert.Equal(BattlePhase.AllyTarget, battle.Phase);
+        battle.Confirm();       // on Wren
+        ClearMessages(battle);
+
+        Assert.True(warden.Health > 4, $"the salve should have healed Wren; health is {warden.Health}");
+        Assert.Equal(1, party.Bag.CountOf("salve"));
+    }
+
+    /// <summary>
+    /// An item leaves the bag when the order is given, so two characters cannot
+    /// both be told to use the last salve. Taking that order back has to put it
+    /// straight back, or cancelling would quietly destroy it.
+    /// </summary>
+    [Fact]
+    public void TakingBackAnOrderReturnsItsItem()
+    {
+        var party = Party.Of(Warden(), Caster());
+        party.Bag.Add("salve");
+
+        var battle = Start(party, Fighter("Ash-wolf", 400, 1, 0, 1));
+        ClearMessages(battle);
+
+        battle.MoveCursor(1);   // Wren: Fight -> Item
+        battle.Confirm();       // open the bag
+        battle.Confirm();       // Salve
+        battle.Confirm();       // on Wren; the order is given, so it leaves the bag
+        Assert.Equal(0, party.Bag.CountOf("salve"));
+        Assert.Equal("Sella", battle.Planning?.Name);
+
+        battle.Cancel();        // take Wren's order back
+        Assert.Equal("Wren", battle.Planning?.Name);
+        Assert.Equal(1, party.Bag.CountOf("salve"));
+    }
+
+    [Fact]
+    public void AReviveBringsBackTheFallen()
+    {
+        var warden = Warden();
+        var caster = Caster();
+        caster.Health = 0;
+
+        var party = Party.Of(warden, caster);
+        party.Bag.Add("waking-salt");
+
+        var battle = Start(party, Fighter("Ash-wolf", 400, 1, 0, 1));
+        ClearMessages(battle);
+
+        battle.MoveCursor(1);   // Wren: Fight -> Item
+        battle.Confirm();       // open the bag
+        battle.Confirm();       // Waking Salt; its cursor starts on somebody down
+        Assert.Equal(BattlePhase.AllyTarget, battle.Phase);
+        Assert.False(battle.Party[battle.AllyIndex].IsAlive,
+            "a revive should open pointed at somebody who actually needs it");
+        battle.Confirm();
+        ClearMessages(battle);
+
+        Assert.True(caster.IsAlive, "the waking salt should have brought Sella round");
+    }
+
+    [Fact]
+    public void VictoryAwardsCoinAsWellAsExperience()
+    {
+        var party = Party.Of(Warden());
+        var battle = Start(party, Fighter("Ash-wolf", 8, 1, 0, 2, experience: 5));
+
+        FightToTheEnd(battle);
+
+        Assert.Equal(BattleOutcome.Victory, battle.Outcome);
+        Assert.Equal(0, battle.CoinEarned); // this one carried none
+        Assert.Equal(0, party.Bag.Coin);
+    }
+
+    [Fact]
+    public void CoinFromTheFallenReachesThePurse()
+    {
+        var party = Party.Of(Warden());
+        var bandit = new Combatant
+        {
+            Name = "Ridge bandit", MaxHealth = 8, Health = 8,
+            Attack = 1, Defense = 0, Agility = 2, Experience = 9, Coin = 14
+        };
+
+        var battle = Start(party, bandit);
+        FightToTheEnd(battle);
+
+        Assert.Equal(BattleOutcome.Victory, battle.Outcome);
+        Assert.Equal(14, battle.CoinEarned);
+        Assert.Equal(14, party.Bag.Coin);
     }
 }

@@ -116,10 +116,13 @@ public class BattleScreen : GameObject
             battle.Planning?.Name,
             battle.CommandIndex,
             battle.SpellIndex,
+            battle.ItemIndex,
             battle.TargetIndex,
             battle.AllyIndex,
             string.Join(",", battle.Party.Select(m => $"{m.Health}/{m.Mana}/{m.Level}")),
-            string.Join(",", battle.Monsters.Select(m => m.Health)));
+            string.Join(",", battle.Monsters.Select(m => m.Health)),
+            string.Join(",", battle.Bag.Keys.Select(k => $"{k}{battle.Bag.CountOf(k)}")),
+            battle.Bag.Coin);
 
         if (signature == _builtSignature) return;
         _builtSignature = signature;
@@ -161,6 +164,11 @@ public class BattleScreen : GameObject
                 _panelLines.Add(Text(Row(battle.Commands.Select(c => c.ToString()), battle.CommandIndex), CursorColor));
                 break;
 
+            case BattlePhase.Item:
+                _panelLines.Add(Text($"{battle.Planning?.Name} reaches for:", TextColor));
+                _panelLines.Add(Text(Row(battle.Bag.Keys.Select(ItemLabel), battle.ItemIndex), CursorColor));
+                break;
+
             case BattlePhase.Spell when battle.Planning is { } caster:
                 _panelLines.Add(Text($"{caster.Name} calls on:", TextColor));
                 _panelLines.Add(Text(Row(caster.Spells.Select(SpellLabel), battle.SpellIndex), CursorColor));
@@ -178,7 +186,8 @@ public class BattleScreen : GameObject
             {
                 var ally = battle.Party[battle.AllyIndex];
                 _panelLines.Add(Text("For whom?", TextColor));
-                _panelLines.Add(Text($"> {ally.Name}   HP {ally.Health}/{ally.MaxHealth}", CursorColor));
+                _panelLines.Add(Text($"> {ally.Name}   HP {ally.Health}/{ally.MaxHealth}"
+                    + (ally.IsAlive ? "" : "   (down)"), CursorColor));
                 break;
             }
 
@@ -194,6 +203,13 @@ public class BattleScreen : GameObject
     {
         var spell = Battle!.SpellFor(key);
         return $"{spell.Name} {spell.Cost}";
+    }
+
+    /// <summary>Name and how many are left - the count is the thing you actually decide on.</summary>
+    private string ItemLabel(string key)
+    {
+        var item = Battle!.ItemFor(key);
+        return $"{item.Name} x{Battle.Bag.CountOf(key)}";
     }
 
     /// <summary>Lays choices out along one line with the cursor on the chosen one - menus here are short enough not to need a column.</summary>

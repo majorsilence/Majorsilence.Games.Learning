@@ -30,6 +30,9 @@ public class Party
 
     public List<Combatant> Members { get; }
 
+    /// <summary>The party's bag and purse - shared, like the experience.</summary>
+    public Inventory Bag { get; } = new();
+
     public int Experience { get; private set; }
 
     public IEnumerable<Combatant> Living => Members.Where(m => m.IsAlive);

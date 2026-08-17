@@ -99,7 +99,8 @@
         "name": "Quartermaster Rhen",
         "look": "2",
         "facing": "1",
-        "says": "Rope, lamp oil, dried fish. If you're going east take all three and a second lamp.|Coin's no use to me if the road stays shut. Buy something and tell your friends the store still stands."
+        "says": "Rope, lamp oil, dried fish. If you're going east take all three and a second lamp.|Coin's no use to me if the road stays shut. Buy something and tell your friends the store still stands.",
+        "sells": "salve,tonic,cordial,waking-salt"
       }
     }
   ]

@@ -31,6 +31,7 @@ public class MonsterBook
         public int Defense { get; set; }
         public int Agility { get; set; }
         public int Experience { get; set; }
+        public int Coin { get; set; }
         public int Frame { get; set; }
         public int MaxGroup { get; set; } = 1;
     }
@@ -66,6 +67,7 @@ public class MonsterBook
                 Defense = monster.Defense,
                 Agility = monster.Agility,
                 Experience = monster.Experience,
+                Coin = monster.Coin,
                 Frame = monster.Frame,
                 MaxGroup = Math.Max(1, monster.MaxGroup)
             };
