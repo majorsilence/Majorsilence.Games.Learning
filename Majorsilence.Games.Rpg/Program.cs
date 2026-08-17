@@ -19,6 +19,9 @@ using Majorsilence.Games.Rpg;
 //                            the same way every run
 //   RPG_BATTLE="ash-wolf,.." start in a fight with these monsters, instead of
 //                            walking the road until one turns up
+//   RPG_SAVE_DIR="/tmp/x"    keep the save somewhere else, so a scripted run
+//                            never touches the player's real game
+//   RPG_NEW="1"              ignore any save and start from the beginning
 const string StartMap = "assets/levels/ashholt.json";
 const string FontPath = "assets/fonts/Gidole-Regular.ttf";
 
@@ -65,8 +68,16 @@ InputManager.WindowResized += SyncViewport;
 var mapSpec = Environment.GetEnvironmentVariable("RPG_MAP");
 if (mapSpec is not null)
 {
+    // An explicit map wins over a save: it is how a scripted run starts
+    // somewhere in particular.
     var parts = mapSpec.Split('|', 2);
     game.LoadMap(parts[0], parts.Length > 1 ? parts[1] : "");
+}
+else if (Environment.GetEnvironmentVariable("RPG_NEW") is null && SaveGame.Load() is { } save)
+{
+    game.LoadMap(StartMap);
+    game.ApplySave(save);
+    Console.WriteLine($"Loaded save from {save.UpdatedUtc:u}.");
 }
 else
 {

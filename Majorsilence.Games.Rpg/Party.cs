@@ -155,6 +155,31 @@ public class Party
         return announcements;
     }
 
+    /// <summary>
+    /// Puts saved numbers back. Members are matched by name, so a roster that
+    /// gains somebody - or reorders - still loads; anyone the save doesn't
+    /// mention is left at their starting numbers rather than dropped.
+    /// </summary>
+    public void Restore(int experience, IEnumerable<SavedMember> saved)
+    {
+        Experience = experience;
+
+        foreach (var record in saved)
+        {
+            var member = Members.FirstOrDefault(m => m.Name == record.Name);
+            if (member is null) continue;
+
+            member.Level = Math.Max(1, record.Level);
+            member.MaxHealth = Math.Max(1, record.MaxHealth);
+            member.Health = Math.Clamp(record.Health, 0, member.MaxHealth);
+            member.MaxMana = Math.Max(0, record.MaxMana);
+            member.Mana = Math.Clamp(record.Mana, 0, member.MaxMana);
+            member.Attack = record.Attack;
+            member.Defense = record.Defense;
+            member.Agility = record.Agility;
+        }
+    }
+
     /// <summary>Full health and mana for everyone, the dead included - what a bed at the inn buys, and what a defeat costs you instead of the save.</summary>
     public void RestoreAll()
     {

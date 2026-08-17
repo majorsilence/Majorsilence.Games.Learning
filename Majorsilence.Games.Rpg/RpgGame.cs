@@ -130,6 +130,9 @@ public class RpgGame : IDisposable
     /// <summary>The fight in progress, or null when out on the map. Non-null means walking is suspended.</summary>
     public Battle? Battle => BattleScreen.Battle;
 
+    /// <summary>Raised just after the game writes itself to disk - what a scripted run listens to in order to prove a save happened.</summary>
+    public event Action? Saved;
+
     /// <summary>Banked experience, shared by the whole party.</summary>
     public int Experience => Roster.Experience;
 
@@ -139,6 +142,9 @@ public class RpgGame : IDisposable
 
     /// <summary>Which map is loaded, and where the hero stands on it - what a scripted run prints to show where it got to.</summary>
     public string MapName { get; private set; } = "";
+
+    /// <summary>The path the current map was loaded from - what a save writes down so it can put you back.</summary>
+    public string MapPath { get; private set; } = "";
 
     public (int Column, int Row) HeroTile =>
         Hero.Body?.CenterTile(Hero.PreciseX, Hero.PreciseY) ?? (0, 0);
@@ -175,6 +181,7 @@ public class RpgGame : IDisposable
     public void LoadMap(string path, string spawnName = "")
     {
         _level = LevelLoader.Load(path);
+        MapPath = path;
         MapName = Path.GetFileNameWithoutExtension(path);
         if (!_level.Perspective.Equals("topdown", StringComparison.OrdinalIgnoreCase))
             throw new MajorsilenceException($"Map '{path}' is not a topdown level.");
@@ -416,6 +423,15 @@ public class RpgGame : IDisposable
         {
             _confirmSound?.Play();
             shop.Confirm();
+
+            // A night at the inn is the save point, the way it is in the games
+            // this is built after.
+            if (shop.Rested)
+            {
+                shop.Rested = false;
+                SaveToDisk();
+                Saved?.Invoke();
+            }
         }
         else if (InputActions.IsJustPressed(InputAction.Cancel))
         {
@@ -559,6 +575,59 @@ public class RpgGame : IDisposable
         Music.Play(_mapMusic);
         _lastEncounterTile = HeroTile;
     }
+
+    /// <summary>Everything worth keeping: who the party are, what they carry, and where they stand.</summary>
+    public SaveGame CaptureSave()
+    {
+        var (column, row) = HeroTile;
+        return new SaveGame
+        {
+            MapPath = MapPath,
+            Column = column,
+            Row = row,
+            Experience = Roster.Experience,
+            Coin = Roster.Bag.Coin,
+            Bag = Roster.Bag.Keys.ToDictionary(key => key, Roster.Bag.CountOf),
+            Members = Roster.Members.Select(m => new SavedMember
+            {
+                Name = m.Name,
+                Level = m.Level,
+                Health = m.Health,
+                MaxHealth = m.MaxHealth,
+                Mana = m.Mana,
+                MaxMana = m.MaxMana,
+                Attack = m.Attack,
+                Defense = m.Defense,
+                Agility = m.Agility
+            }).ToList()
+        };
+    }
+
+    /// <summary>
+    /// Puts a saved game back. Members are matched by name rather than by
+    /// position, so a save still loads if the roster file gains somebody or
+    /// changes their order; anyone the save doesn't mention keeps their starting
+    /// numbers rather than vanishing.
+    /// </summary>
+    public void ApplySave(SaveGame save)
+    {
+        Roster.Restore(save.Experience, save.Members);
+
+        Roster.Bag.Clear();
+        Roster.Bag.EarnCoin(save.Coin);
+        foreach (var (key, count) in save.Bag)
+        {
+            if (_itemBook.Contains(key)) Roster.Bag.Add(key, count);
+        }
+
+        LoadMap(save.MapPath);
+        Hero.SnapTo(save.Column * _level.TileWidth, save.Row * _level.TileHeight);
+        Camera.Update();
+        _lastEncounterTile = HeroTile;
+    }
+
+    /// <summary>Writes the current state to disk. The inn is the only place that calls this - beds are where a console RPG saves.</summary>
+    public void SaveToDisk() => CaptureSave().Save();
 
     /// <summary>Walking onto a doorway tile loads the map behind it. Runs after movement, so it sees where the hero actually ended up this frame.</summary>
     public bool CheckDoors()

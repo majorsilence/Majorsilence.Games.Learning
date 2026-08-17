@@ -63,6 +63,13 @@ public class Shop
 
     public int Coin => _party.Bag.Coin;
 
+    /// <summary>
+    /// Set the moment a bed is actually taken. The inn is where a console RPG
+    /// saves, so the caller watches this to know when to write to disk - and
+    /// clears it once it has.
+    /// </summary>
+    public bool Rested { get; set; }
+
     /// <summary>The item under the cursor, or null at an inn.</summary>
     public Item? Selected =>
         Stock.Count > 0 ? _items[Stock[Math.Clamp(Index, 0, Stock.Count - 1)]] : null;
@@ -134,6 +141,7 @@ public class Shop
         }
 
         _party.RestoreAll();
+        Rested = true;
         Say("You sleep, and wake to the shutters open. Everyone is whole.");
     }
 

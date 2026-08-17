@@ -52,6 +52,14 @@ public class Inventory
         return true;
     }
 
+    /// <summary>Empties the bag and the purse - for loading a save over a game already in progress.</summary>
+    public void Clear()
+    {
+        _counts.Clear();
+        _order.Clear();
+        Coin = 0;
+    }
+
     public void EarnCoin(int amount) => Coin += Math.Max(0, amount);
 
     /// <summary>Spends coin if there is enough, returning false and spending nothing if there isn't.</summary>
