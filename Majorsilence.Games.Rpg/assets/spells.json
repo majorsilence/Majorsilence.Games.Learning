@@ -1,0 +1,30 @@
+{
+  "ember": {
+    "name": "Ember",
+    "cost": 3,
+    "power": 11,
+    "kind": "damage",
+    "verb": "calls up a gout of fire at"
+  },
+  "scour": {
+    "name": "Scour",
+    "cost": 7,
+    "power": 8,
+    "kind": "damageAll",
+    "verb": "sweeps burning ash across"
+  },
+  "mend": {
+    "name": "Mend",
+    "cost": 3,
+    "power": 14,
+    "kind": "heal",
+    "verb": "closes the wounds of"
+  },
+  "rally": {
+    "name": "Rally",
+    "cost": 8,
+    "power": 9,
+    "kind": "healAll",
+    "verb": "puts heart back into"
+  }
+}

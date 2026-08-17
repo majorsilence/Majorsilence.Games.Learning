@@ -59,6 +59,7 @@ public class RpgGame : IDisposable
     private readonly Sound? _doorSound;
     private readonly Sound? _victorySound;
     private readonly MonsterBook _monsterBook;
+    private readonly SpellBook _spellBook;
     private readonly Random _random;
     private float _doorCooldown;
     private Folk? _talkingTo;
@@ -92,18 +93,8 @@ public class RpgGame : IDisposable
         BattleScreen = new BattleScreen(renderer, fontPath,
             new SpriteSheet(Texture.CreateImageTexture(renderer, "assets/artwork/rpg/monsters.png"), 32, 32));
 
-        // Starting numbers for the one character there is. Levels, MP and a
-        // party are the next slice; these are what a first fight is balanced
-        // against.
-        Champion = new Combatant
-        {
-            Name = "Wren",
-            MaxHealth = 28,
-            Health = 28,
-            Attack = 9,
-            Defense = 4,
-            Agility = 8
-        };
+        _spellBook = SpellBook.Load("assets/spells.json");
+        Roster = Rpg.Party.Load("assets/party.json", _spellBook);
 
         // Sound is optional the same way it is in the Titanic game: no audio
         // device (a test run, a machine with no card) means a silent game, not a
@@ -119,16 +110,20 @@ public class RpgGame : IDisposable
 
     public MusicDirector Music { get; }
 
-    /// <summary>The hero's fighting self - the same character the Walker draws, kept separately because battle cares about numbers and the map cares about pixels.</summary>
-    public Combatant Champion { get; }
+    /// <summary>
+    /// Who you travel with. The Walker on the map draws the leader; the rest are
+    /// with them, and everyone turns up in a fight - battle cares about numbers
+    /// and the map cares about pixels, so the two are kept apart.
+    /// </summary>
+    public Party Roster { get; }
 
     public BattleScreen BattleScreen { get; }
 
     /// <summary>The fight in progress, or null when out on the map. Non-null means walking is suspended.</summary>
     public Battle? Battle => BattleScreen.Battle;
 
-    /// <summary>Banked experience. Nothing spends it yet - levels arrive with the stats slice.</summary>
-    public int Experience { get; private set; }
+    /// <summary>Banked experience, shared by the whole party.</summary>
+    public int Experience => Roster.Experience;
 
     public Camera Camera { get; }
     public DialogueBox Dialogue { get; }
@@ -321,10 +316,11 @@ public class RpgGame : IDisposable
     }
 
     /// <summary>
-    /// Battle input. Up/Down move the command cursor, Left/Right pick a target,
-    /// Confirm commits whatever is in front of you, Cancel steps back out of
-    /// target selection. Both cursor calls are safe to make in either phase -
-    /// each ignores input meant for the other.
+    /// Battle input. Any direction moves whichever cursor the current phase owns
+    /// - command, spell, monster or companion - because the menus are one row or
+    /// one column and which axis you reach for shouldn't matter. Confirm commits
+    /// what is in front of you; Cancel steps back a stage, and from the first
+    /// stage takes back the previous character's orders.
     /// </summary>
     private void UpdateBattle(Battle battle)
     {
@@ -337,18 +333,10 @@ public class RpgGame : IDisposable
             return;
         }
 
-        if (InputActions.IsJustPressed(InputAction.MoveUp))
-        {
-            battle.MoveCommand(-1);
-            battle.MoveTarget(-1);
-        }
-        if (InputActions.IsJustPressed(InputAction.MoveDown))
-        {
-            battle.MoveCommand(1);
-            battle.MoveTarget(1);
-        }
-        if (InputActions.IsJustPressed(InputAction.MoveLeft)) battle.MoveTarget(-1);
-        if (InputActions.IsJustPressed(InputAction.MoveRight)) battle.MoveTarget(1);
+        if (InputActions.IsJustPressed(InputAction.MoveUp) || InputActions.IsJustPressed(InputAction.MoveLeft))
+            battle.MoveCursor(-1);
+        if (InputActions.IsJustPressed(InputAction.MoveDown) || InputActions.IsJustPressed(InputAction.MoveRight))
+            battle.MoveCursor(1);
 
         if (InputActions.IsJustPressed(InputAction.Confirm))
         {
@@ -474,7 +462,7 @@ public class RpgGame : IDisposable
         Hero.DirectionY = 0;
 
         _victoryPlayed = false;
-        BattleScreen.Battle = new Battle(Champion, monsters, _random);
+        BattleScreen.Battle = new Battle(Roster, monsters, _spellBook, _random);
         Music.Play(BattleMusicPath);
     }
 
@@ -482,14 +470,12 @@ public class RpgGame : IDisposable
     {
         BattleScreen.Battle = null;
 
-        if (battle.Outcome == BattleOutcome.Victory) Experience += battle.ExperienceEarned;
-
         if (battle.Outcome == BattleOutcome.Defeat)
         {
-            // Losing costs you the road rather than the save: you wake back in
-            // Ashholt, whole. A harsher rule can come with saving, when there is
-            // something to reload.
-            Champion.Health = Champion.MaxHealth;
+            // Losing costs you the road rather than the save: the party wakes
+            // back in Ashholt, whole. A harsher rule can come with saving, when
+            // there is something to reload.
+            Roster.RestoreAll();
             LoadMap(DefeatMap, DefeatSpawn);
             return;
         }

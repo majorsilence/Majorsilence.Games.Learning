@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Wren",
+    "className": "Warden",
+    "health": 28,
+    "mana": 0,
+    "attack": 9,
+    "defense": 4,
+    "agility": 8,
+    "growth": { "health": 5, "mana": 0, "attack": 2, "defense": 1, "agility": 1 },
+    "spells": []
+  },
+  {
+    "name": "Sella",
+    "className": "Emberwright",
+    "health": 18,
+    "mana": 12,
+    "attack": 5,
+    "defense": 2,
+    "agility": 7,
+    "growth": { "health": 3, "mana": 4, "attack": 1, "defense": 1, "agility": 1 },
+    "spells": ["ember", "scour"]
+  },
+  {
+    "name": "Halt",
+    "className": "Bonesetter",
+    "health": 22,
+    "mana": 10,
+    "attack": 6,
+    "defense": 3,
+    "agility": 10,
+    "growth": { "health": 4, "mana": 3, "attack": 1, "defense": 1, "agility": 2 },
+    "spells": ["mend", "rally"]
+  }
+]

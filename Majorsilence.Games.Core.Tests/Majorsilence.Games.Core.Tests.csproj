@@ -44,6 +44,14 @@
         <PackageReference Include="SDL3-CS.MacOS.Mixer" Version="3.2.4.5" />
     </ItemGroup>
 
+    <!-- The RPG's data files, so the tests can check the shipped roster, spell
+         book and monster book actually parse and agree with each other. -->
+    <ItemGroup>
+        <None Include="$(MSBuildProjectDirectory)/../Majorsilence.Games.Rpg/assets/*.json" Link="assets/%(Filename)%(Extension)">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
     <ItemGroup>
         <None Include="$(MSBuildProjectDirectory)/../Majorsilence.Games.Learning/assets/artwork/z-like/*.png" Link="assets/artwork/z-like/%(Filename)%(Extension)">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

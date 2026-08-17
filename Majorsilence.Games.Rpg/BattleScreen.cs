@@ -8,8 +8,9 @@ namespace Majorsilence.Games.Rpg;
 
 /// <summary>
 /// Draws a <see cref="Battle"/>: the monsters ranged across the field, the
-/// hero's condition, and whichever panel the current phase calls for - the
-/// command list, the target cursor, or the line describing what just happened.
+/// party's condition, and whichever panel the current phase calls for - the
+/// command list, the spell list, a target cursor, or the line describing what
+/// just happened.
 ///
 /// Presentation only. It reads the battle and never changes it, the same split
 /// DialogueBox has with the conversation it shows.
@@ -18,21 +19,22 @@ public class BattleScreen : GameObject
 {
     private const int MonsterSize = 32;
     private const int Margin = 8;
-    private const int PanelHeight = 62;
-    private const int StatusHeight = 22;
+    private const int PanelHeight = 46;
     private const int PaddingX = 10;
-    private const int PaddingY = 7;
-    private const int LineHeight = 15;
+    private const int PaddingY = 6;
+    private const int LineHeight = 14;
     private const int FontSize = 11;
 
     private static readonly SDL.Color TextColor = new() { A = 0, R = 240, G = 240, B = 232 };
     private static readonly SDL.Color CursorColor = new() { A = 0, R = 248, G = 216, B = 120 };
     private static readonly SDL.Color HurtColor = new() { A = 0, R = 232, G = 112, B = 96 };
+    private static readonly SDL.Color DownColor = new() { A = 0, R = 128, G = 124, B = 132 };
 
     private readonly Renderer _renderer;
     private readonly string _fontPath;
     private readonly SpriteSheet _monsterArt;
-    private readonly List<Texture> _lines = new();
+    private readonly List<Texture> _statusLines = new();
+    private readonly List<Texture> _panelLines = new();
     private string _builtSignature = "";
 
     public BattleScreen(Renderer renderer, string fontPath, SpriteSheet monsterArt)
@@ -55,24 +57,42 @@ public class BattleScreen : GameObject
         if (Battle is null) return;
 
         var (viewWidth, viewHeight) = _renderer.LogicalSize;
+        var statusHeight = Battle.Party.Count * LineHeight + PaddingY * 2;
 
         // A flat dark field rather than the map: the fight is somewhere else,
         // and drawing the town behind it would say otherwise.
         _renderer.FillRect(0, 0, viewWidth, viewHeight, 20, 18, 28, 255);
         _renderer.FillRect(0, viewHeight / 2, viewWidth, viewHeight / 2, 34, 30, 40, 255);
 
-        DrawMonsters(viewWidth, viewHeight);
-        DrawStatus(viewWidth, viewHeight);
-        DrawPanel(viewWidth, viewHeight);
+        RebuildIfChanged();
+
+        var statusY = viewHeight - PanelHeight - statusHeight - Margin - 2;
+        DrawMonsters(viewWidth, statusY);
+        DrawBox(Margin, statusY, viewWidth - Margin * 2, statusHeight, _statusLines);
+        DrawBox(Margin, viewHeight - PanelHeight - Margin, viewWidth - Margin * 2, PanelHeight, _panelLines);
     }
 
-    private void DrawMonsters(int viewWidth, int viewHeight)
+    private void DrawBox(int x, int y, int width, int height, List<Texture> lines)
+    {
+        // Two nested rectangles: a light border around a near-black field.
+        _renderer.FillRect(x, y, width, height, 236, 236, 228, 245);
+        _renderer.FillRect(x + 2, y + 2, width - 4, height - 4, 16, 20, 40, 250);
+
+        var lineY = y + PaddingY;
+        foreach (var line in lines)
+        {
+            line.Render(x + PaddingX, lineY);
+            lineY += LineHeight;
+        }
+    }
+
+    private void DrawMonsters(int viewWidth, int fieldBottom)
     {
         var living = Battle!.Monsters.Where(m => m.IsAlive).ToList();
         if (living.Count == 0) return;
 
         var spacing = Math.Min(64, viewWidth / (living.Count + 1));
-        var top = viewHeight / 2 - MonsterSize - 18;
+        var top = Math.Max(Margin, fieldBottom / 2 - MonsterSize / 2);
 
         for (var i = 0; i < living.Count; i++)
         {
@@ -86,41 +106,6 @@ public class BattleScreen : GameObject
         }
     }
 
-    private void DrawStatus(int viewWidth, int viewHeight)
-    {
-        var y = viewHeight - PanelHeight - StatusHeight - Margin - 2;
-        var width = 128;
-
-        _renderer.FillRect(Margin, y, width, StatusHeight, 236, 236, 228, 245);
-        _renderer.FillRect(Margin + 2, y + 2, width - 4, StatusHeight - 4, 16, 20, 40, 250);
-    }
-
-    private void DrawPanel(int viewWidth, int viewHeight)
-    {
-        var panelY = viewHeight - PanelHeight - Margin;
-        var panelWidth = viewWidth - Margin * 2;
-
-        _renderer.FillRect(Margin, panelY, panelWidth, PanelHeight, 236, 236, 228, 245);
-        _renderer.FillRect(Margin + 2, panelY + 2, panelWidth - 4, PanelHeight - 4, 16, 20, 40, 250);
-
-        RebuildIfChanged();
-
-        // First line is always the hero's condition, drawn into the status box
-        // above the panel; the rest fill the panel itself.
-        var statusY = viewHeight - PanelHeight - StatusHeight - Margin - 2 + 5;
-        var y = panelY + PaddingY;
-
-        for (var i = 0; i < _lines.Count; i++)
-        {
-            if (i == 0) _lines[i].Render(Margin + PaddingX, statusY);
-            else
-            {
-                _lines[i].Render(Margin + PaddingX, y);
-                y += LineHeight;
-            }
-        }
-    }
-
     private void RebuildIfChanged()
     {
         var battle = Battle!;
@@ -128,45 +113,96 @@ public class BattleScreen : GameObject
             _renderer.PixelsPerLogicalUnit,
             battle.Phase,
             battle.Message,
-            battle.Command,
+            battle.Planning?.Name,
+            battle.CommandIndex,
+            battle.SpellIndex,
             battle.TargetIndex,
-            battle.Hero.Health,
+            battle.AllyIndex,
+            string.Join(",", battle.Party.Select(m => $"{m.Health}/{m.Mana}/{m.Level}")),
             string.Join(",", battle.Monsters.Select(m => m.Health)));
 
         if (signature == _builtSignature) return;
         _builtSignature = signature;
 
-        foreach (var texture in _lines) texture.Dispose();
-        _lines.Clear();
+        foreach (var texture in _statusLines) texture.Dispose();
+        foreach (var texture in _panelLines) texture.Dispose();
+        _statusLines.Clear();
+        _panelLines.Clear();
 
-        var hurt = battle.Hero.Health * 4 <= battle.Hero.MaxHealth;
-        Add($"{battle.Hero.Name}   HP {battle.Hero.Health}/{battle.Hero.MaxHealth}", hurt ? HurtColor : TextColor);
+        BuildStatus(battle);
+        BuildPanel(battle);
+    }
 
+    private void BuildStatus(Battle battle)
+    {
+        foreach (var member in battle.Party)
+        {
+            // A marker rather than a separate cursor sprite: it shows who is
+            // being given orders while their stats are already on the line.
+            var planning = ReferenceEquals(member, battle.Planning);
+            var mana = member.MaxMana > 0 ? $"   MP {member.Mana}/{member.MaxMana}" : "";
+            var text = $"{(planning ? ">" : " ")} {member.Name,-6} L{member.Level}  HP {member.Health}/{member.MaxHealth}{mana}";
+
+            var color = !member.IsAlive ? DownColor
+                : planning ? CursorColor
+                : member.Health * 4 <= member.MaxHealth ? HurtColor
+                : TextColor;
+
+            _statusLines.Add(Text(text, color));
+        }
+    }
+
+    private void BuildPanel(Battle battle)
+    {
         switch (battle.Phase)
         {
             case BattlePhase.Command:
-                Add(battle.Command == BattleCommand.Fight ? "> Fight" : "  Fight",
-                    battle.Command == BattleCommand.Fight ? CursorColor : TextColor);
-                Add(battle.Command == BattleCommand.Run ? "> Run" : "  Run",
-                    battle.Command == BattleCommand.Run ? CursorColor : TextColor);
+                _panelLines.Add(Text($"{battle.Planning?.Name} - what will you do?", TextColor));
+                _panelLines.Add(Text(Row(battle.Commands.Select(c => c.ToString()), battle.CommandIndex), CursorColor));
+                break;
+
+            case BattlePhase.Spell when battle.Planning is { } caster:
+                _panelLines.Add(Text($"{caster.Name} calls on:", TextColor));
+                _panelLines.Add(Text(Row(caster.Spells.Select(SpellLabel), battle.SpellIndex), CursorColor));
                 break;
 
             case BattlePhase.Target:
-                Add("Strike which?", TextColor);
+            {
                 var target = battle.Monsters[battle.TargetIndex];
-                Add($"> {target.Name}   HP {target.Health}/{target.MaxHealth}", CursorColor);
+                _panelLines.Add(Text("Against which?", TextColor));
+                _panelLines.Add(Text($"> {target.Name}   HP {target.Health}/{target.MaxHealth}", CursorColor));
                 break;
+            }
+
+            case BattlePhase.AllyTarget:
+            {
+                var ally = battle.Party[battle.AllyIndex];
+                _panelLines.Add(Text("For whom?", TextColor));
+                _panelLines.Add(Text($"> {ally.Name}   HP {ally.Health}/{ally.MaxHealth}", CursorColor));
+                break;
+            }
 
             case BattlePhase.Message:
             case BattlePhase.Over:
-                Add(battle.Message, TextColor);
+                _panelLines.Add(Text(battle.Message, TextColor));
                 break;
         }
     }
 
-    private void Add(string text, SDL.Color color)
+    /// <summary>Name and price for one entry in a caster's list - every entry, not just the selected one.</summary>
+    private string SpellLabel(string key)
     {
-        if (text == "") return;
-        _lines.Add(Texture.CreateTextTexture(_renderer, _fontPath, FontSize, color, text));
+        var spell = Battle!.SpellFor(key);
+        return $"{spell.Name} {spell.Cost}";
     }
+
+    /// <summary>Lays choices out along one line with the cursor on the chosen one - menus here are short enough not to need a column.</summary>
+    private static string Row(IEnumerable<string> options, int selected)
+    {
+        var list = options.ToList();
+        return string.Join("   ", list.Select((option, i) => i == selected ? $"> {option}" : $"  {option}"));
+    }
+
+    private Texture Text(string text, SDL.Color color) =>
+        Texture.CreateTextTexture(_renderer, _fontPath, FontSize, color, text == "" ? " " : text);
 }

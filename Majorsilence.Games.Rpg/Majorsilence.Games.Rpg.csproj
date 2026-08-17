@@ -20,7 +20,7 @@
         <None Update="assets\audio\rpg\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="assets\monsters.json">
+        <None Update="assets\*.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

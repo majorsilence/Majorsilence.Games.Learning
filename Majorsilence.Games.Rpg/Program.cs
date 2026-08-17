@@ -114,10 +114,12 @@ loop.Start(game.GameObjects, game.Camera,
             Console.WriteLine($"t={clock:0.0} map={game.MapName} tile=({column},{row}) at=({game.Hero.PreciseX:0.0},{game.Hero.PreciseY:0.0}) facing={game.Hero.Facing} music={(track == "" ? "-" : track)}"
                 + (game.Dialogue.IsOpen ? " [talking]" : "")
                 + (game.Battle is { } fight
-                    ? $" [battle {fight.Phase} hp={fight.Hero.Health}/{fight.Hero.MaxHealth}"
+                    ? $" [battle {fight.Phase} party={string.Join("/", fight.Party.Select(m => m.Health))}"
+                      + $" mp={string.Join("/", fight.Party.Select(m => m.Mana))}"
                       + $" foes={string.Join("/", fight.Monsters.Select(m => m.Health))}"
+                      + (fight.Planning is { } who ? $" planning={who.Name}" : "")
                       + (fight.Message == "" ? "" : $" \"{fight.Message}\"") + "]"
-                    : $" xp={game.Experience}"));
+                    : $" xp={game.Experience} levels={string.Join("/", game.Roster.Members.Select(m => m.Level))}"));
         }
 
         if (screenshotPath is not null)
