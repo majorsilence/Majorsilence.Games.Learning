@@ -1,0 +1,2889 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door_default"]
+
+[ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/bed.png" id="Tex_bed_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/table.png" id="Tex_table_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
+
+[ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(1, 2, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_floor"]
+atlas = ExtResource("Tileset")
+region = Rect2(0, 0, 32, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_texture = SubResource("AtlasTexture_floor")
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.3219, 0.3128, 0.3231, 1)
+roughness = 0.75
+metallic_specular = 0.35
+
+[sub_resource type="Environment" id="Environment_room"]
+background_mode = 1
+background_color = Color(0.06, 0.06, 0.06, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.85, 0.8, 0.75, 1)
+ambient_light_energy = 0.45
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary1"]
+size = Vector3(26, 2.3, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary2"]
+size = Vector3(26, 2.3, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary3"]
+size = Vector3(0.2, 2.3, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary4"]
+size = Vector3(0.2, 2.3, 16)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_forearm"]
+size = Vector3(0.12, 0.12, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hand"]
+size = Vector3(0.14, 0.1, 0.16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
+albedo_color = Color(0.85, 0.68, 0.54, 1)
+roughness = 0.7
+
+[node name="second-class-quarters" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_room")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+position = Vector3(0, 8, 0)
+rotation_degrees = Vector3(-50, -30, 0)
+light_color = Color(0.85, 0.78, 0.68, 1)
+light_energy = 0.9
+shadow_enabled = true
+
+[node name="Cell_r0_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r1_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 1.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r1_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 1.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r1_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 1.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r1_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 1.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r2_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 2.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r2_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 2.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r2_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 2.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r2_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 2.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r3_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 3.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r3_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 3.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r3_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 3.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r3_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 3.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r4_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 4.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r4_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 4.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r4_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 4.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r4_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 4.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 6.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r6_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 6.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r6_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 6.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r6_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r6_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 6.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r7_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 7.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r7_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 7.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r7_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 7.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r8_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 8.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r8_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 8.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r8_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 8.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 9.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r9_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 9.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r9_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 9.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r9_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r9_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 9.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r10_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 10.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r10_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 10.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r10_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 10.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r10_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 10.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r10_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 10.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r11_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 11.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r11_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 11.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r11_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 11.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r11_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 11.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r11_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 11.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r12_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 12.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r12_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 12.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r12_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 12.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r12_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 12.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r12_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 12.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r13_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 13.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r13_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 13.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r13_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 13.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r13_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 13.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r13_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 13.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r14_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 14.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r14_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 14.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r14_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 14.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r14_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.1, 14.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r14_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 14.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r15_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 0.65, 15.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="BoundaryNorth" type="StaticBody3D" parent="."]
+position = Vector3(12.5, 1.15, -0.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundaryNorth"]
+shape = SubResource("BoxShape3D_boundary1")
+
+[node name="BoundarySouth" type="StaticBody3D" parent="."]
+position = Vector3(12.5, 1.15, 15.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundarySouth"]
+shape = SubResource("BoxShape3D_boundary2")
+
+[node name="BoundaryWest" type="StaticBody3D" parent="."]
+position = Vector3(-0.5, 1.15, 7.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundaryWest"]
+shape = SubResource("BoxShape3D_boundary3")
+
+[node name="BoundaryEast" type="StaticBody3D" parent="."]
+position = Vector3(25.5, 1.15, 7.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundaryEast"]
+shape = SubResource("BoxShape3D_boundary4")
+
+[node name="Entity_door__r7_c2" type="Area3D" parent="."]
+position = Vector3(2.0, 0.2, 7.0)
+script = ExtResource("DoorScript")
+target_scene = "res://scenes/rooms_3d/a-deck-corridor.tscn"
+
+[node name="Sprite" type="Sprite3D" parent="Entity_door__r7_c2"]
+position = Vector3(0, 0.5625, 0)
+texture = ExtResource("Tex_door_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Entity_door__r7_c2"]
+position = Vector3(0, 1, 0)
+shape = SubResource("BoxShape3D_door")
+
+[node name="Entity_bed__r2_c2" type="Node3D" parent="."]
+position = Vector3(2.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c2"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_bed_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_table__r3_c5" type="Node3D" parent="."]
+position = Vector3(5.0, 0.2, 3.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_table__r3_c5"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_table_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_bed__r12_c2" type="Node3D" parent="."]
+position = Vector3(2.0, 0.2, 12.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_bed__r12_c2"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_bed_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_table__r13_c5" type="Node3D" parent="."]
+position = Vector3(5.0, 0.2, 13.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_table__r13_c5"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_table_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_bed__r2_c10" type="Node3D" parent="."]
+position = Vector3(10.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c10"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_bed_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_table__r3_c13" type="Node3D" parent="."]
+position = Vector3(13.0, 0.2, 3.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_table__r3_c13"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_table_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_bed__r12_c10" type="Node3D" parent="."]
+position = Vector3(10.0, 0.2, 12.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_bed__r12_c10"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_bed_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_table__r13_c13" type="Node3D" parent="."]
+position = Vector3(13.0, 0.2, 13.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_table__r13_c13"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_table_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_bed__r2_c18" type="Node3D" parent="."]
+position = Vector3(18.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c18"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_bed_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_table__r3_c21" type="Node3D" parent="."]
+position = Vector3(21.0, 0.2, 3.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_table__r3_c21"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_table_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_bed__r12_c18" type="Node3D" parent="."]
+position = Vector3(18.0, 0.2, 12.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_bed__r12_c18"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_bed_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_table__r13_c21" type="Node3D" parent="."]
+position = Vector3(21.0, 0.2, 13.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_table__r13_c21"]
+position = Vector3(0, 0.375, 0)
+texture = ExtResource("Tex_table_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_tix__r2_c6" type="Node3D" parent="."]
+position = Vector3(6.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r2_c6"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_tix__r2_c14" type="Node3D" parent="."]
+position = Vector3(14.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r2_c14"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_tix__r2_c22" type="Node3D" parent="."]
+position = Vector3(22.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r2_c22"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_tix__r13_c6" type="Node3D" parent="."]
+position = Vector3(6.0, 0.2, 13.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r13_c6"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_tix__r13_c14" type="Node3D" parent="."]
+position = Vector3(14.0, 0.2, 13.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r13_c14"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_tix__r13_c22" type="Node3D" parent="."]
+position = Vector3(22.0, 0.2, 13.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r13_c22"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Player" type="CharacterBody3D" parent="."]
+position = Vector3(4.0, 0.2, 8.0)
+script = ExtResource("PlayerScript")
+
+[node name="Collision" type="CollisionShape3D" parent="Player"]
+position = Vector3(0, 0.5, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Sprite" type="Sprite3D" parent="Player"]
+position = Vector3(0, 0.5, 0)
+texture = ExtResource("Tex_player")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 4
+frame = 0
+
+[node name="Camera3D" type="Camera3D" parent="Player"]
+position = Vector3(0, 0.85, 0)
+fov = 75
+
+[node name="Arm" type="Node3D" parent="Player/Camera3D"]
+position = Vector3(0.32, -0.32, -0.45)
+rotation_degrees = Vector3(15, -20, 10)
+
+[node name="Forearm" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("BoxMesh_forearm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 0, -0.15)
+
+[node name="Hand" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("BoxMesh_hand")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 0, -0.42)
+
+[connection signal="body_entered" from="Entity_door__r7_c2" to="Entity_door__r7_c2" method="_on_body_entered"]

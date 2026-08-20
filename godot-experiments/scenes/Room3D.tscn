@@ -1,0 +1,79 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+[ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.2, 0.22, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.4, 0.32, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
+albedo_color = Color(0.9, 0.3, 0.3, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.4
+height = 1.2
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_player"]
+radius = 0.4
+height = 1.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(10, 2, 1)
+
+[node name="Room3D" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+position = Vector3(0, 5, 0)
+rotation_degrees = Vector3(-50, -30, 0)
+shadow_enabled = true
+
+[node name="Floor" type="CSGBox3D" parent="."]
+position = Vector3(0, -0.1, 0)
+size = Vector3(10, 0.2, 10)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="WallNorth" type="CSGBox3D" parent="."]
+position = Vector3(0, 1.5, -5)
+size = Vector3(10, 3, 0.2)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEast" type="CSGBox3D" parent="."]
+position = Vector3(5, 1.5, 0)
+size = Vector3(0.2, 3, 10)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallWest" type="CSGBox3D" parent="."]
+position = Vector3(-5, 1.5, 0)
+size = Vector3(0.2, 3, 10)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+position = Vector3(0, 1, 0)
+script = ExtResource("PlayerScript")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+mesh = SubResource("CapsuleMesh_player")
+material_override = SubResource("StandardMaterial3D_player")
+
+[node name="Camera3D" type="Camera3D" parent="Player"]
+position = Vector3(0, 3, 4.5)
+
+[node name="DoorBack" type="Area3D" parent="."]
+position = Vector3(0, 1, 5.5)
+target_scene = "res://scenes/Room2D.tscn"
+script = ExtResource("DoorScript")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorBack"]
+shape = SubResource("BoxShape3D_door")
+
+[connection signal="body_entered" from="DoorBack" to="DoorBack" method="_on_body_entered"]

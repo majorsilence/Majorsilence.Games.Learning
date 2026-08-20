@@ -1,0 +1,12 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Godot Experiments"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7")
+
+[physics]
+
+common/enable_pause_aware_picking=true

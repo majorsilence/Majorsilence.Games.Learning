@@ -1,0 +1,1740 @@
+[gd_scene load_steps=23 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/platformer-tileset.png" id="Tileset"]
+
+[ext_resource type="Script" path="res://scripts/Ladder2D.gd" id="LadderScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door"]
+
+[ext_resource type="Script" path="res://scripts/Door2D.gd" id="DoorScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
+
+[ext_resource type="Script" path="res://scripts/Player2DSide.gd" id="PlayerScript"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_floor"]
+atlas = ExtResource("Tileset")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wall"]
+atlas = ExtResource("Tileset")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_grating"]
+atlas = ExtResource("Tileset")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_steam"]
+atlas = ExtResource("Tileset")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_crate"]
+atlas = ExtResource("Tileset")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_solid"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oneway"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_boundary"]
+size = Vector2(8, 288)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(24, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f0"]
+atlas = ExtResource("Tex_player")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f1"]
+atlas = ExtResource("Tex_player")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f2"]
+atlas = ExtResource("Tex_player")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f3"]
+atlas = ExtResource("Tex_player")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_player"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f3")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 6.666666666666667
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(12, 28)
+
+[node name="turbine-room" type="Node2D"]
+
+[node name="Tile_r0_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c1" type="Sprite2D" parent="."]
+position = Vector2(32, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c1" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c1"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c2"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c3"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c4"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c5"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c6"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c7"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c8"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c9"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c10" type="Sprite2D" parent="."]
+position = Vector2(320, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c10" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c10"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c12" type="Sprite2D" parent="."]
+position = Vector2(384, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c12" type="StaticBody2D" parent="."]
+position = Vector2(400.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c12"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c13" type="Sprite2D" parent="."]
+position = Vector2(416, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c13" type="StaticBody2D" parent="."]
+position = Vector2(432.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c13"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c14" type="Sprite2D" parent="."]
+position = Vector2(448, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c14" type="StaticBody2D" parent="."]
+position = Vector2(464.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c14"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c15" type="Sprite2D" parent="."]
+position = Vector2(480, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c15" type="StaticBody2D" parent="."]
+position = Vector2(496.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c15"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c16" type="Sprite2D" parent="."]
+position = Vector2(512, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c16" type="StaticBody2D" parent="."]
+position = Vector2(528.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c16"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c17" type="Sprite2D" parent="."]
+position = Vector2(544, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c17" type="StaticBody2D" parent="."]
+position = Vector2(560.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c17"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c18" type="Sprite2D" parent="."]
+position = Vector2(576, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c18" type="StaticBody2D" parent="."]
+position = Vector2(592.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c18"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c19" type="Sprite2D" parent="."]
+position = Vector2(608, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c19" type="StaticBody2D" parent="."]
+position = Vector2(624.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c19"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c20" type="Sprite2D" parent="."]
+position = Vector2(640, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c20" type="StaticBody2D" parent="."]
+position = Vector2(656.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c20"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c21" type="Sprite2D" parent="."]
+position = Vector2(672, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c21" type="StaticBody2D" parent="."]
+position = Vector2(688.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c21"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c22" type="Sprite2D" parent="."]
+position = Vector2(704, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c22" type="StaticBody2D" parent="."]
+position = Vector2(720.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c22"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c23" type="Sprite2D" parent="."]
+position = Vector2(736, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c23" type="StaticBody2D" parent="."]
+position = Vector2(752.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c23"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c24" type="Sprite2D" parent="."]
+position = Vector2(768, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c24" type="StaticBody2D" parent="."]
+position = Vector2(784.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c24"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c25" type="Sprite2D" parent="."]
+position = Vector2(800, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c25" type="StaticBody2D" parent="."]
+position = Vector2(816.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c25"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c26" type="Sprite2D" parent="."]
+position = Vector2(832, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c26" type="StaticBody2D" parent="."]
+position = Vector2(848.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c26"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c27" type="Sprite2D" parent="."]
+position = Vector2(864, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c27" type="StaticBody2D" parent="."]
+position = Vector2(880.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c27"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c28" type="Sprite2D" parent="."]
+position = Vector2(896, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c28" type="StaticBody2D" parent="."]
+position = Vector2(912.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c28"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c29" type="Sprite2D" parent="."]
+position = Vector2(928, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c29" type="StaticBody2D" parent="."]
+position = Vector2(944.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c29"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c30" type="Sprite2D" parent="."]
+position = Vector2(960, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c30" type="StaticBody2D" parent="."]
+position = Vector2(976.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c30"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c31" type="Sprite2D" parent="."]
+position = Vector2(992, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c31" type="StaticBody2D" parent="."]
+position = Vector2(1008.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c31"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c32" type="Sprite2D" parent="."]
+position = Vector2(1024, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c32" type="StaticBody2D" parent="."]
+position = Vector2(1040.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c32"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c33" type="Sprite2D" parent="."]
+position = Vector2(1056, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c33" type="StaticBody2D" parent="."]
+position = Vector2(1072.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c33"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c34" type="Sprite2D" parent="."]
+position = Vector2(1088, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c34" type="StaticBody2D" parent="."]
+position = Vector2(1104.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c34"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c35" type="Sprite2D" parent="."]
+position = Vector2(1120, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c35" type="StaticBody2D" parent="."]
+position = Vector2(1136.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c35"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c36" type="Sprite2D" parent="."]
+position = Vector2(1152, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c36" type="StaticBody2D" parent="."]
+position = Vector2(1168.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c36"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c37" type="Sprite2D" parent="."]
+position = Vector2(1184, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c37" type="StaticBody2D" parent="."]
+position = Vector2(1200.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c37"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c38" type="Sprite2D" parent="."]
+position = Vector2(1216, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c38" type="StaticBody2D" parent="."]
+position = Vector2(1232.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c38"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c39" type="Sprite2D" parent="."]
+position = Vector2(1248, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c39" type="StaticBody2D" parent="."]
+position = Vector2(1264.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c39"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c40" type="Sprite2D" parent="."]
+position = Vector2(1280, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c40" type="StaticBody2D" parent="."]
+position = Vector2(1296.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c40"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c41" type="Sprite2D" parent="."]
+position = Vector2(1312, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c41" type="StaticBody2D" parent="."]
+position = Vector2(1328.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c41"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c42" type="Sprite2D" parent="."]
+position = Vector2(1344, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c42" type="StaticBody2D" parent="."]
+position = Vector2(1360.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c42"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 32)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r1_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 32)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r1_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r2_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 64)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r2_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 80.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r2_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r2_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 64)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r2_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 80.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r2_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r3_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 96)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r3_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 112.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r3_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r3_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 96)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r3_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 112.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r3_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r4_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 128)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r4_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 144.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r4_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r4_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 128)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r4_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 144.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r4_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r5_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 160)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r5_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 176.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r5_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r5_c24" type="Sprite2D" parent="."]
+position = Vector2(768, 160)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r5_c24" type="StaticBody2D" parent="."]
+position = Vector2(784.0, 176.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r5_c24"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r5_c25" type="Sprite2D" parent="."]
+position = Vector2(800, 160)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r5_c25" type="StaticBody2D" parent="."]
+position = Vector2(816.0, 176.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r5_c25"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r5_c26" type="Sprite2D" parent="."]
+position = Vector2(832, 160)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r5_c26" type="StaticBody2D" parent="."]
+position = Vector2(848.0, 176.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r5_c26"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r5_c27" type="Sprite2D" parent="."]
+position = Vector2(864, 160)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r5_c27" type="StaticBody2D" parent="."]
+position = Vector2(880.0, 176.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r5_c27"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r5_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 160)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r5_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 176.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r5_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r6_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 192)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r6_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 208.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r6_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r6_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c4"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c5"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c7"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c15" type="Sprite2D" parent="."]
+position = Vector2(480, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c15" type="StaticBody2D" parent="."]
+position = Vector2(496.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c15"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c16" type="Sprite2D" parent="."]
+position = Vector2(512, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c16" type="StaticBody2D" parent="."]
+position = Vector2(528.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c16"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c17" type="Sprite2D" parent="."]
+position = Vector2(544, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c17" type="StaticBody2D" parent="."]
+position = Vector2(560.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c17"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c18" type="Sprite2D" parent="."]
+position = Vector2(576, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c18" type="StaticBody2D" parent="."]
+position = Vector2(592.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c18"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c30" type="Sprite2D" parent="."]
+position = Vector2(960, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c30" type="StaticBody2D" parent="."]
+position = Vector2(976.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c30"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c31" type="Sprite2D" parent="."]
+position = Vector2(992, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c31" type="StaticBody2D" parent="."]
+position = Vector2(1008.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c31"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c32" type="Sprite2D" parent="."]
+position = Vector2(1024, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c32" type="StaticBody2D" parent="."]
+position = Vector2(1040.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c32"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c33" type="Sprite2D" parent="."]
+position = Vector2(1056, 192)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r6_c33" type="StaticBody2D" parent="."]
+position = Vector2(1072.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c33"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r6_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 192)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r6_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 208.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r6_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 224)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r7_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c17" type="Sprite2D" parent="."]
+position = Vector2(544, 224)
+texture = SubResource("AtlasTexture_crate")
+centered = false
+
+[node name="Solid_r7_c17" type="StaticBody2D" parent="."]
+position = Vector2(560.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c17"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c18" type="Sprite2D" parent="."]
+position = Vector2(576, 224)
+texture = SubResource("AtlasTexture_crate")
+centered = false
+
+[node name="Solid_r7_c18" type="StaticBody2D" parent="."]
+position = Vector2(592.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c18"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c26" type="Sprite2D" parent="."]
+position = Vector2(832, 224)
+texture = SubResource("AtlasTexture_crate")
+centered = false
+
+[node name="Solid_r7_c26" type="StaticBody2D" parent="."]
+position = Vector2(848.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c26"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c27" type="Sprite2D" parent="."]
+position = Vector2(864, 224)
+texture = SubResource("AtlasTexture_crate")
+centered = false
+
+[node name="Solid_r7_c27" type="StaticBody2D" parent="."]
+position = Vector2(880.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c27"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 224)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r7_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 256)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r8_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c1" type="Sprite2D" parent="."]
+position = Vector2(32, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c1" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c1"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c2"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c3"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c4"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c5"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c6"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c7"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 256)
+texture = SubResource("AtlasTexture_steam")
+centered = false
+
+[node name="OneWay_r8_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 272.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r8_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r8_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c9"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c10" type="Sprite2D" parent="."]
+position = Vector2(320, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c10" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c10"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c12" type="Sprite2D" parent="."]
+position = Vector2(384, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c12" type="StaticBody2D" parent="."]
+position = Vector2(400.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c12"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c15" type="Sprite2D" parent="."]
+position = Vector2(480, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c15" type="StaticBody2D" parent="."]
+position = Vector2(496.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c15"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c16" type="Sprite2D" parent="."]
+position = Vector2(512, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c16" type="StaticBody2D" parent="."]
+position = Vector2(528.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c16"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c17" type="Sprite2D" parent="."]
+position = Vector2(544, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c17" type="StaticBody2D" parent="."]
+position = Vector2(560.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c17"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c18" type="Sprite2D" parent="."]
+position = Vector2(576, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c18" type="StaticBody2D" parent="."]
+position = Vector2(592.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c18"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c19" type="Sprite2D" parent="."]
+position = Vector2(608, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c19" type="StaticBody2D" parent="."]
+position = Vector2(624.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c19"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c20" type="Sprite2D" parent="."]
+position = Vector2(640, 256)
+texture = SubResource("AtlasTexture_steam")
+centered = false
+
+[node name="OneWay_r8_c20" type="StaticBody2D" parent="."]
+position = Vector2(656.0, 272.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r8_c20"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r8_c21" type="Sprite2D" parent="."]
+position = Vector2(672, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c21" type="StaticBody2D" parent="."]
+position = Vector2(688.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c21"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c22" type="Sprite2D" parent="."]
+position = Vector2(704, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c22" type="StaticBody2D" parent="."]
+position = Vector2(720.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c22"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c23" type="Sprite2D" parent="."]
+position = Vector2(736, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c23" type="StaticBody2D" parent="."]
+position = Vector2(752.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c23"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c24" type="Sprite2D" parent="."]
+position = Vector2(768, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c24" type="StaticBody2D" parent="."]
+position = Vector2(784.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c24"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c25" type="Sprite2D" parent="."]
+position = Vector2(800, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c25" type="StaticBody2D" parent="."]
+position = Vector2(816.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c25"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c26" type="Sprite2D" parent="."]
+position = Vector2(832, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c26" type="StaticBody2D" parent="."]
+position = Vector2(848.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c26"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c27" type="Sprite2D" parent="."]
+position = Vector2(864, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c27" type="StaticBody2D" parent="."]
+position = Vector2(880.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c27"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c28" type="Sprite2D" parent="."]
+position = Vector2(896, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c28" type="StaticBody2D" parent="."]
+position = Vector2(912.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c28"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c29" type="Sprite2D" parent="."]
+position = Vector2(928, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c29" type="StaticBody2D" parent="."]
+position = Vector2(944.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c29"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c30" type="Sprite2D" parent="."]
+position = Vector2(960, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c30" type="StaticBody2D" parent="."]
+position = Vector2(976.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c30"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c31" type="Sprite2D" parent="."]
+position = Vector2(992, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c31" type="StaticBody2D" parent="."]
+position = Vector2(1008.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c31"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c32" type="Sprite2D" parent="."]
+position = Vector2(1024, 256)
+texture = SubResource("AtlasTexture_steam")
+centered = false
+
+[node name="OneWay_r8_c32" type="StaticBody2D" parent="."]
+position = Vector2(1040.0, 272.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r8_c32"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r8_c33" type="Sprite2D" parent="."]
+position = Vector2(1056, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c33" type="StaticBody2D" parent="."]
+position = Vector2(1072.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c33"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c34" type="Sprite2D" parent="."]
+position = Vector2(1088, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c34" type="StaticBody2D" parent="."]
+position = Vector2(1104.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c34"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c37" type="Sprite2D" parent="."]
+position = Vector2(1184, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c37" type="StaticBody2D" parent="."]
+position = Vector2(1200.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c37"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c38" type="Sprite2D" parent="."]
+position = Vector2(1216, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c38" type="StaticBody2D" parent="."]
+position = Vector2(1232.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c38"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c39" type="Sprite2D" parent="."]
+position = Vector2(1248, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c39" type="StaticBody2D" parent="."]
+position = Vector2(1264.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c39"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c40" type="Sprite2D" parent="."]
+position = Vector2(1280, 256)
+texture = SubResource("AtlasTexture_steam")
+centered = false
+
+[node name="OneWay_r8_c40" type="StaticBody2D" parent="."]
+position = Vector2(1296.0, 272.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r8_c40"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r8_c41" type="Sprite2D" parent="."]
+position = Vector2(1312, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c41" type="StaticBody2D" parent="."]
+position = Vector2(1328.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c41"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c42" type="Sprite2D" parent="."]
+position = Vector2(1344, 256)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r8_c42" type="StaticBody2D" parent="."]
+position = Vector2(1360.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c42"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c43" type="Sprite2D" parent="."]
+position = Vector2(1376, 256)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r8_c43" type="StaticBody2D" parent="."]
+position = Vector2(1392.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c43"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="BoundaryLeft" type="StaticBody2D" parent="."]
+position = Vector2(-4.0, 144.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="BoundaryLeft"]
+shape = SubResource("RectangleShape2D_boundary")
+
+[node name="BoundaryRight" type="StaticBody2D" parent="."]
+position = Vector2(1412.0, 144.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="BoundaryRight"]
+shape = SubResource("RectangleShape2D_boundary")
+
+[node name="Entity_door_r7_c2" type="Area2D" parent="."]
+position = Vector2(80.0, 256)
+script = ExtResource("DoorScript")
+target_scene = "res://scenes/rooms_2d/a-deck-corridor.tscn"
+
+[node name="Visual" type="Sprite2D" parent="Entity_door_r7_c2"]
+z_index = 1
+texture = ExtResource("Tex_door")
+centered = false
+offset = Vector2(-12.0, -36)
+
+[node name="Collision" type="CollisionShape2D" parent="Entity_door_r7_c2"]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Entity_tix_r5_c5" type="Node2D" parent="."]
+position = Vector2(176.0, 192)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r5_c5"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r5_c16" type="Node2D" parent="."]
+position = Vector2(528.0, 192)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r5_c16"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r4_c25" type="Node2D" parent="."]
+position = Vector2(816.0, 160)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r4_c25"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r5_c31" type="Node2D" parent="."]
+position = Vector2(1008.0, 192)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r5_c31"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r7_c41" type="Node2D" parent="."]
+position = Vector2(1328.0, 256)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r7_c41"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(144.0, 256)
+collision_layer = 8
+collision_mask = 3
+script = ExtResource("PlayerScript")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Player"]
+z_index = 1
+sprite_frames = SubResource("SpriteFrames_player")
+animation = &"walk"
+centered = false
+offset = Vector2(-8, -32)
+
+[node name="Collision" type="CollisionShape2D" parent="Player"]
+position = Vector2(0, -14)
+shape = SubResource("RectangleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+zoom = Vector2(3, 3)
+
+[connection signal="body_entered" from="Entity_door_r7_c2" to="Entity_door_r7_c2" method="_on_body_entered"]

@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Main.gd" id="MainScript"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("MainScript")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/VBox"]
+layout_mode = 2
+text = "Godot Experiments"
+horizontal_alignment = 1
+
+[node name="Room2DButton" type="Button" parent="Center/VBox"]
+layout_mode = 2
+text = "2D Room (arrow keys; walk through the door to go 3D)"
+
+[node name="Room3DButton" type="Button" parent="Center/VBox"]
+layout_mode = 2
+text = "3D Room (arrow keys; Esc for menu)"
+
+[connection signal="pressed" from="Center/VBox/Room2DButton" to="." method="_on_room2d_pressed"]
+[connection signal="pressed" from="Center/VBox/Room3DButton" to="." method="_on_room3d_pressed"]

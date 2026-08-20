@@ -1,0 +1,449 @@
+[gd_scene load_steps=24 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/watcher.png" id="Tex_npc_watcher"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door_default"]
+
+[ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
+
+[ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(1, 2, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_floor"]
+atlas = ExtResource("Tileset")
+region = Rect2(0, 0, 32, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_texture = SubResource("AtlasTexture_floor")
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.3219, 0.3128, 0.3231, 1)
+roughness = 0.75
+metallic_specular = 0.35
+
+[sub_resource type="Shader" id="Shader_starfield"]
+code = "shader_type sky;
+
+uniform vec3 sky_top : source_color = vec3(0.01, 0.02, 0.05);
+uniform vec3 sky_horizon : source_color = vec3(0.09, 0.12, 0.2);
+uniform float star_density = 260.0;
+uniform vec3 moon_dir = vec3(0.35, 0.6, -0.65);
+uniform vec3 moon_color : source_color = vec3(0.85, 0.88, 0.82);
+
+float hash13(vec3 p) {
+    p = fract(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+void sky() {
+    float t = clamp(EYEDIR.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 col = mix(sky_horizon, sky_top, pow(t, 0.6));
+    vec3 cell = floor(EYEDIR * star_density);
+    float r = hash13(cell);
+    float star = smoothstep(0.986, 1.0, r) * step(0.02, EYEDIR.y);
+    float tw = 0.7 + 0.3 * hash13(cell + 11.0);
+    col += vec3(star * tw);
+
+    // A soft pale moon disc plus a faint glow halo -- gives the
+    // DirectionalLight3D \"moonlight\" a visible source in the sky instead
+    // of light coming from nowhere.
+    float md = dot(EYEDIR, normalize(moon_dir));
+    float disc = smoothstep(0.9985, 0.9993, md);
+    float halo = smoothstep(0.95, 0.999, md) * 0.15;
+    col += moon_color * (disc + halo);
+
+    COLOR = col;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_starfield"]
+shader = SubResource("Shader_starfield")
+shader_parameter/sky_top = Color(0.01, 0.02, 0.05, 1)
+shader_parameter/sky_horizon = Color(0.09, 0.12, 0.2, 1)
+
+[sub_resource type="Sky" id="Sky_starfield"]
+sky_material = SubResource("ShaderMaterial_starfield")
+
+[sub_resource type="Environment" id="Environment_room"]
+background_mode = 2
+sky = SubResource("Sky_starfield")
+ambient_light_source = 2
+ambient_light_color = Color(0.35, 0.45, 0.65, 1)
+ambient_light_energy = 0.45
+fog_enabled = true
+fog_light_color = Color(0.15, 0.2, 0.32, 1)
+fog_density = 0.02
+glow_enabled = true
+glow_intensity = 0.25
+glow_bloom = 0.05
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary1"]
+size = Vector3(6, 2.3, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary2"]
+size = Vector3(6, 2.3, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary3"]
+size = Vector3(0.2, 2.3, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boundary4"]
+size = Vector3(0.2, 2.3, 6)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_forearm"]
+size = Vector3(0.12, 0.12, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hand"]
+size = Vector3(0.14, 0.1, 0.16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
+albedo_color = Color(0.85, 0.68, 0.54, 1)
+roughness = 0.7
+
+[node name="crows-nest" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_room")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+position = Vector3(0, 8, 0)
+rotation_degrees = Vector3(-50, -30, 0)
+light_color = Color(0.55, 0.65, 0.9, 1)
+light_energy = 0.55
+shadow_enabled = true
+
+[node name="Cell_r0_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r0_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 0.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r1_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 1.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r1_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 1.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r1_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 1.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r2_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 2.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r2_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 2.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r2_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 2.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r3_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 3.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r3_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 3.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r3_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 3.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r4_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 4.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r4_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.1, 4.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r4_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 4.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c0" type="CSGBox3D" parent="."]
+position = Vector3(0.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 0.1, 5.0)
+size = Vector3(1, 0.2, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="Cell_r5_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="Cell_r5_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 0.65, 5.0)
+size = Vector3(1, 1.3, 1)
+use_collision = true
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="BoundaryNorth" type="StaticBody3D" parent="."]
+position = Vector3(2.5, 1.15, -0.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundaryNorth"]
+shape = SubResource("BoxShape3D_boundary1")
+
+[node name="BoundarySouth" type="StaticBody3D" parent="."]
+position = Vector3(2.5, 1.15, 5.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundarySouth"]
+shape = SubResource("BoxShape3D_boundary2")
+
+[node name="BoundaryWest" type="StaticBody3D" parent="."]
+position = Vector3(-0.5, 1.15, 2.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundaryWest"]
+shape = SubResource("BoxShape3D_boundary3")
+
+[node name="BoundaryEast" type="StaticBody3D" parent="."]
+position = Vector3(5.5, 1.15, 2.5)
+
+[node name="Shape" type="CollisionShape3D" parent="BoundaryEast"]
+shape = SubResource("BoxShape3D_boundary4")
+
+[node name="Entity_npc_watcher_r2_c3" type="Node3D" parent="."]
+position = Vector3(3.0, 0.2, 2.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_npc_watcher_r2_c3"]
+position = Vector3(0, 0.5, 0)
+texture = ExtResource("Tex_npc_watcher")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 4
+frame = 0
+
+[node name="Entity_tix__r3_c4" type="Node3D" parent="."]
+position = Vector3(4.0, 0.2, 3.0)
+
+[node name="Sprite" type="Sprite3D" parent="Entity_tix__r3_c4"]
+position = Vector3(0, 0.25, 0)
+texture = ExtResource("Tex_tix_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Entity_door__r5_c2" type="Area3D" parent="."]
+position = Vector3(2.0, 0.2, 5.0)
+script = ExtResource("DoorScript")
+target_scene = "res://scenes/rooms_3d/titanic.tscn"
+
+[node name="Sprite" type="Sprite3D" parent="Entity_door__r5_c2"]
+position = Vector3(0, 0.5625, 0)
+texture = ExtResource("Tex_door_default")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 1
+frame = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Entity_door__r5_c2"]
+position = Vector3(0, 1, 0)
+shape = SubResource("BoxShape3D_door")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+position = Vector3(3.0, 0.2, 4.0)
+script = ExtResource("PlayerScript")
+
+[node name="Collision" type="CollisionShape3D" parent="Player"]
+position = Vector3(0, 0.5, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Sprite" type="Sprite3D" parent="Player"]
+position = Vector3(0, 0.5, 0)
+texture = ExtResource("Tex_player")
+pixel_size = 0.03125
+billboard = 2
+shaded = false
+texture_filter = 0
+hframes = 4
+frame = 0
+
+[node name="Camera3D" type="Camera3D" parent="Player"]
+position = Vector3(0, 0.85, 0)
+fov = 75
+
+[node name="Arm" type="Node3D" parent="Player/Camera3D"]
+position = Vector3(0.32, -0.32, -0.45)
+rotation_degrees = Vector3(15, -20, 10)
+
+[node name="Forearm" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("BoxMesh_forearm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 0, -0.15)
+
+[node name="Hand" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("BoxMesh_hand")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 0, -0.42)
+
+[connection signal="body_entered" from="Entity_door__r5_c2" to="Entity_door__r5_c2" method="_on_body_entered"]

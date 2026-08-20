@@ -1,0 +1,4 @@
+# Godot 4 editor cache/import artifacts -- regenerated locally, not source.
+.godot/
+.mono/
+data_*/

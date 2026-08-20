@@ -1,0 +1,3616 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door_default"]
+
+[ext_resource type="Script" path="res://scripts/Door2D.gd" id="DoorScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/bed.png" id="Tex_bed_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/table.png" id="Tex_table_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
+
+[ext_resource type="Script" path="res://scripts/Player2D.gd" id="PlayerScript"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(24, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_floor"]
+atlas = ExtResource("Tileset")
+region = Rect2(0, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wall"]
+atlas = ExtResource("Tileset")
+region = Rect2(32, 0, 32, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f0"]
+atlas = ExtResource("Tex_player")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f1"]
+atlas = ExtResource("Tex_player")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f2"]
+atlas = ExtResource("Tex_player")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f3"]
+atlas = ExtResource("Tex_player")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_player"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f3")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 6.666666666666667
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(12, 12)
+
+[node name="second-class-quarters" type="Node2D"]
+y_sort_enabled = true
+
+[node name="Mood" type="CanvasModulate" parent="."]
+color = Color(0.9250, 0.8900, 0.8400, 1)
+
+[node name="Tile_r0_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 0.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c0" type="StaticBody2D" parent="."]
+position = Vector2(0.0, 0.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 8.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c1" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 8.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c1"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 16.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c2" type="StaticBody2D" parent="."]
+position = Vector2(32.0, 16.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c2"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 24.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c3" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 24.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c3"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 32.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c4" type="StaticBody2D" parent="."]
+position = Vector2(64.0, 32.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c4"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 40.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c5" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 40.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c5"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 48.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c6" type="StaticBody2D" parent="."]
+position = Vector2(96.0, 48.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c6"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 56.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c7" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 56.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c7"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 64.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c8" type="StaticBody2D" parent="."]
+position = Vector2(128.0, 64.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 72.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c9" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 72.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c9"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 80.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c10" type="StaticBody2D" parent="."]
+position = Vector2(160.0, 80.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c10"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 88.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c11" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 88.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c11"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 96.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c12" type="StaticBody2D" parent="."]
+position = Vector2(192.0, 96.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c12"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 104.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c13" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 104.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c13"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 112.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c14" type="StaticBody2D" parent="."]
+position = Vector2(224.0, 112.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c14"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 120.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c15" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 120.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c15"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 128.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c16" type="StaticBody2D" parent="."]
+position = Vector2(256.0, 128.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 136.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c17" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 136.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c17"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 144.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c18" type="StaticBody2D" parent="."]
+position = Vector2(288.0, 144.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c18"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 152.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c19" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 152.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c19"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(320.0, 160.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c20" type="StaticBody2D" parent="."]
+position = Vector2(320.0, 160.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c20"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(336.0, 168.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c21" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 168.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c21"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(352.0, 176.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c22" type="StaticBody2D" parent="."]
+position = Vector2(352.0, 176.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c22"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(368.0, 184.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c23" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 184.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c23"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(384.0, 192.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c24" type="StaticBody2D" parent="."]
+position = Vector2(384.0, 192.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c24"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r0_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(400.0, 200.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r0_c25" type="StaticBody2D" parent="."]
+position = Vector2(400.0, 200.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r0_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r1_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 8.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r1_c0" type="StaticBody2D" parent="."]
+position = Vector2(-16.0, 8.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r1_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r1_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 16.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 24.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 32.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 40.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 48.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 56.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 64.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 72.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r1_c8" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 72.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r1_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r1_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 136.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r1_c16" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 136.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r1_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r1_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(320.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(336.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(352.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(368.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r1_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(384.0, 208.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r1_c25" type="StaticBody2D" parent="."]
+position = Vector2(384.0, 208.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r1_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r2_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 16.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r2_c0" type="StaticBody2D" parent="."]
+position = Vector2(-32.0, 16.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r2_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r2_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 24.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 32.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 40.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 48.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 56.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 64.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 72.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 80.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r2_c8" type="StaticBody2D" parent="."]
+position = Vector2(96.0, 80.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r2_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r2_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 144.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r2_c16" type="StaticBody2D" parent="."]
+position = Vector2(224.0, 144.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r2_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r2_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(320.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(336.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(352.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r2_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(368.0, 216.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r2_c25" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 216.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r2_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r3_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 24.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r3_c0" type="StaticBody2D" parent="."]
+position = Vector2(-48.0, 24.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r3_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r3_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 32.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 40.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 48.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 56.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 64.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 72.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 88.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r3_c8" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 88.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r3_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r3_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 152.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r3_c16" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 152.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r3_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r3_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(320.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(336.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r3_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(352.0, 224.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r3_c25" type="StaticBody2D" parent="."]
+position = Vector2(352.0, 224.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r3_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r4_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 32.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r4_c0" type="StaticBody2D" parent="."]
+position = Vector2(-64.0, 32.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r4_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r4_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 40.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 48.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 56.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 64.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 72.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 96.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r4_c8" type="StaticBody2D" parent="."]
+position = Vector2(64.0, 96.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r4_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r4_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 160.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r4_c16" type="StaticBody2D" parent="."]
+position = Vector2(192.0, 160.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r4_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r4_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(320.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r4_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(336.0, 232.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r4_c25" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 232.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r4_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r5_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 40.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r5_c0" type="StaticBody2D" parent="."]
+position = Vector2(-80.0, 40.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r5_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r5_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 48.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 56.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 64.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 72.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 104.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r5_c8" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 104.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r5_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r5_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 168.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r5_c16" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 168.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r5_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r5_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r5_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(320.0, 240.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r5_c25" type="StaticBody2D" parent="."]
+position = Vector2(320.0, 240.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r5_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 48.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c0" type="StaticBody2D" parent="."]
+position = Vector2(-96.0, 48.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 56.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c1" type="StaticBody2D" parent="."]
+position = Vector2(-80.0, 56.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c1"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 64.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c2" type="StaticBody2D" parent="."]
+position = Vector2(-64.0, 64.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c2"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 72.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c3" type="StaticBody2D" parent="."]
+position = Vector2(-48.0, 72.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c3"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r6_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 88.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c5" type="StaticBody2D" parent="."]
+position = Vector2(-16.0, 88.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c5"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 96.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c6" type="StaticBody2D" parent="."]
+position = Vector2(0.0, 96.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c6"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 104.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c7" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 104.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c7"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 112.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c8" type="StaticBody2D" parent="."]
+position = Vector2(32.0, 112.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 120.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c9" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 120.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c9"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 128.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c10" type="StaticBody2D" parent="."]
+position = Vector2(64.0, 128.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c10"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 136.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c11" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 136.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c11"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r6_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 152.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c13" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 152.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c13"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 160.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c14" type="StaticBody2D" parent="."]
+position = Vector2(128.0, 160.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c14"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 168.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c15" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 168.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c15"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 176.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c16" type="StaticBody2D" parent="."]
+position = Vector2(160.0, 176.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 184.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c17" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 184.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c17"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 192.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c18" type="StaticBody2D" parent="."]
+position = Vector2(192.0, 192.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c18"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 200.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c19" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 200.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c19"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r6_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 216.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c21" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 216.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c21"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 224.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c22" type="StaticBody2D" parent="."]
+position = Vector2(256.0, 224.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c22"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 232.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c23" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 232.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c23"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 240.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c24" type="StaticBody2D" parent="."]
+position = Vector2(288.0, 240.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c24"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r6_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(304.0, 248.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r6_c25" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 248.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r6_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r7_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 56.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r7_c0" type="StaticBody2D" parent="."]
+position = Vector2(-112.0, 56.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r7_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r7_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 64.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 72.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 240.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r7_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(288.0, 256.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r7_c25" type="StaticBody2D" parent="."]
+position = Vector2(288.0, 256.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r7_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r8_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 64.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r8_c0" type="StaticBody2D" parent="."]
+position = Vector2(-128.0, 64.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r8_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r8_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 72.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 80.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 240.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 256.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r8_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(272.0, 264.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r8_c25" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 264.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r8_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 72.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c0" type="StaticBody2D" parent="."]
+position = Vector2(-144.0, 72.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 80.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c1" type="StaticBody2D" parent="."]
+position = Vector2(-128.0, 80.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c1"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 88.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c2" type="StaticBody2D" parent="."]
+position = Vector2(-112.0, 88.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c2"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 96.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c3" type="StaticBody2D" parent="."]
+position = Vector2(-96.0, 96.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c3"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r9_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 112.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c5" type="StaticBody2D" parent="."]
+position = Vector2(-64.0, 112.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c5"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 120.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c6" type="StaticBody2D" parent="."]
+position = Vector2(-48.0, 120.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c6"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 128.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c7" type="StaticBody2D" parent="."]
+position = Vector2(-32.0, 128.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c7"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 136.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c8" type="StaticBody2D" parent="."]
+position = Vector2(-16.0, 136.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 144.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c9" type="StaticBody2D" parent="."]
+position = Vector2(0.0, 144.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c9"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 152.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c10" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 152.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c10"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 160.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c11" type="StaticBody2D" parent="."]
+position = Vector2(32.0, 160.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c11"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r9_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 176.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c13" type="StaticBody2D" parent="."]
+position = Vector2(64.0, 176.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c13"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 184.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c14" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 184.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c14"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 192.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c15" type="StaticBody2D" parent="."]
+position = Vector2(96.0, 192.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c15"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 200.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c16" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 200.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 208.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c17" type="StaticBody2D" parent="."]
+position = Vector2(128.0, 208.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c17"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 216.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c18" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 216.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c18"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 224.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c19" type="StaticBody2D" parent="."]
+position = Vector2(160.0, 224.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c19"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r9_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 240.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c21" type="StaticBody2D" parent="."]
+position = Vector2(192.0, 240.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c21"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 248.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c22" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 248.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c22"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 256.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c23" type="StaticBody2D" parent="."]
+position = Vector2(224.0, 256.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c23"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 264.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c24" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 264.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c24"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r9_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(256.0, 272.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r9_c25" type="StaticBody2D" parent="."]
+position = Vector2(256.0, 272.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r9_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r10_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-160.0, 80.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r10_c0" type="StaticBody2D" parent="."]
+position = Vector2(-160.0, 80.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r10_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r10_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 88.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 144.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r10_c8" type="StaticBody2D" parent="."]
+position = Vector2(-32.0, 144.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r10_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r10_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 208.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r10_c16" type="StaticBody2D" parent="."]
+position = Vector2(96.0, 208.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r10_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r10_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 240.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 256.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 264.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 272.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r10_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(240.0, 280.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r10_c25" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 280.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r10_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r11_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-176.0, 88.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r11_c0" type="StaticBody2D" parent="."]
+position = Vector2(-176.0, 88.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r11_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r11_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-160.0, 96.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 152.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r11_c8" type="StaticBody2D" parent="."]
+position = Vector2(-48.0, 152.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r11_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r11_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 216.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r11_c16" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 216.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r11_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r11_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 240.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 256.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 264.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 272.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 280.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r11_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(224.0, 288.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r11_c25" type="StaticBody2D" parent="."]
+position = Vector2(224.0, 288.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r11_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r12_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-192.0, 96.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r12_c0" type="StaticBody2D" parent="."]
+position = Vector2(-192.0, 96.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r12_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r12_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-176.0, 104.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-160.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 160.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r12_c8" type="StaticBody2D" parent="."]
+position = Vector2(-64.0, 160.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r12_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r12_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 224.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r12_c16" type="StaticBody2D" parent="."]
+position = Vector2(64.0, 224.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r12_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r12_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 240.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 256.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 264.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 272.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 280.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 288.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r12_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(208.0, 296.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r12_c25" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 296.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r12_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r13_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-208.0, 104.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r13_c0" type="StaticBody2D" parent="."]
+position = Vector2(-208.0, 104.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r13_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r13_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-192.0, 112.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-176.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-160.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 168.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r13_c8" type="StaticBody2D" parent="."]
+position = Vector2(-80.0, 168.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r13_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r13_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 176.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 232.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r13_c16" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 232.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r13_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r13_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 240.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 256.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 264.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 272.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 280.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 288.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 296.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r13_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(192.0, 304.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r13_c25" type="StaticBody2D" parent="."]
+position = Vector2(192.0, 304.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r13_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r14_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-224.0, 112.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r14_c0" type="StaticBody2D" parent="."]
+position = Vector2(-224.0, 112.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r14_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r14_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-208.0, 120.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-192.0, 128.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-176.0, 136.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-160.0, 144.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 152.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 160.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 168.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 176.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r14_c8" type="StaticBody2D" parent="."]
+position = Vector2(-96.0, 176.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r14_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r14_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 184.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 192.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 200.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 208.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 216.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 224.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 232.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 240.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r14_c16" type="StaticBody2D" parent="."]
+position = Vector2(32.0, 240.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r14_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r14_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 248.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 256.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 264.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 272.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 280.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 288.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 296.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 304.0)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Tile_r14_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(176.0, 312.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r14_c25" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 312.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r14_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c0_k0" type="Sprite2D" parent="."]
+position = Vector2(-240.0, 120.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c0" type="StaticBody2D" parent="."]
+position = Vector2(-240.0, 120.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c0"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c1_k0" type="Sprite2D" parent="."]
+position = Vector2(-224.0, 128.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c1" type="StaticBody2D" parent="."]
+position = Vector2(-224.0, 128.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c1"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c2_k0" type="Sprite2D" parent="."]
+position = Vector2(-208.0, 136.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c2" type="StaticBody2D" parent="."]
+position = Vector2(-208.0, 136.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c2"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c3_k0" type="Sprite2D" parent="."]
+position = Vector2(-192.0, 144.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c3" type="StaticBody2D" parent="."]
+position = Vector2(-192.0, 144.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c3"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c4_k0" type="Sprite2D" parent="."]
+position = Vector2(-176.0, 152.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c4" type="StaticBody2D" parent="."]
+position = Vector2(-176.0, 152.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c4"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c5_k0" type="Sprite2D" parent="."]
+position = Vector2(-160.0, 160.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c5" type="StaticBody2D" parent="."]
+position = Vector2(-160.0, 160.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c5"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c6_k0" type="Sprite2D" parent="."]
+position = Vector2(-144.0, 168.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c6" type="StaticBody2D" parent="."]
+position = Vector2(-144.0, 168.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c6"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c7_k0" type="Sprite2D" parent="."]
+position = Vector2(-128.0, 176.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c7" type="StaticBody2D" parent="."]
+position = Vector2(-128.0, 176.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c7"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c8_k0" type="Sprite2D" parent="."]
+position = Vector2(-112.0, 184.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c8" type="StaticBody2D" parent="."]
+position = Vector2(-112.0, 184.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c8"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c9_k0" type="Sprite2D" parent="."]
+position = Vector2(-96.0, 192.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c9" type="StaticBody2D" parent="."]
+position = Vector2(-96.0, 192.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c9"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c10_k0" type="Sprite2D" parent="."]
+position = Vector2(-80.0, 200.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c10" type="StaticBody2D" parent="."]
+position = Vector2(-80.0, 200.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c10"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c11_k0" type="Sprite2D" parent="."]
+position = Vector2(-64.0, 208.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c11" type="StaticBody2D" parent="."]
+position = Vector2(-64.0, 208.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c11"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c12_k0" type="Sprite2D" parent="."]
+position = Vector2(-48.0, 216.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c12" type="StaticBody2D" parent="."]
+position = Vector2(-48.0, 216.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c12"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c13_k0" type="Sprite2D" parent="."]
+position = Vector2(-32.0, 224.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c13" type="StaticBody2D" parent="."]
+position = Vector2(-32.0, 224.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c13"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c14_k0" type="Sprite2D" parent="."]
+position = Vector2(-16.0, 232.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c14" type="StaticBody2D" parent="."]
+position = Vector2(-16.0, 232.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c14"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c15_k0" type="Sprite2D" parent="."]
+position = Vector2(0.0, 240.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c15" type="StaticBody2D" parent="."]
+position = Vector2(0.0, 240.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c15"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c16_k0" type="Sprite2D" parent="."]
+position = Vector2(16.0, 248.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c16" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 248.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c16"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c17_k0" type="Sprite2D" parent="."]
+position = Vector2(32.0, 256.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c17" type="StaticBody2D" parent="."]
+position = Vector2(32.0, 256.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c17"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c18_k0" type="Sprite2D" parent="."]
+position = Vector2(48.0, 264.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c18" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 264.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c18"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c19_k0" type="Sprite2D" parent="."]
+position = Vector2(64.0, 272.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c19" type="StaticBody2D" parent="."]
+position = Vector2(64.0, 272.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c19"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c20_k0" type="Sprite2D" parent="."]
+position = Vector2(80.0, 280.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c20" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 280.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c20"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c21_k0" type="Sprite2D" parent="."]
+position = Vector2(96.0, 288.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c21" type="StaticBody2D" parent="."]
+position = Vector2(96.0, 288.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c21"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c22_k0" type="Sprite2D" parent="."]
+position = Vector2(112.0, 296.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c22" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 296.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c22"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c23_k0" type="Sprite2D" parent="."]
+position = Vector2(128.0, 304.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c23" type="StaticBody2D" parent="."]
+position = Vector2(128.0, 304.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c23"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c24_k0" type="Sprite2D" parent="."]
+position = Vector2(144.0, 312.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c24" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 312.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c24"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Tile_r15_c25_k0" type="Sprite2D" parent="."]
+position = Vector2(160.0, 320.0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+offset = Vector2(-16.0, -16.0)
+
+[node name="Wall_r15_c25" type="StaticBody2D" parent="."]
+position = Vector2(160.0, 320.0)
+
+[node name="Collision" type="CollisionPolygon2D" parent="Wall_r15_c25"]
+polygon = PackedVector2Array(0, -8.0, 16.0, 0, 0, 8.0, -16.0, 0)
+
+[node name="Entity_door__r7_c2" type="Area2D" parent="."]
+position = Vector2(-80.0, 72.0)
+script = ExtResource("DoorScript")
+target_scene = "res://scenes/rooms_2d/a-deck-corridor.tscn"
+
+[node name="Visual" type="Sprite2D" parent="Entity_door__r7_c2"]
+z_index = 1
+texture = ExtResource("Tex_door_default")
+centered = false
+offset = Vector2(-12.0, -36)
+
+[node name="Collision" type="CollisionShape2D" parent="Entity_door__r7_c2"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Entity_bed__r2_c2" type="Node2D" parent="."]
+position = Vector2(0.0, 32.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_bed__r2_c2"]
+z_index = 1
+texture = ExtResource("Tex_bed_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_table__r3_c5" type="Node2D" parent="."]
+position = Vector2(32.0, 64.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_table__r3_c5"]
+z_index = 1
+texture = ExtResource("Tex_table_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_bed__r12_c2" type="Node2D" parent="."]
+position = Vector2(-160.0, 112.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_bed__r12_c2"]
+z_index = 1
+texture = ExtResource("Tex_bed_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_table__r13_c5" type="Node2D" parent="."]
+position = Vector2(-128.0, 144.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_table__r13_c5"]
+z_index = 1
+texture = ExtResource("Tex_table_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_bed__r2_c10" type="Node2D" parent="."]
+position = Vector2(128.0, 96.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_bed__r2_c10"]
+z_index = 1
+texture = ExtResource("Tex_bed_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_table__r3_c13" type="Node2D" parent="."]
+position = Vector2(160.0, 128.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_table__r3_c13"]
+z_index = 1
+texture = ExtResource("Tex_table_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_bed__r12_c10" type="Node2D" parent="."]
+position = Vector2(-32.0, 176.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_bed__r12_c10"]
+z_index = 1
+texture = ExtResource("Tex_bed_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_table__r13_c13" type="Node2D" parent="."]
+position = Vector2(0.0, 208.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_table__r13_c13"]
+z_index = 1
+texture = ExtResource("Tex_table_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_bed__r2_c18" type="Node2D" parent="."]
+position = Vector2(256.0, 160.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_bed__r2_c18"]
+z_index = 1
+texture = ExtResource("Tex_bed_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_table__r3_c21" type="Node2D" parent="."]
+position = Vector2(288.0, 192.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_table__r3_c21"]
+z_index = 1
+texture = ExtResource("Tex_table_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_bed__r12_c18" type="Node2D" parent="."]
+position = Vector2(96.0, 240.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_bed__r12_c18"]
+z_index = 1
+texture = ExtResource("Tex_bed_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_table__r13_c21" type="Node2D" parent="."]
+position = Vector2(128.0, 272.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_table__r13_c21"]
+z_index = 1
+texture = ExtResource("Tex_table_default")
+centered = false
+offset = Vector2(-16.0, -24)
+
+[node name="Entity_tix__r2_c6" type="Node2D" parent="."]
+position = Vector2(64.0, 64.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix__r2_c6"]
+z_index = 1
+texture = ExtResource("Tex_tix_default")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix__r2_c14" type="Node2D" parent="."]
+position = Vector2(192.0, 128.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix__r2_c14"]
+z_index = 1
+texture = ExtResource("Tex_tix_default")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix__r2_c22" type="Node2D" parent="."]
+position = Vector2(320.0, 192.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix__r2_c22"]
+z_index = 1
+texture = ExtResource("Tex_tix_default")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix__r13_c6" type="Node2D" parent="."]
+position = Vector2(-112.0, 152.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix__r13_c6"]
+z_index = 1
+texture = ExtResource("Tex_tix_default")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix__r13_c14" type="Node2D" parent="."]
+position = Vector2(16.0, 216.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix__r13_c14"]
+z_index = 1
+texture = ExtResource("Tex_tix_default")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix__r13_c22" type="Node2D" parent="."]
+position = Vector2(144.0, 280.0)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix__r13_c22"]
+z_index = 1
+texture = ExtResource("Tex_tix_default")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(-64.0, 96.0)
+script = ExtResource("PlayerScript")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Player"]
+z_index = 1
+sprite_frames = SubResource("SpriteFrames_player")
+animation = &"walk"
+centered = false
+offset = Vector2(-8, -32)
+
+[node name="Collision" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+zoom = Vector2(3, 3)
+
+[connection signal="body_entered" from="Entity_door__r7_c2" to="Entity_door__r7_c2" method="_on_body_entered"]

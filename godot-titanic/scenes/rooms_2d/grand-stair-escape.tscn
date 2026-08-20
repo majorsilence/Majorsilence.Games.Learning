@@ -1,0 +1,2411 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/platformer-tileset.png" id="Tileset"]
+
+[ext_resource type="Script" path="res://scripts/Ladder2D.gd" id="LadderScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door"]
+
+[ext_resource type="Script" path="res://scripts/Door2D.gd" id="DoorScript"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix"]
+
+[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
+
+[ext_resource type="Script" path="res://scripts/Player2DSide.gd" id="PlayerScript"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_floor"]
+atlas = ExtResource("Tileset")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wall"]
+atlas = ExtResource("Tileset")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_grating"]
+atlas = ExtResource("Tileset")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ladder"]
+atlas = ExtResource("Tileset")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_solid"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oneway"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_boundary"]
+size = Vector2(8, 896)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(24, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f0"]
+atlas = ExtResource("Tex_player")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f1"]
+atlas = ExtResource("Tex_player")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f2"]
+atlas = ExtResource("Tex_player")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_player_f3"]
+atlas = ExtResource("Tex_player")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_player"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_player_f3")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 6.666666666666667
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(12, 28)
+
+[node name="grand-stair-escape" type="Node2D"]
+
+[node name="Tile_r0_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c1" type="Sprite2D" parent="."]
+position = Vector2(32, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c1" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c1"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c2"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c3"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c4"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c5"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c6"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c7"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c8"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c9"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c10" type="Sprite2D" parent="."]
+position = Vector2(320, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c10" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c10"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r0_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 0)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r0_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 16.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r0_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 32)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r1_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c1" type="Sprite2D" parent="."]
+position = Vector2(32, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c1" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c1"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c2"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c3"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c4"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c5"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 32)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r1_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 48.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r1_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r1_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 48.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r1_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r1_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c7"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c8"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c9"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c10" type="Sprite2D" parent="."]
+position = Vector2(320, 32)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r1_c10" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c10"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r1_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 32)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r1_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 48.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r1_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r2_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 64)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r2_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 80.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r2_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r2_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 64)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r2_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 80.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r2_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r2_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 80.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r2_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r2_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 64)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r2_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 80.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r2_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r3_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 96)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r3_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 112.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r3_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r3_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 96)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r3_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 112.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r3_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r3_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 112.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r3_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r3_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 96)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r3_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 112.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r3_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r4_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 128)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r4_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 144.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r4_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r4_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 128)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r4_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 144.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r4_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r4_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 144.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r4_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r4_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 128)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r4_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 144.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r4_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r5_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 160)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r5_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 176.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r5_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r5_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 160)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r5_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 176.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r5_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r5_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 176.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r5_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r5_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 160)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r5_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 176.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r5_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r6_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 192)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r6_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 208.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r6_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r6_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 192)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r6_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 208.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r6_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r6_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 208.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r6_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r6_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 192)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r6_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 208.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r6_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 224)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r7_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r7_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 224)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r7_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r7_c2" type="Area2D" parent="."]
+position = Vector2(80.0, 240.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r7_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r7_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 224)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r7_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r7_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 224)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r7_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c4"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r7_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 224)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r7_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c5"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r7_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 224)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r7_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r7_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 240.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r7_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r7_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 224)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r7_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c7"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r7_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 224)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r7_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r7_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 224)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r7_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 240.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r7_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r7_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 224)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r7_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 240.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r7_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 256)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r8_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r8_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 256)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r8_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 272.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r8_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r8_c2" type="Area2D" parent="."]
+position = Vector2(80.0, 272.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r8_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r8_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 256)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r8_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 272.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r8_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r9_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 288)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r9_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 304.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r9_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r9_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 288)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r9_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 304.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r9_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r9_c2" type="Area2D" parent="."]
+position = Vector2(80.0, 304.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r9_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r9_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 288)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r9_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 304.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r9_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r10_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 320)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r10_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 336.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r10_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r10_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 320)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r10_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 336.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r10_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r10_c2" type="Area2D" parent="."]
+position = Vector2(80.0, 336.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r10_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r10_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 320)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r10_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 336.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r10_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r11_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 352)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r11_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 368.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r11_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r11_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 352)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r11_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 368.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r11_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r11_c2" type="Area2D" parent="."]
+position = Vector2(80.0, 368.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r11_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r11_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 352)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r11_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 368.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r11_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r12_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 384)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r12_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 400.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r12_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r12_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c4"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c5"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c7"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 384)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r12_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r12_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 384)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r12_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 400.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r12_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r12_c9" type="Area2D" parent="."]
+position = Vector2(304.0, 400.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r12_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r12_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 384)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r12_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 400.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r12_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r13_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 416)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r13_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 432.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r13_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r13_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 416)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r13_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 432.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r13_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r13_c9" type="Area2D" parent="."]
+position = Vector2(304.0, 432.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r13_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r13_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 416)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r13_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 432.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r13_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r14_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 448)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r14_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 464.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r14_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r14_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 448)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r14_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 464.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r14_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r14_c9" type="Area2D" parent="."]
+position = Vector2(304.0, 464.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r14_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r14_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 448)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r14_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 464.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r14_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r15_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 480)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r15_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 496.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r15_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r15_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 480)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r15_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 496.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r15_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r15_c9" type="Area2D" parent="."]
+position = Vector2(304.0, 496.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r15_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r15_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 480)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r15_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 496.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r15_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r16_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 512)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r16_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 528.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r16_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r16_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 512)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r16_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 528.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r16_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r16_c9" type="Area2D" parent="."]
+position = Vector2(304.0, 528.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r16_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r16_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 512)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r16_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 528.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r16_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r17_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 544)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r17_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 560.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r17_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r17_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 544)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r17_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r17_c3" type="Area2D" parent="."]
+position = Vector2(112.0, 560.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r17_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r17_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c4"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c5"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c7"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 544)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r17_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 560.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r17_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r17_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 544)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r17_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 560.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r17_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r18_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 576)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r18_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 592.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r18_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r18_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 576)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r18_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 592.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r18_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r18_c3" type="Area2D" parent="."]
+position = Vector2(112.0, 592.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r18_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r18_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 576)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r18_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 592.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r18_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r19_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 608)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r19_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 624.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r19_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r19_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 608)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r19_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 624.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r19_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r19_c3" type="Area2D" parent="."]
+position = Vector2(112.0, 624.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r19_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r19_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 608)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r19_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 624.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r19_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r20_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 640)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r20_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 656.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r20_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r20_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 640)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r20_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 656.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r20_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r20_c3" type="Area2D" parent="."]
+position = Vector2(112.0, 656.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r20_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r20_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 640)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r20_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 656.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r20_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r21_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 672)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r21_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 688.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r21_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r21_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 672)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r21_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 688.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r21_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r21_c3" type="Area2D" parent="."]
+position = Vector2(112.0, 688.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r21_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r21_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 672)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r21_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 688.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r21_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r22_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 704)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r22_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 720.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r22_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r22_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c2"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c3"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c4"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c5"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c6"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c7"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 704)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r22_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r22_c8" type="Area2D" parent="."]
+position = Vector2(272.0, 720.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r22_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r22_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 704)
+texture = SubResource("AtlasTexture_grating")
+centered = false
+
+[node name="OneWay_r22_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 720.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r22_c9"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Tile_r22_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 704)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r22_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 720.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r22_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r23_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 736)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r23_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 752.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r23_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r23_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 736)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r23_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 752.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r23_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r23_c8" type="Area2D" parent="."]
+position = Vector2(272.0, 752.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r23_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r23_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 736)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r23_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 752.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r23_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r24_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 768)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r24_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 784.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r24_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r24_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 768)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r24_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 784.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r24_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r24_c8" type="Area2D" parent="."]
+position = Vector2(272.0, 784.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r24_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r24_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 768)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r24_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 784.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r24_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r25_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 800)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r25_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 816.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r25_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r25_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 800)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r25_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 816.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r25_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r25_c8" type="Area2D" parent="."]
+position = Vector2(272.0, 816.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r25_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r25_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 800)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r25_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 816.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r25_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r26_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 832)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r26_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 848.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r26_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r26_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 832)
+texture = SubResource("AtlasTexture_ladder")
+centered = false
+
+[node name="OneWay_r26_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 848.0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="OneWay_r26_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+one_way_collision = true
+
+[node name="Ladder_r26_c8" type="Area2D" parent="."]
+position = Vector2(272.0, 848.0)
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("LadderScript")
+
+[node name="Collision" type="CollisionShape2D" parent="Ladder_r26_c8"]
+shape = SubResource("RectangleShape2D_oneway")
+
+[node name="Tile_r26_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 832)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r26_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 848.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r26_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c0" type="Sprite2D" parent="."]
+position = Vector2(0, 864)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r27_c0" type="StaticBody2D" parent="."]
+position = Vector2(16.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c0"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c1" type="Sprite2D" parent="."]
+position = Vector2(32, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c1" type="StaticBody2D" parent="."]
+position = Vector2(48.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c1"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c2" type="Sprite2D" parent="."]
+position = Vector2(64, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c2" type="StaticBody2D" parent="."]
+position = Vector2(80.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c2"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c3" type="Sprite2D" parent="."]
+position = Vector2(96, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c3" type="StaticBody2D" parent="."]
+position = Vector2(112.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c3"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c4" type="Sprite2D" parent="."]
+position = Vector2(128, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c4" type="StaticBody2D" parent="."]
+position = Vector2(144.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c4"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c5" type="Sprite2D" parent="."]
+position = Vector2(160, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c5" type="StaticBody2D" parent="."]
+position = Vector2(176.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c5"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c6" type="Sprite2D" parent="."]
+position = Vector2(192, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c6" type="StaticBody2D" parent="."]
+position = Vector2(208.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c6"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c7" type="Sprite2D" parent="."]
+position = Vector2(224, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c7" type="StaticBody2D" parent="."]
+position = Vector2(240.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c7"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c8" type="Sprite2D" parent="."]
+position = Vector2(256, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c8" type="StaticBody2D" parent="."]
+position = Vector2(272.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c8"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c9" type="Sprite2D" parent="."]
+position = Vector2(288, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c9" type="StaticBody2D" parent="."]
+position = Vector2(304.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c9"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c10" type="Sprite2D" parent="."]
+position = Vector2(320, 864)
+texture = SubResource("AtlasTexture_floor")
+centered = false
+
+[node name="Solid_r27_c10" type="StaticBody2D" parent="."]
+position = Vector2(336.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c10"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="Tile_r27_c11" type="Sprite2D" parent="."]
+position = Vector2(352, 864)
+texture = SubResource("AtlasTexture_wall")
+centered = false
+
+[node name="Solid_r27_c11" type="StaticBody2D" parent="."]
+position = Vector2(368.0, 880.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape2D" parent="Solid_r27_c11"]
+shape = SubResource("RectangleShape2D_solid")
+
+[node name="BoundaryLeft" type="StaticBody2D" parent="."]
+position = Vector2(-4.0, 448.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="BoundaryLeft"]
+shape = SubResource("RectangleShape2D_boundary")
+
+[node name="BoundaryRight" type="StaticBody2D" parent="."]
+position = Vector2(388.0, 448.0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="BoundaryRight"]
+shape = SubResource("RectangleShape2D_boundary")
+
+[node name="Entity_door_r26_c4" type="Area2D" parent="."]
+position = Vector2(144.0, 864)
+script = ExtResource("DoorScript")
+target_scene = "res://scenes/rooms_2d/a-deck-corridor.tscn"
+
+[node name="Visual" type="Sprite2D" parent="Entity_door_r26_c4"]
+z_index = 1
+texture = ExtResource("Tex_door")
+centered = false
+offset = Vector2(-12.0, -36)
+
+[node name="Collision" type="CollisionShape2D" parent="Entity_door_r26_c4"]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Entity_door_r1_c6" type="Area2D" parent="."]
+position = Vector2(208.0, 64)
+script = ExtResource("DoorScript")
+target_scene = "res://scenes/rooms_2d/titanic.tscn"
+
+[node name="Visual" type="Sprite2D" parent="Entity_door_r1_c6"]
+z_index = 1
+texture = ExtResource("Tex_door")
+centered = false
+offset = Vector2(-12.0, -36)
+
+[node name="Collision" type="CollisionShape2D" parent="Entity_door_r1_c6"]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Entity_tix_r21_c4" type="Node2D" parent="."]
+position = Vector2(144.0, 704)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r21_c4"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r16_c5" type="Node2D" parent="."]
+position = Vector2(176.0, 544)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r16_c5"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r11_c7" type="Node2D" parent="."]
+position = Vector2(240.0, 384)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r11_c7"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r6_c8" type="Node2D" parent="."]
+position = Vector2(272.0, 224)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r6_c8"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Entity_tix_r3_c6" type="Node2D" parent="."]
+position = Vector2(208.0, 128)
+
+[node name="Visual" type="Sprite2D" parent="Entity_tix_r3_c6"]
+z_index = 1
+texture = ExtResource("Tex_tix")
+centered = false
+offset = Vector2(-8.0, -16)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(208.0, 864)
+collision_layer = 8
+collision_mask = 3
+script = ExtResource("PlayerScript")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Player"]
+z_index = 1
+sprite_frames = SubResource("SpriteFrames_player")
+animation = &"walk"
+centered = false
+offset = Vector2(-8, -32)
+
+[node name="Collision" type="CollisionShape2D" parent="Player"]
+position = Vector2(0, -14)
+shape = SubResource("RectangleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+zoom = Vector2(3, 3)
+
+[connection signal="body_entered" from="Ladder_r1_c6" to="Ladder_r1_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r1_c6" to="Ladder_r1_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r2_c6" to="Ladder_r2_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r2_c6" to="Ladder_r2_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r3_c6" to="Ladder_r3_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r3_c6" to="Ladder_r3_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r4_c6" to="Ladder_r4_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r4_c6" to="Ladder_r4_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r5_c6" to="Ladder_r5_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r5_c6" to="Ladder_r5_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r6_c6" to="Ladder_r6_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r6_c6" to="Ladder_r6_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r7_c2" to="Ladder_r7_c2" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r7_c2" to="Ladder_r7_c2" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r7_c6" to="Ladder_r7_c6" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r7_c6" to="Ladder_r7_c6" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r8_c2" to="Ladder_r8_c2" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r8_c2" to="Ladder_r8_c2" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r9_c2" to="Ladder_r9_c2" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r9_c2" to="Ladder_r9_c2" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r10_c2" to="Ladder_r10_c2" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r10_c2" to="Ladder_r10_c2" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r11_c2" to="Ladder_r11_c2" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r11_c2" to="Ladder_r11_c2" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r12_c9" to="Ladder_r12_c9" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r12_c9" to="Ladder_r12_c9" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r13_c9" to="Ladder_r13_c9" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r13_c9" to="Ladder_r13_c9" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r14_c9" to="Ladder_r14_c9" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r14_c9" to="Ladder_r14_c9" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r15_c9" to="Ladder_r15_c9" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r15_c9" to="Ladder_r15_c9" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r16_c9" to="Ladder_r16_c9" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r16_c9" to="Ladder_r16_c9" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r17_c3" to="Ladder_r17_c3" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r17_c3" to="Ladder_r17_c3" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r18_c3" to="Ladder_r18_c3" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r18_c3" to="Ladder_r18_c3" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r19_c3" to="Ladder_r19_c3" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r19_c3" to="Ladder_r19_c3" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r20_c3" to="Ladder_r20_c3" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r20_c3" to="Ladder_r20_c3" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r21_c3" to="Ladder_r21_c3" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r21_c3" to="Ladder_r21_c3" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r22_c8" to="Ladder_r22_c8" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r22_c8" to="Ladder_r22_c8" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r23_c8" to="Ladder_r23_c8" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r23_c8" to="Ladder_r23_c8" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r24_c8" to="Ladder_r24_c8" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r24_c8" to="Ladder_r24_c8" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r25_c8" to="Ladder_r25_c8" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r25_c8" to="Ladder_r25_c8" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Ladder_r26_c8" to="Ladder_r26_c8" method="_on_body_entered"]
+
+[connection signal="body_exited" from="Ladder_r26_c8" to="Ladder_r26_c8" method="_on_body_exited"]
+
+[connection signal="body_entered" from="Entity_door_r26_c4" to="Entity_door_r26_c4" method="_on_body_entered"]
+
+[connection signal="body_entered" from="Entity_door_r1_c6" to="Entity_door_r1_c6" method="_on_body_entered"]
