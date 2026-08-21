@@ -1,7 +1,6 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/grand_staircase.glb" id="Model"]
-[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
 
 [sub_resource type="Environment" id="Environment_room"]
@@ -47,6 +46,26 @@ roughness = 0.7
 albedo_color = Color(0.14, 0.18, 0.27, 1)
 roughness = 0.85
 
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_leg"]
+radius = 0.09
+height = 0.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_torso"]
+radius = 0.14
+height = 0.45
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.12
+height = 0.24
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_bodyarm"]
+radius = 0.05
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uniform_016_022_032"]
+albedo_color = Color(0.16, 0.22, 0.32, 1)
+roughness = 0.8
+
 [node name="grand-stair-escape" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -69,15 +88,37 @@ script = ExtResource("PlayerScript")
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
 
-[node name="Sprite" type="Sprite3D" parent="Player"]
-position = Vector3(0, 0.5, 0)
-texture = ExtResource("Tex_player")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 4
-frame = 0
+[node name="Body" type="Node3D" parent="Player"]
+
+[node name="Leg0" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_leg")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(-0.09, 0.25, 0)
+
+[node name="Leg1" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_leg")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(0.09, 0.25, 0)
+
+[node name="Torso" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_torso")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(0, 0.725, 0)
+
+[node name="Head" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("SphereMesh_head")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 1.07, 0)
+
+[node name="Arm0" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_bodyarm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(-0.21, 0.7, 0)
+
+[node name="Arm1" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_bodyarm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0.21, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player"]
 position = Vector3(0, 0.85, 0)

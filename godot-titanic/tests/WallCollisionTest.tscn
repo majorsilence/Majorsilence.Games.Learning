@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/PhysicsProbe.gd" id="Probe"]
+
+[node name="WallCollisionTest" type="Node3D"]
+script = ExtResource("Probe")
+scene_path = "res://scenes/rooms_3d/crows-nest.tscn"
+hold_key = 87
+test_frames = 300
+pass_condition = "pos.z > 0.4"

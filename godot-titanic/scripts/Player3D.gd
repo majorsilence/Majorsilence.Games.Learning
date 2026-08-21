@@ -4,9 +4,6 @@ const SPEED := 4.0
 const GRAVITY := 9.8
 const MOUSE_SENSITIVITY := 0.0025
 const MAX_PITCH := deg_to_rad(80.0)
-# Mirrors Game.cs's player Animation(frames: [0,1,2,3], frameDurationMs: 150).
-const FRAME_COUNT := 4
-const FRAME_DURATION := 0.15
 
 const CAMERA_FIRST_PERSON := Vector3(0, 0.85, 0)
 const CAMERA_THIRD_PERSON := Vector3(0, 1.6, 3.2)
@@ -18,7 +15,9 @@ var _anim_time := 0.0
 var _pitch := 0.0
 var _view_mode := ViewMode.FIRST_PERSON
 
-@onready var _sprite: Sprite3D = $Sprite
+@onready var _body: Node3D = $Body
+@onready var _leg0: Node3D = $Body/Leg0
+@onready var _leg1: Node3D = $Body/Leg1
 @onready var _camera: Camera3D = $Camera3D
 @onready var _arm: Node3D = $Camera3D/Arm
 
@@ -51,17 +50,22 @@ func _physics_process(delta: float) -> void:
 
 	if Vector2(velocity.x, velocity.z).length() > 0.1:
 		_anim_time += delta
-		_sprite.frame = int(_anim_time / FRAME_DURATION) % FRAME_COUNT
 	else:
 		_anim_time = 0.0
-		_sprite.frame = 0
 
-	# Minecraft-style arm swing: a small bob tied to the same walk-cycle
-	# timer the sprite's own frame animation already uses (_anim_time),
-	# so the arm and the legs read as one stride instead of two unrelated
-	# animations. Idle (_anim_time reset to 0 above) collapses back to
-	# ARM_REST exactly, no separate idle-state handling needed.
+	# Minecraft-style arm swing: a small bob tied to the walk-cycle timer,
+	# so the arm and the third-person legs below read as one stride
+	# instead of unrelated animations. Idle (_anim_time reset to 0 above)
+	# collapses back to ARM_REST exactly, no separate idle-state handling
+	# needed.
 	_arm.position = ARM_REST + Vector3(0.0, sin(_anim_time * 10.0) * 0.015, -abs(sin(_anim_time * 5.0)) * 0.02)
+
+	# Third-person legs: opposite-phase swing, same timer -- only visible
+	# when _body is shown (see _apply_view_mode), harmless to keep
+	# updating while hidden in first person.
+	var swing := sin(_anim_time * 10.0) * 0.35
+	_leg0.rotation.x = swing
+	_leg1.rotation.x = -swing
 
 
 func _movement_input() -> Vector2:
@@ -98,10 +102,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _apply_view_mode() -> void:
 	# Minecraft-style F5 toggle: first person shows the arm (hides the
-	# player's own billboard, which would otherwise just fill the screen
-	# facing the camera); third person is the reverse, camera pulled back
-	# over the shoulder instead of sitting at eye level.
+	# player's own third-person body, which would otherwise stand between
+	# the camera and everything in front of it); third person is the
+	# reverse, camera pulled back over the shoulder instead of sitting at
+	# eye level.
 	var first := _view_mode == ViewMode.FIRST_PERSON
 	_camera.position = CAMERA_FIRST_PERSON if first else CAMERA_THIRD_PERSON
-	_sprite.visible = not first
+	_body.visible = not first
 	_arm.visible = first

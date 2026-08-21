@@ -1,8 +1,6 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
-
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door_default"]
 
 [ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
 
@@ -11,8 +9,6 @@
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/crate.png" id="Tex_crate_default"]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
-
-[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
 
@@ -91,9 +87,43 @@ size = Vector3(0.2, 2.3, 14)
 [sub_resource type="BoxShape3D" id="BoxShape3D_boundary4"]
 size = Vector3(0.2, 2.3, 14)
 
+[sub_resource type="BoxMesh" id="BoxMesh_doorpost"]
+size = Vector3(0.08, 1.15, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_doorlintel"]
+size = Vector3(1.0, 0.15, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_doorframe"]
+albedo_color = Color(0.32, 0.22, 0.13, 1)
+roughness = 0.8
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.3
 height = 1.0
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_leg"]
+radius = 0.09
+height = 0.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_torso"]
+radius = 0.14
+height = 0.45
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.12
+height = 0.24
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_bodyarm"]
+radius = 0.05
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
+albedo_color = Color(0.85, 0.68, 0.54, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uniform_016_022_032"]
+albedo_color = Color(0.16, 0.22, 0.32, 1)
+roughness = 0.8
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_sleeve"]
 top_radius = 0.085
@@ -115,10 +145,6 @@ height = 0.1
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_thumb"]
 radius = 0.015
 height = 0.08
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
-albedo_color = Color(0.85, 0.68, 0.54, 1)
-roughness = 0.7
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sleeve"]
 albedo_color = Color(0.14, 0.18, 0.27, 1)
@@ -5765,15 +5791,20 @@ position = Vector3(2.0, 0.2, 2.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/titanic.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r2_c2"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r2_c2"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r2_c2"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r2_c2"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r2_c2"]
 position = Vector3(0, 1, 0)
@@ -5784,15 +5815,20 @@ position = Vector3(37.0, 0.2, 7.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/pursers-office.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r7_c37"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r7_c37"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r7_c37"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r7_c37"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r7_c37"]
 position = Vector3(0, 1, 0)
@@ -5803,15 +5839,20 @@ position = Vector3(10.0, 0.2, 12.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/first-class-quarters.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r12_c10"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r12_c10"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r12_c10"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r12_c10"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r12_c10"]
 position = Vector3(0, 1, 0)
@@ -5822,15 +5863,20 @@ position = Vector3(20.0, 0.2, 12.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/second-class-quarters.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r12_c20"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r12_c20"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r12_c20"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r12_c20"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r12_c20"]
 position = Vector3(0, 1, 0)
@@ -5841,15 +5887,20 @@ position = Vector3(30.0, 0.2, 12.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/third-class-berths.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r12_c30"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r12_c30"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r12_c30"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r12_c30"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r12_c30"]
 position = Vector3(0, 1, 0)
@@ -5951,15 +6002,20 @@ position = Vector3(4.0, 0.2, 9.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/turbine-room.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r9_c4"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r9_c4"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r9_c4"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r9_c4"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r9_c4"]
 position = Vector3(0, 1, 0)
@@ -5970,15 +6026,20 @@ position = Vector3(14.0, 0.2, 3.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/grand-stair-escape.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r3_c14"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r3_c14"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r3_c14"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r3_c14"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r3_c14"]
 position = Vector3(0, 1, 0)
@@ -5992,15 +6053,37 @@ script = ExtResource("PlayerScript")
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
 
-[node name="Sprite" type="Sprite3D" parent="Player"]
-position = Vector3(0, 0.5, 0)
-texture = ExtResource("Tex_player")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 4
-frame = 0
+[node name="Body" type="Node3D" parent="Player"]
+
+[node name="Leg0" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_leg")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(-0.09, 0.25, 0)
+
+[node name="Leg1" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_leg")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(0.09, 0.25, 0)
+
+[node name="Torso" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_torso")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(0, 0.725, 0)
+
+[node name="Head" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("SphereMesh_head")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 1.0699999999999998, 0)
+
+[node name="Arm0" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_bodyarm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(-0.21, 0.7, 0)
+
+[node name="Arm1" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_bodyarm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0.21, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player"]
 position = Vector3(0, 0.85, 0)

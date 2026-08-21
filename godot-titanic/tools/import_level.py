@@ -59,6 +59,20 @@ ENTITY_ART = {
     ("shopCounter", None): ("assets/artwork/titanic-demo/shop-counter.png", 32, 28, 1),
 }
 
+# 3D-only: NPCs get a real capsule humanoid (build_humanoid()) instead of
+# the billboard Sprite3D every other entity still uses -- a flat sprite
+# read as "blurry" up close in first person no matter how it was filtered,
+# since a 16x32px source image magnified to fill real screen space is a
+# resolution problem, not a filtering one. Role -> a uniform/torso tint so
+# the three NPC roles stay visually distinct without needing separate
+# meshes; unlisted roles fall back to NPC_UNIFORM_COLORS[None].
+NPC_UNIFORM_COLORS = {
+    "watcher": (0.16, 0.18, 0.22),
+    "captain": (0.08, 0.1, 0.22),
+    "engineer": (0.3, 0.26, 0.18),
+    None: (0.22, 0.24, 0.3),
+}
+
 # The player's walk-cycle strip -- mirrors Game.cs's
 # `player1.SetAnimation(new Animation(frames: [0,1,2,3], frameDurationMs: 150))`.
 PLAYER_ART = "assets/artwork/isometric-demo/character.png"
@@ -83,14 +97,26 @@ MOODS = {
         "light_color": (1, 1, 1), "light_energy": 1.0,
     },
     "deck_night": {
+        # Night-side values (also the room's fallback/default state before
+        # DayNightCycle.gd starts ticking). "day_*"/"night_*" pairs below
+        # feed that runtime script directly (see build_day_night_cycle())
+        # so the deck actually cycles instead of being frozen at night.
         "bg": (0.02, 0.03, 0.07), "ambient_color": (0.35, 0.45, 0.65), "ambient_energy": 0.45,
         "light_color": (0.55, 0.65, 0.9), "light_energy": 0.55,
         "fog_color": (0.15, 0.2, 0.32), "fog_density": 0.02,
         "glow_intensity": 0.25, "glow_bloom": 0.05,
-        # Procedural starry-sky background instead of a flat color -- see
-        # STARFIELD_SKY_SHADER -- for the open-deck-at-night-in-the-North-
-        # Atlantic look the 1996 film leans on so heavily.
-        "stars": True, "sky_top": (0.01, 0.02, 0.05), "sky_horizon": (0.09, 0.12, 0.2),
+        # Procedural sky background instead of a flat color -- see
+        # DAY_NIGHT_SKY_SHADER -- blending from a starry North-Atlantic
+        # night to a blue day sky with a sun that tracks DayNightCycle.gd's
+        # clock, sharing one tracked "celestial body" direction (sun by
+        # day, moon by night -- a deliberate simplification, not a
+        # separate sun+moon pair).
+        "stars": True,
+        "night_top": (0.01, 0.02, 0.05), "night_horizon": (0.09, 0.12, 0.2),
+        "day_top": (0.25, 0.55, 0.95), "day_horizon": (0.75, 0.85, 0.95),
+        "day_ambient_color": (1.0, 1.0, 1.0), "day_ambient_energy": 0.9,
+        "day_light_color": (1.0, 0.97, 0.9), "day_light_energy": 1.3,
+        "day_fog_color": (0.72, 0.82, 0.92), "day_fog_density": 0.006,
     },
     "bridge": {
         "bg": (0.55, 0.65, 0.78), "ambient_color": (0.85, 0.92, 1.0), "ambient_energy": 0.75,
@@ -161,18 +187,27 @@ ROOM_WINDOW_WALLS = {
 }
 
 # Inline shader sources (embedded as Shader sub_resources, no external
-# .gdshader files needed) for the two atmosphere upgrades that a flat
-# WorldEnvironment color/CSGBox3D can't give us: a starry night sky for
+# .gdshader files needed) for the atmosphere upgrades a flat
+# WorldEnvironment color/CSGBox3D can't give us: a day/night sky for
 # "deck_night"-mood rooms, and a real animated ocean for the fallback
 # "open water" plane those same rooms float in. Both are fully procedural
 # (hash-noise stars, sine-wave displacement) -- no textures or external
 # assets, in keeping with the no-paid-assets constraint.
-STARFIELD_SKY_SHADER = """shader_type sky;
+#
+# DAY_NIGHT_SKY_SHADER tracks one "celestial body" direction (`sun_dir`),
+# updated at runtime by DayNightCycle.gd (see build_day_night_cycle()) --
+# stars + a pale moon disc when it's below the horizon, a blue gradient +
+# a bright sun disc when it's above. `day_t` (how "risen" the body is)
+# drives every blend, including fading stars out as the sun comes up.
+DAY_NIGHT_SKY_SHADER = """shader_type sky;
 
-uniform vec3 sky_top : source_color = vec3(0.01, 0.02, 0.05);
-uniform vec3 sky_horizon : source_color = vec3(0.09, 0.12, 0.2);
+uniform vec3 night_top : source_color = vec3(0.01, 0.02, 0.05);
+uniform vec3 night_horizon : source_color = vec3(0.09, 0.12, 0.2);
+uniform vec3 day_top : source_color = vec3(0.25, 0.55, 0.95);
+uniform vec3 day_horizon : source_color = vec3(0.75, 0.85, 0.95);
 uniform float star_density = 260.0;
-uniform vec3 moon_dir = vec3(0.35, 0.6, -0.65);
+uniform vec3 sun_dir = vec3(0.35, 0.6, -0.65);
+uniform vec3 sun_color : source_color = vec3(1.0, 0.95, 0.85);
 uniform vec3 moon_color : source_color = vec3(0.85, 0.88, 0.82);
 
 float hash13(vec3 p) {
@@ -182,21 +217,29 @@ float hash13(vec3 p) {
 }
 
 void sky() {
+    vec3 dir = normalize(sun_dir);
+    float day_t = smoothstep(-0.15, 0.15, dir.y);
+
     float t = clamp(EYEDIR.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 col = mix(sky_horizon, sky_top, pow(t, 0.6));
+    vec3 night_col = mix(night_horizon, night_top, pow(t, 0.6));
+    vec3 day_col = mix(day_horizon, day_top, pow(t, 0.6));
+    vec3 col = mix(night_col, day_col, day_t);
+
     vec3 cell = floor(EYEDIR * star_density);
     float r = hash13(cell);
     float star = smoothstep(0.986, 1.0, r) * step(0.02, EYEDIR.y);
     float tw = 0.7 + 0.3 * hash13(cell + 11.0);
-    col += vec3(star * tw);
+    col += vec3(star * tw) * (1.0 - day_t);
 
-    // A soft pale moon disc plus a faint glow halo -- gives the
-    // DirectionalLight3D "moonlight" a visible source in the sky instead
-    // of light coming from nowhere.
-    float md = dot(EYEDIR, normalize(moon_dir));
+    // A soft disc plus a faint glow halo along the tracked direction --
+    // pale moon by night, brighter sun by day -- gives the
+    // DirectionalLight3D a visible source in the sky instead of light
+    // coming from nowhere, and reads as it rising/setting with the cycle.
+    float md = dot(EYEDIR, dir);
     float disc = smoothstep(0.9985, 0.9993, md);
-    float halo = smoothstep(0.95, 0.999, md) * 0.15;
-    col += moon_color * (disc + halo);
+    float halo = smoothstep(0.95, 0.999, md) * mix(0.15, 0.35, day_t);
+    vec3 body_color = mix(moon_color, sun_color, day_t);
+    col += body_color * (disc + halo);
 
     COLOR = col;
 }
@@ -434,6 +477,113 @@ def build_first_person_arm(add_sub_once, sub_resources: list) -> list:
         'position = Vector3(0.065, 0.015, -0.42)\n'
         'rotation_degrees = Vector3(95, 0, 45)'
     )
+    return nodes
+
+
+# Feet-anchored (y=0 == ground) humanoid proportions shared by every
+# build_humanoid() call, so multiple instances (several NPCs in one room,
+# or the player's own third-person body) all agree on where "standing on
+# the floor" means.
+_LEG_H, _LEG_R = 0.5, 0.09
+_TORSO_H, _TORSO_R = 0.45, 0.14
+_HEAD_R = 0.12
+_ARM_H, _ARM_R = 0.4, 0.05
+
+
+def build_humanoid(add_sub_once, sub_resources: list, parent_path: str, uniform_color: tuple = (0.22, 0.24, 0.3)) -> list:
+    """Node blocks for a simple capsule-and-sphere humanoid (legs, torso,
+    head, arms) -- replaces a flat billboard Sprite3D, which read as low-
+    resolution/"blurry" (a 16x32px source image magnified to fill a real
+    chunk of the screen in first person) no matter how it was filtered,
+    since the actual problem was resolution, not filtering. Real geometry
+    doesn't have that ceiling. Uses the same shared skin material as
+    build_first_person_arm() (dedup'd via add_sub_once, so calling both in
+    the same scene doesn't create two skin materials); `uniform_color`
+    lets different NPC roles (or the player) get a different torso/leg
+    tint without duplicating meshes -- only a new StandardMaterial3D per
+    distinct color, id'd by that color so repeats still dedup."""
+    leg_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_leg", f'radius = {_LEG_R}\nheight = {_LEG_H}')
+    torso_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_torso", f'radius = {_TORSO_R}\nheight = {_TORSO_H}')
+    head_mesh = add_sub_once(sub_resources, "SphereMesh", "SphereMesh_head", f'radius = {_HEAD_R}\nheight = {_HEAD_R * 2.0}')
+    arm_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_bodyarm", f'radius = {_ARM_R}\nheight = {_ARM_H}')
+    skin_mat = add_sub_once(sub_resources, "StandardMaterial3D", "StandardMaterial3D_skin", 'albedo_color = Color(0.85, 0.68, 0.54, 1)\nroughness = 0.7')
+    uid = f"{uniform_color[0]:.2f}_{uniform_color[1]:.2f}_{uniform_color[2]:.2f}".replace(".", "")
+    uniform_mat = add_sub_once(
+        sub_resources, "StandardMaterial3D", f"StandardMaterial3D_uniform_{uid}",
+        f'albedo_color = Color({uniform_color[0]}, {uniform_color[1]}, {uniform_color[2]}, 1)\nroughness = 0.8'
+    )
+
+    torso_y = _LEG_H + _TORSO_H / 2.0
+    head_y = _LEG_H + _TORSO_H + _HEAD_R
+    arm_y = _LEG_H + _TORSO_H - _ARM_H / 2.0 - 0.05
+    arm_x = _TORSO_R + _ARM_R + 0.02
+
+    nodes = []
+    for i, lx in enumerate((-_LEG_R, _LEG_R)):
+        nodes.append(
+            f'[node name="Leg{i}" type="MeshInstance3D" parent="{parent_path}"]\n'
+            f'mesh = SubResource("{leg_mesh}")\n'
+            f'material_override = SubResource("{uniform_mat}")\n'
+            f'position = Vector3({lx}, {_LEG_H / 2.0}, 0)'
+        )
+    nodes.append(
+        f'[node name="Torso" type="MeshInstance3D" parent="{parent_path}"]\n'
+        f'mesh = SubResource("{torso_mesh}")\n'
+        f'material_override = SubResource("{uniform_mat}")\n'
+        f'position = Vector3(0, {torso_y}, 0)'
+    )
+    nodes.append(
+        f'[node name="Head" type="MeshInstance3D" parent="{parent_path}"]\n'
+        f'mesh = SubResource("{head_mesh}")\n'
+        f'material_override = SubResource("{skin_mat}")\n'
+        f'position = Vector3(0, {head_y}, 0)'
+    )
+    for i, ax in enumerate((-arm_x, arm_x)):
+        nodes.append(
+            f'[node name="Arm{i}" type="MeshInstance3D" parent="{parent_path}"]\n'
+            f'mesh = SubResource("{arm_mesh}")\n'
+            f'material_override = SubResource("{skin_mat}")\n'
+            f'position = Vector3({ax}, {arm_y}, 0)'
+        )
+    return nodes
+
+
+def build_door_frame(add_sub_once, sub_resources: list, parent_path: str) -> list:
+    """Node blocks for an open door frame (two posts + a lintel) --
+    replaces a flat billboard Sprite3D "closed door" image that used to
+    physically block the opening. A door you can walk through should look
+    open: with the frame instead of an opaque image filling the gap, the
+    player actually sees through to whatever real geometry stands beyond
+    it in this room (a boundary wall, the ceiling, the outdoor fallback
+    plane -- whatever's really there), rather than a picture of a door.
+    This does NOT show the connected room on the far side of a scene-
+    transition door -- see the memory note on why that would need
+    inventing spatial layout data that doesn't exist; this only fixes the
+    "solid image where an opening should be" half of the complaint. Frame
+    posts run along local X, so it reads best for doors in a wall that
+    runs along Z (the common case here) -- a reasonable, honest scoped
+    choice given there's no data on which way an individual door's wall
+    actually runs."""
+    post_mesh = add_sub_once(sub_resources, "BoxMesh", "BoxMesh_doorpost", 'size = Vector3(0.08, 1.15, 0.12)')
+    lintel_mesh = add_sub_once(sub_resources, "BoxMesh", "BoxMesh_doorlintel", 'size = Vector3(1.0, 0.15, 0.12)')
+    wood_mat = add_sub_once(sub_resources, "StandardMaterial3D", "StandardMaterial3D_doorframe", 'albedo_color = Color(0.32, 0.22, 0.13, 1)\nroughness = 0.8')
+
+    nodes = [
+        f'[node name="PostL" type="MeshInstance3D" parent="{parent_path}"]\n'
+        f'mesh = SubResource("{post_mesh}")\n'
+        f'material_override = SubResource("{wood_mat}")\n'
+        'position = Vector3(-0.46, 0.575, 0)',
+
+        f'[node name="PostR" type="MeshInstance3D" parent="{parent_path}"]\n'
+        f'mesh = SubResource("{post_mesh}")\n'
+        f'material_override = SubResource("{wood_mat}")\n'
+        'position = Vector3(0.46, 0.575, 0)',
+
+        f'[node name="Lintel" type="MeshInstance3D" parent="{parent_path}"]\n'
+        f'mesh = SubResource("{lintel_mesh}")\n'
+        f'material_override = SubResource("{wood_mat}")\n'
+        'position = Vector3(0, 1.225, 0)',
+    ]
     return nodes
 
 
@@ -781,14 +931,20 @@ def build_3d_scene(level: dict, room_name: str) -> str:
     lc, le = mood["light_color"], mood["light_energy"]
     bg = mood["bg"]
 
-    # Ceilings: every indoor room gets one (a room with open sky above --
-    # the outdoor deck rooms, which set fallbackTileType -- obviously
-    # shouldn't). Without one, first-person view straight up just showed
-    # the void past the wall tops, the single biggest "this isn't a real
-    # enclosed building" tell. Tinted darker than the room's own ambient
-    # so it still reads as "overhead" rather than another wall.
+    # Ceilings: every indoor room gets one (a room open to the sky
+    # obviously shouldn't). Gated on the room's *mood* having a sky
+    # ("stars", i.e. deck_night) rather than on fallbackTileType --
+    # crows-nest has no fallbackTileType (it's a small fixed platform, not
+    # an edge-of-map "floats in open water" room) but is very much meant
+    # to be open-air at the top of a mast; gating on fallbackTileType alone
+    # capped it with a solid ceiling, hiding its own day/night sky from
+    # the one room that should show it off best. Without a ceiling at all,
+    # first-person view straight up just showed the void past the wall
+    # tops -- the single biggest "this isn't a real enclosed building"
+    # tell for rooms that *should* have one. Tinted darker than the room's
+    # own ambient so it still reads as "overhead" rather than another wall.
     ceiling_mat_id = None
-    if not level.get("fallbackTileType"):
+    if not mood.get("stars"):
         ceiling_mat_id = "ShaderMaterial_ceiling"
         # Same per-cell 0..1 UV scale as a wall face (each ceiling cell is
         # its own 1x1 CSGBox3D, like the floor), so the default panel_count
@@ -803,19 +959,22 @@ def build_3d_scene(level: dict, room_name: str) -> str:
         '[sub_resource type="Environment" id="Environment_room"]',
     ]
     if mood.get("stars"):
-        sky_shader_id = "Shader_starfield"
-        sub_resources.append(f'[sub_resource type="Shader" id="{sky_shader_id}"]\ncode = {gd_str(STARFIELD_SKY_SHADER)}')
+        sky_shader_id = "Shader_daynight"
+        sub_resources.append(f'[sub_resource type="Shader" id="{sky_shader_id}"]\ncode = {gd_str(DAY_NIGHT_SKY_SHADER)}')
         load_steps += 1
-        st, sh = mood["sky_top"], mood["sky_horizon"]
-        sky_mat_id = "ShaderMaterial_starfield"
+        nt, nh = mood["night_top"], mood["night_horizon"]
+        dt, dh = mood["day_top"], mood["day_horizon"]
+        sky_mat_id = "ShaderMaterial_daynight"
         sub_resources.append(
             f'[sub_resource type="ShaderMaterial" id="{sky_mat_id}"]\n'
             f'shader = SubResource("{sky_shader_id}")\n'
-            f'shader_parameter/sky_top = Color({st[0]}, {st[1]}, {st[2]}, 1)\n'
-            f'shader_parameter/sky_horizon = Color({sh[0]}, {sh[1]}, {sh[2]}, 1)'
+            f'shader_parameter/night_top = Color({nt[0]}, {nt[1]}, {nt[2]}, 1)\n'
+            f'shader_parameter/night_horizon = Color({nh[0]}, {nh[1]}, {nh[2]}, 1)\n'
+            f'shader_parameter/day_top = Color({dt[0]}, {dt[1]}, {dt[2]}, 1)\n'
+            f'shader_parameter/day_horizon = Color({dh[0]}, {dh[1]}, {dh[2]}, 1)'
         )
         load_steps += 1
-        sky_id = "Sky_starfield"
+        sky_id = "Sky_daynight"
         sub_resources.append(f'[sub_resource type="Sky" id="{sky_id}"]\nsky_material = SubResource("{sky_mat_id}")')
         load_steps += 1
         env_lines += [
@@ -868,6 +1027,23 @@ def build_3d_scene(level: dict, room_name: str) -> str:
         # ambient room lighting; only outdoor rooms (no ceiling) keep them.
         f'shadow_enabled = {"false" if ceiling_mat_id is not None else "true"}'
     )
+    if mood.get("stars"):
+        day_script_id = add_ext("DayNightScript", "Script", "res://scripts/DayNightCycle.gd")
+        ac_c, ae_c = mood["ambient_color"], mood["ambient_energy"]
+        dac, dae = mood["day_ambient_color"], mood["day_ambient_energy"]
+        dlc, dle = mood["day_light_color"], mood["day_light_energy"]
+        nodes.append(
+            f'[node name="DayNightCycle" type="Node" parent="."]\n'
+            f'script = ExtResource("{day_script_id}")\n'
+            f'night_ambient_color = Color({ac_c[0]}, {ac_c[1]}, {ac_c[2]}, 1)\n'
+            f'day_ambient_color = Color({dac[0]}, {dac[1]}, {dac[2]}, 1)\n'
+            f'night_ambient_energy = {ae_c}\n'
+            f'day_ambient_energy = {dae}\n'
+            f'night_light_color = Color({lc[0]}, {lc[1]}, {lc[2]}, 1)\n'
+            f'day_light_color = Color({dlc[0]}, {dlc[1]}, {dlc[2]}, 1)\n'
+            f'night_light_energy = {le}\n'
+            f'day_light_energy = {dle}'
+        )
 
     window_cells = set()
     if room_name in ROOM_WINDOW_WALLS:
@@ -1013,12 +1189,6 @@ def build_3d_scene(level: dict, room_name: str) -> str:
             print(f"WARN: no art mapped for entity type={etype!r} role={role!r}, skipping visual", file=sys.stderr)
             continue
 
-        img_path, w, h, frames = ENTITY_ART[art_key]
-        res_path = "res://assets/" + img_path.split("assets/", 1)[-1]
-        ext_id = f"Tex_{etype}_{role or 'default'}"
-        if not any(ext_id in e for e in ext_resources):
-            add_ext(ext_id, "Texture2D", res_path)
-
         node_name = f"Entity_{etype}_{role or ''}_r{row}_c{col}".rstrip("_")
         node_type = "Area3D" if etype == "door" else "Node3D"
         extra = ""
@@ -1035,20 +1205,40 @@ def build_3d_scene(level: dict, room_name: str) -> str:
                 + extra
             ).rstrip()
         )
-        # Sprite3D natively handles frame-sheet slicing (hframes/frame) and
-        # feet-anchoring (centered=false + pixel offset), so entities don't
-        # need the manual QuadMesh/UV setup the player used to need either.
-        nodes.append(
-            f'[node name="Sprite" type="Sprite3D" parent="{node_name}"]\n'
-            f'position = Vector3(0, {h * PIXEL_SIZE_3D / 2.0}, 0)\n'
-            f'texture = ExtResource("{ext_id}")\n'
-            f'pixel_size = {PIXEL_SIZE_3D}\n'
-            f'billboard = 2\n'
-            f'shaded = false\n'
-            f'texture_filter = 0\n'
-            f'hframes = {frames}\n'
-            f'frame = 0'
-        )
+        if etype in ("npc", "door"):
+            _before = len(sub_resources)
+            if etype == "npc":
+                color = NPC_UNIFORM_COLORS.get(role, NPC_UNIFORM_COLORS[None])
+                built = build_humanoid(add_sub_once, sub_resources, node_name, uniform_color=color)
+            else:
+                built = build_door_frame(add_sub_once, sub_resources, node_name)
+            for n in built:
+                nodes.append(n)
+            # add_sub_once dedups (a room usually has multiple NPCs/doors
+            # sharing meshes/colors), so load_steps has to track how many
+            # entries actually landed this call, not a fixed count.
+            load_steps += len(sub_resources) - _before
+        else:
+            img_path, w, h, frames = ENTITY_ART[art_key]
+            res_path = "res://assets/" + img_path.split("assets/", 1)[-1]
+            ext_id = f"Tex_{etype}_{role or 'default'}"
+            if not any(ext_id in e for e in ext_resources):
+                add_ext(ext_id, "Texture2D", res_path)
+            # Sprite3D natively handles frame-sheet slicing (hframes/frame)
+            # and feet-anchoring (centered=false + pixel offset), so
+            # entities don't need the manual QuadMesh/UV setup the player
+            # used to need either.
+            nodes.append(
+                f'[node name="Sprite" type="Sprite3D" parent="{node_name}"]\n'
+                f'position = Vector3(0, {h * PIXEL_SIZE_3D / 2.0}, 0)\n'
+                f'texture = ExtResource("{ext_id}")\n'
+                f'pixel_size = {PIXEL_SIZE_3D}\n'
+                f'billboard = 2\n'
+                f'shaded = false\n'
+                f'texture_filter = 0\n'
+                f'hframes = {frames}\n'
+                f'frame = 0'
+            )
         if etype == "door":
             nodes.append(
                 f'[node name="Collision" type="CollisionShape3D" parent="{node_name}"]\n'
@@ -1063,7 +1253,6 @@ def build_3d_scene(level: dict, room_name: str) -> str:
 
     spawn_col, spawn_row = find_spawn(level)
     spawn_ground_y = floor_top_units(level, spawn_row, spawn_col)
-    add_ext("Tex_player", "Texture2D", "res://" + PLAYER_ART)
     add_ext("PlayerScript", "Script", "res://scripts/Player3D.gd")
     # Capsule half-height above the CharacterBody3D's own origin, so with
     # Player.position.y set to the floor surface (feet level), the capsule's
@@ -1084,17 +1273,15 @@ def build_3d_scene(level: dict, room_name: str) -> str:
         'position = Vector3(0, 0.5, 0)\n'
         'shape = SubResource("CapsuleShape3D_player")'
     )
-    nodes.append(
-        f'[node name="Sprite" type="Sprite3D" parent="Player"]\n'
-        f'position = Vector3(0, {PLAYER_H * PIXEL_SIZE_3D / 2.0}, 0)\n'
-        f'texture = ExtResource("Tex_player")\n'
-        f'pixel_size = {PIXEL_SIZE_3D}\n'
-        f'billboard = 2\n'
-        f'shaded = false\n'
-        f'texture_filter = 0\n'
-        f'hframes = {PLAYER_FRAMES}\n'
-        f'frame = 0'
-    )
+    # Third-person body: same real capsule-humanoid build_humanoid() gives
+    # NPCs, replacing a flat billboard Sprite3D here too -- Player3D.gd
+    # hides this whole "Body" node in first person (see the F5 toggle) and
+    # shows it in third person instead of swapping a texture.
+    nodes.append('[node name="Body" type="Node3D" parent="Player"]')
+    _before_body = len(sub_resources)
+    for n in build_humanoid(add_sub_once, sub_resources, "Player/Body", uniform_color=(0.16, 0.22, 0.32)):
+        nodes.append(n)
+    load_steps += len(sub_resources) - _before_body
     nodes.append(
         # First-person by default: eye height near the top of the capsule
         # (capsule height 1.0, feet at the Player node's own origin), a

@@ -1,10 +1,10 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=44 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tileset.png" id="Tileset"]
 
-[ext_resource type="PackedScene" path="res://assets/models/iceberg.glb" id="Model_iceberg"]
+[ext_resource type="Script" path="res://scripts/DayNightCycle.gd" id="DayNightScript"]
 
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/doorway.png" id="Tex_door_default"]
+[ext_resource type="PackedScene" path="res://assets/models/iceberg.glb" id="Model_iceberg"]
 
 [ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
 
@@ -15,8 +15,6 @@
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
 
 [ext_resource type="PackedScene" path="res://assets/models/lifeboat.glb" id="Model_lifeboat"]
-
-[ext_resource type="Texture2D" path="res://assets/artwork/isometric-demo/character.png" id="Tex_player"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
 
@@ -86,13 +84,16 @@ region = Rect2(160, 0, 32, 16)
 albedo_texture = SubResource("AtlasTexture_cabin")
 texture_filter = 0
 
-[sub_resource type="Shader" id="Shader_starfield"]
+[sub_resource type="Shader" id="Shader_daynight"]
 code = "shader_type sky;
 
-uniform vec3 sky_top : source_color = vec3(0.01, 0.02, 0.05);
-uniform vec3 sky_horizon : source_color = vec3(0.09, 0.12, 0.2);
+uniform vec3 night_top : source_color = vec3(0.01, 0.02, 0.05);
+uniform vec3 night_horizon : source_color = vec3(0.09, 0.12, 0.2);
+uniform vec3 day_top : source_color = vec3(0.25, 0.55, 0.95);
+uniform vec3 day_horizon : source_color = vec3(0.75, 0.85, 0.95);
 uniform float star_density = 260.0;
-uniform vec3 moon_dir = vec3(0.35, 0.6, -0.65);
+uniform vec3 sun_dir = vec3(0.35, 0.6, -0.65);
+uniform vec3 sun_color : source_color = vec3(1.0, 0.95, 0.85);
 uniform vec3 moon_color : source_color = vec3(0.85, 0.88, 0.82);
 
 float hash13(vec3 p) {
@@ -102,37 +103,47 @@ float hash13(vec3 p) {
 }
 
 void sky() {
+    vec3 dir = normalize(sun_dir);
+    float day_t = smoothstep(-0.15, 0.15, dir.y);
+
     float t = clamp(EYEDIR.y * 0.5 + 0.5, 0.0, 1.0);
-    vec3 col = mix(sky_horizon, sky_top, pow(t, 0.6));
+    vec3 night_col = mix(night_horizon, night_top, pow(t, 0.6));
+    vec3 day_col = mix(day_horizon, day_top, pow(t, 0.6));
+    vec3 col = mix(night_col, day_col, day_t);
+
     vec3 cell = floor(EYEDIR * star_density);
     float r = hash13(cell);
     float star = smoothstep(0.986, 1.0, r) * step(0.02, EYEDIR.y);
     float tw = 0.7 + 0.3 * hash13(cell + 11.0);
-    col += vec3(star * tw);
+    col += vec3(star * tw) * (1.0 - day_t);
 
-    // A soft pale moon disc plus a faint glow halo -- gives the
-    // DirectionalLight3D \"moonlight\" a visible source in the sky instead
-    // of light coming from nowhere.
-    float md = dot(EYEDIR, normalize(moon_dir));
+    // A soft disc plus a faint glow halo along the tracked direction --
+    // pale moon by night, brighter sun by day -- gives the
+    // DirectionalLight3D a visible source in the sky instead of light
+    // coming from nowhere, and reads as it rising/setting with the cycle.
+    float md = dot(EYEDIR, dir);
     float disc = smoothstep(0.9985, 0.9993, md);
-    float halo = smoothstep(0.95, 0.999, md) * 0.15;
-    col += moon_color * (disc + halo);
+    float halo = smoothstep(0.95, 0.999, md) * mix(0.15, 0.35, day_t);
+    vec3 body_color = mix(moon_color, sun_color, day_t);
+    col += body_color * (disc + halo);
 
     COLOR = col;
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_starfield"]
-shader = SubResource("Shader_starfield")
-shader_parameter/sky_top = Color(0.01, 0.02, 0.05, 1)
-shader_parameter/sky_horizon = Color(0.09, 0.12, 0.2, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_daynight"]
+shader = SubResource("Shader_daynight")
+shader_parameter/night_top = Color(0.01, 0.02, 0.05, 1)
+shader_parameter/night_horizon = Color(0.09, 0.12, 0.2, 1)
+shader_parameter/day_top = Color(0.25, 0.55, 0.95, 1)
+shader_parameter/day_horizon = Color(0.75, 0.85, 0.95, 1)
 
-[sub_resource type="Sky" id="Sky_starfield"]
-sky_material = SubResource("ShaderMaterial_starfield")
+[sub_resource type="Sky" id="Sky_daynight"]
+sky_material = SubResource("ShaderMaterial_daynight")
 
 [sub_resource type="Environment" id="Environment_room"]
 background_mode = 2
-sky = SubResource("Sky_starfield")
+sky = SubResource("Sky_daynight")
 ambient_light_source = 2
 ambient_light_color = Color(0.35, 0.45, 0.65, 1)
 ambient_light_energy = 0.45
@@ -178,9 +189,43 @@ subdivide_width = 60
 subdivide_depth = 60
 material = SubResource("ShaderMaterial_ocean")
 
+[sub_resource type="BoxMesh" id="BoxMesh_doorpost"]
+size = Vector3(0.08, 1.15, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_doorlintel"]
+size = Vector3(1.0, 0.15, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_doorframe"]
+albedo_color = Color(0.32, 0.22, 0.13, 1)
+roughness = 0.8
+
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.3
 height = 1.0
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_leg"]
+radius = 0.09
+height = 0.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_torso"]
+radius = 0.14
+height = 0.45
+
+[sub_resource type="SphereMesh" id="SphereMesh_head"]
+radius = 0.12
+height = 0.24
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_bodyarm"]
+radius = 0.05
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
+albedo_color = Color(0.85, 0.68, 0.54, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uniform_016_022_032"]
+albedo_color = Color(0.16, 0.22, 0.32, 1)
+roughness = 0.8
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_sleeve"]
 top_radius = 0.085
@@ -203,10 +248,6 @@ height = 0.1
 radius = 0.015
 height = 0.08
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
-albedo_color = Color(0.85, 0.68, 0.54, 1)
-roughness = 0.7
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sleeve"]
 albedo_color = Color(0.14, 0.18, 0.27, 1)
 roughness = 0.85
@@ -222,6 +263,17 @@ rotation_degrees = Vector3(-50, -30, 0)
 light_color = Color(0.55, 0.65, 0.9, 1)
 light_energy = 0.55
 shadow_enabled = true
+
+[node name="DayNightCycle" type="Node" parent="."]
+script = ExtResource("DayNightScript")
+night_ambient_color = Color(0.35, 0.45, 0.65, 1)
+day_ambient_color = Color(1.0, 1.0, 1.0, 1)
+night_ambient_energy = 0.45
+day_ambient_energy = 0.9
+night_light_color = Color(0.55, 0.65, 0.9, 1)
+day_light_color = Color(1.0, 0.97, 0.9, 1)
+night_light_energy = 0.55
+day_light_energy = 1.3
 
 [node name="Cell_r0_c0" type="CSGBox3D" parent="."]
 position = Vector3(0.0, 0.1, 0.0)
@@ -9836,15 +9888,20 @@ position = Vector3(9.0, 0.2, 3.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/bridge.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r3_c9"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r3_c9"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r3_c9"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r3_c9"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r3_c9"]
 position = Vector3(0, 1, 0)
@@ -9855,15 +9912,20 @@ position = Vector3(12.0, 0.2, 5.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/crows-nest.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r5_c12"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r5_c12"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r5_c12"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r5_c12"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r5_c12"]
 position = Vector3(0, 1, 0)
@@ -9998,15 +10060,20 @@ position = Vector3(9.0, 0.2, 62.0)
 script = ExtResource("DoorScript")
 target_scene = "res://scenes/rooms_3d/a-deck-corridor.tscn"
 
-[node name="Sprite" type="Sprite3D" parent="Entity_door__r62_c9"]
-position = Vector3(0, 0.5625, 0)
-texture = ExtResource("Tex_door_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="PostL" type="MeshInstance3D" parent="Entity_door__r62_c9"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(-0.46, 0.575, 0)
+
+[node name="PostR" type="MeshInstance3D" parent="Entity_door__r62_c9"]
+mesh = SubResource("BoxMesh_doorpost")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0.46, 0.575, 0)
+
+[node name="Lintel" type="MeshInstance3D" parent="Entity_door__r62_c9"]
+mesh = SubResource("BoxMesh_doorlintel")
+material_override = SubResource("StandardMaterial3D_doorframe")
+position = Vector3(0, 1.225, 0)
 
 [node name="Collision" type="CollisionShape3D" parent="Entity_door__r62_c9"]
 position = Vector3(0, 1, 0)
@@ -10084,15 +10151,37 @@ script = ExtResource("PlayerScript")
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
 
-[node name="Sprite" type="Sprite3D" parent="Player"]
-position = Vector3(0, 0.5, 0)
-texture = ExtResource("Tex_player")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 4
-frame = 0
+[node name="Body" type="Node3D" parent="Player"]
+
+[node name="Leg0" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_leg")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(-0.09, 0.25, 0)
+
+[node name="Leg1" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_leg")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(0.09, 0.25, 0)
+
+[node name="Torso" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_torso")
+material_override = SubResource("StandardMaterial3D_uniform_016_022_032")
+position = Vector3(0, 0.725, 0)
+
+[node name="Head" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("SphereMesh_head")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 1.0699999999999998, 0)
+
+[node name="Arm0" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_bodyarm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(-0.21, 0.7, 0)
+
+[node name="Arm1" type="MeshInstance3D" parent="Player/Body"]
+mesh = SubResource("CapsuleMesh_bodyarm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0.21, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player"]
 position = Vector3(0, 0.85, 0)

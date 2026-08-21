@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/PhysicsProbe.gd" id="Probe"]
+
+[node name="StairClimbTest" type="Node3D"]
+script = ExtResource("Probe")
+scene_path = "res://scenes/rooms_3d/grand-stair-escape.tscn"
+hold_key = 83
+test_frames = 300
+pass_condition = "pos.y > 1.3"

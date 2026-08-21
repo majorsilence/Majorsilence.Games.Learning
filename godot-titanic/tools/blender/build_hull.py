@@ -19,6 +19,7 @@ around and the right way up in Godot once imported.
 import bpy
 import bmesh
 import math
+import mathutils
 
 OUT = "/home/peter/source/repos/Majorsilence.Games.Learning/godot-titanic/assets/models/titanic_hull.glb"
 
@@ -132,16 +133,20 @@ def build_hull():
 
 
 def build_funnel(depth, index):
+    # Real White Star Line livery (see reference photos): buff/cream body
+    # for most of the height, a black cap only at the very top -- this had
+    # the two swapped (mostly black with a thin buff band), the opposite
+    # of every reference image.
     bpy.ops.mesh.primitive_cylinder_add(radius=2.0, depth=8.0, location=P(CENTER_X, depth, 4.0))
     body = bpy.context.active_object
     body.name = f"Funnel{index}_Body"
-    body.data.materials.append(make_material(f"FunnelBlack{index}", (0.05, 0.05, 0.05)))
+    body.data.materials.append(make_material(f"FunnelBuff{index}", (0.78, 0.6, 0.35)))
 
-    bpy.ops.mesh.primitive_cylinder_add(radius=2.05, depth=1.2, location=P(CENTER_X, depth, 7.6))
-    band = bpy.context.active_object
-    band.name = f"Funnel{index}_Band"
-    band.data.materials.append(make_material(f"FunnelBuff{index}", (0.78, 0.63, 0.38)))
-    return [body, band]
+    bpy.ops.mesh.primitive_cylinder_add(radius=2.05, depth=1.4, location=P(CENTER_X, depth, 7.7))
+    cap = bpy.context.active_object
+    cap.name = f"Funnel{index}_Cap"
+    cap.data.materials.append(make_material(f"FunnelBlack{index}", (0.04, 0.04, 0.045)))
+    return [body, cap]
 
 
 def build_mast(depth, height, index):
@@ -150,6 +155,84 @@ def build_mast(depth, height, index):
     mast.name = f"Mast{index}"
     mast.data.materials.append(make_material(f"MastMat{index}", (0.15, 0.14, 0.13)))
     return mast
+
+
+def build_sheer_line():
+    """A thin gold/buff stripe hugging both sides of the hull right at the
+    deck edge -- the line separating black hull from white superstructure
+    in every reference photo, and one of the two or three things that
+    single-handedly reads as "Titanic" at a glance. Follows the hull's own
+    tapering contour (same half_width_at()) rather than running the full
+    beam width, so it narrows into the bow/stern with the hull instead of
+    poking through it."""
+    mesh = bpy.data.meshes.new("SheerLineMesh")
+    obj = bpy.data.objects.new("SheerLine", mesh)
+    bpy.context.collection.objects.link(obj)
+    bm = bmesh.new()
+    y_top, y_bot = -0.05, -0.3
+    depths = [BOW_Z]
+    d = BOW_Z
+    while d < STERN_Z:
+        d += 2.5
+        depths.append(min(d, STERN_Z))
+    if depths[-1] != STERN_Z:
+        depths.append(STERN_Z)
+
+    for side in (-1, 1):
+        ring = []
+        for depth in depths:
+            hw = half_width_at(depth)
+            x = CENTER_X + side * hw
+            ring.append((bm.verts.new(P(x, depth, y_top)), bm.verts.new(P(x, depth, y_bot))))
+        for i in range(len(ring) - 1):
+            t0, b0 = ring[i]
+            t1, b1 = ring[i + 1]
+            try:
+                bm.faces.new((t0, t1, b1, b0) if side > 0 else (b0, b1, t1, t0))
+            except ValueError:
+                pass
+
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(make_material("SheerLineGold", (0.75, 0.6, 0.3)))
+    return obj
+
+
+def build_portholes():
+    """Rows of small emissive discs along both sides of the black hull --
+    the glowing-windows-at-night look every reference photo leans on.
+    Skipped near the bow/stern where the hull tapers to nothing (hw <= 1)
+    so discs don't poke out past the hull's own surface. Built into one
+    shared mesh (bmesh.ops.create_circle per instance, one shared
+    material) instead of one bpy object each -- a few dozen individual
+    objects/materials would still export fine, but there's no reason to
+    pay that draw-call cost for flat little discs."""
+    mesh = bpy.data.meshes.new("PortholesMesh")
+    obj = bpy.data.objects.new("Portholes", mesh)
+    bpy.context.collection.objects.link(obj)
+    bm = bmesh.new()
+    count = 0
+    d = BOW_Z + 6.0
+    while d < STERN_Z - 6.0:
+        hw = half_width_at(d)
+        if hw > 1.0:
+            for row_h in (-0.6, -1.35):
+                for side in (-1, 1):
+                    x = CENTER_X + side * (hw + 0.02)
+                    loc = mathutils.Vector(P(x, d, row_h))
+                    rot = mathutils.Matrix.Rotation(math.radians(90), 4, "Y")
+                    mat = mathutils.Matrix.Translation(loc) @ rot
+                    bmesh.ops.create_circle(bm, cap_ends=True, segments=10, radius=0.12, matrix=mat)
+                    count += 1
+        d += 2.2
+
+    bm.normal_update()
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(make_material("PortholeGlow", (1.0, 0.85, 0.55), emission=3.0))
+    print(f"Built {count} portholes")
+    return obj
 
 
 def build_superstructure():
@@ -163,6 +246,8 @@ def build_superstructure():
 
 clear_scene()
 build_hull()
+build_sheer_line()
+build_portholes()
 for i, fd in enumerate([DECK_LEN * 0.32, DECK_LEN * 0.44, DECK_LEN * 0.56, DECK_LEN * 0.68]):
     build_funnel(fd, i)
 build_mast(DECK_LEN * 0.12, 11.0, 0)
