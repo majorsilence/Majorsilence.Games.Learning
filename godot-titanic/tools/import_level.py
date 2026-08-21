@@ -587,6 +587,82 @@ def build_door_frame(add_sub_once, sub_resources: list, parent_path: str) -> lis
     return nodes
 
 
+# (mesh_id_suffix, size, position, material) box parts per furniture kind
+# -- feet-anchored (y=0 == floor), a fixed default orientation (no data on
+# which way an individual room would "want" a bed/counter to face, same
+# scoping compromise as build_door_frame's post orientation). "wood"/
+# "linen" key into FURNITURE_MATERIALS below.
+FURNITURE_PARTS = {
+    "bed": [
+        ("mattress", (0.6, 0.28, 1.0), (0, 0.14, 0), "linen"),
+        ("headboard", (0.6, 0.5, 0.06), (0, 0.25, -0.47), "wood"),
+        ("pillow", (0.4, 0.08, 0.22), (0, 0.32, -0.35), "linen_pillow"),
+    ],
+    "table": [
+        ("top", (0.8, 0.05, 0.5), (0, 0.4, 0), "wood"),
+        ("leg", (0.04, 0.4, 0.04), (-0.36, 0.2, -0.21), "wood"),
+        ("leg", (0.04, 0.4, 0.04), (0.36, 0.2, -0.21), "wood"),
+        ("leg", (0.04, 0.4, 0.04), (-0.36, 0.2, 0.21), "wood"),
+        ("leg", (0.04, 0.4, 0.04), (0.36, 0.2, 0.21), "wood"),
+    ],
+    "crate": [
+        ("body", (0.5, 0.5, 0.5), (0, 0.25, 0), "wood"),
+    ],
+    "shopCounter": [
+        ("body", (0.9, 0.75, 0.4), (0, 0.375, 0), "wood"),
+        ("top", (1.0, 0.06, 0.46), (0, 0.78, 0), "wood_light"),
+    ],
+}
+FURNITURE_MATERIALS = {
+    "wood": (0.35, 0.24, 0.14),
+    "wood_light": (0.46, 0.33, 0.2),
+    "linen": (0.86, 0.83, 0.76),
+    "linen_pillow": (0.94, 0.92, 0.87),
+    # Class-contrast variants (see FURNITURE_VARIANT_OVERRIDES) -- the
+    # film's whole visual language leans hard on rich/warm first class vs.
+    # stark/dim steerage (already true of the mood system's lighting; this
+    # extends the same contrast to individual furniture pieces instead of
+    # every room's bed/table looking identical regardless of class).
+    "linen_fine": (0.95, 0.94, 0.9),  # crisp white tablecloth/linens
+    "linen_worn": (0.55, 0.53, 0.5),  # dull grey steerage bedding
+}
+# variant -> {"kind.part": material_key override}. Selected per-room from
+# ROOM_MOODS (see the entity loop) -- "fine" for first_class/grand rooms,
+# "worn" for third_class, "default" (no overrides) otherwise.
+FURNITURE_VARIANT_OVERRIDES = {
+    "fine": {"table.top": "linen_fine", "bed.mattress": "linen_fine", "bed.pillow": "linen_fine"},
+    "worn": {"bed.mattress": "linen_worn", "bed.pillow": "linen_worn"},
+}
+
+
+def build_furniture(add_sub_once, sub_resources: list, parent_path: str, kind: str, variant: str = "default") -> list:
+    """Node blocks for real box-built furniture (bed/table/crate/
+    shopCounter) -- replaces their billboard Sprite3D the same way
+    build_humanoid()/build_door_frame() did for characters and doors: a
+    flat sprite up close in first person is a resolution problem no
+    filtering setting fixes, and these sit right next to where the player
+    walks. Meshes/materials are id'd by kind+part so multiple instances of
+    the same furniture kind in one room (several beds in third-class-
+    berths, say) share geometry via add_sub_once instead of duplicating
+    it."""
+    overrides = FURNITURE_VARIANT_OVERRIDES.get(variant, {})
+    mat_ids = {}
+    nodes = []
+    for i, (part, size, pos, mat_key) in enumerate(FURNITURE_PARTS[kind]):
+        mat_key = overrides.get(f"{kind}.{part}", mat_key)
+        mesh_id = add_sub_once(sub_resources, "BoxMesh", f"BoxMesh_{kind}_{part}", f'size = Vector3({size[0]}, {size[1]}, {size[2]})')
+        if mat_key not in mat_ids:
+            c = FURNITURE_MATERIALS[mat_key]
+            mat_ids[mat_key] = add_sub_once(sub_resources, "StandardMaterial3D", f"StandardMaterial3D_{mat_key}", f'albedo_color = Color({c[0]}, {c[1]}, {c[2]}, 1)\nroughness = 0.8')
+        nodes.append(
+            f'[node name="{part}{i}" type="MeshInstance3D" parent="{parent_path}"]\n'
+            f'mesh = SubResource("{mesh_id}")\n'
+            f'material_override = SubResource("{mat_ids[mat_key]}")\n'
+            f'position = Vector3({pos[0]}, {pos[1]}, {pos[2]})'
+        )
+    return nodes
+
+
 def build_2d_scene(level: dict, room_name: str) -> str:
     ext_resources = []
     sub_resources = []
@@ -1044,6 +1120,8 @@ def build_3d_scene(level: dict, room_name: str) -> str:
             f'night_light_energy = {le}\n'
             f'day_light_energy = {dle}'
         )
+        ocean_script_id = add_ext("AmbientOceanScript", "Script", "res://scripts/AmbientOcean.gd")
+        nodes.append(f'[node name="AmbientOcean" type="AudioStreamPlayer" parent="."]\nscript = ExtResource("{ocean_script_id}")')
 
     window_cells = set()
     if room_name in ROOM_WINDOW_WALLS:
@@ -1162,6 +1240,7 @@ def build_3d_scene(level: dict, room_name: str) -> str:
             )
 
     door_script_id = None
+    npc_idle_script_id = None
     for ent in level.get("entities", []):
         etype = ent["type"]
         role = ent.get("properties", {}).get("role")
@@ -1197,6 +1276,10 @@ def build_3d_scene(level: dict, room_name: str) -> str:
                 door_script_id = add_ext("DoorScript", "Script", "res://scripts/Door3D.gd")
             target = source_json_to_scene_res(ent["properties"].get("target", "")).replace("rooms_2d", "rooms_3d")
             extra = f'script = ExtResource("{door_script_id}")\ntarget_scene = {gd_str(target)}\n'
+        elif etype == "npc":
+            if npc_idle_script_id is None:
+                npc_idle_script_id = add_ext("NpcIdleScript", "Script", "res://scripts/NpcIdle.gd")
+            extra = f'script = ExtResource("{npc_idle_script_id}")\n'
 
         nodes.append(
             (
@@ -1205,18 +1288,23 @@ def build_3d_scene(level: dict, room_name: str) -> str:
                 + extra
             ).rstrip()
         )
-        if etype in ("npc", "door"):
+        if etype in ("npc", "door") or etype in FURNITURE_PARTS:
             _before = len(sub_resources)
             if etype == "npc":
                 color = NPC_UNIFORM_COLORS.get(role, NPC_UNIFORM_COLORS[None])
                 built = build_humanoid(add_sub_once, sub_resources, node_name, uniform_color=color)
-            else:
+            elif etype == "door":
                 built = build_door_frame(add_sub_once, sub_resources, node_name)
+            else:
+                mood_name = ROOM_MOODS.get(room_name, "default")
+                furniture_variant = "fine" if mood_name in ("first_class", "grand") else "worn" if mood_name == "third_class" else "default"
+                built = build_furniture(add_sub_once, sub_resources, node_name, etype, variant=furniture_variant)
             for n in built:
                 nodes.append(n)
-            # add_sub_once dedups (a room usually has multiple NPCs/doors
-            # sharing meshes/colors), so load_steps has to track how many
-            # entries actually landed this call, not a fixed count.
+            # add_sub_once dedups (a room usually has multiple NPCs/doors/
+            # furniture pieces sharing meshes/colors), so load_steps has to
+            # track how many entries actually landed this call, not a
+            # fixed count.
             load_steps += len(sub_resources) - _before
         else:
             img_path, w, h, frames = ENTITY_ART[art_key]
@@ -1273,6 +1361,8 @@ def build_3d_scene(level: dict, room_name: str) -> str:
         'position = Vector3(0, 0.5, 0)\n'
         'shape = SubResource("CapsuleShape3D_player")'
     )
+    footstep_script_id = add_ext("FootstepScript", "Script", "res://scripts/FootstepAudio.gd")
+    nodes.append(f'[node name="Footstep" type="AudioStreamPlayer" parent="Player"]\nscript = ExtResource("{footstep_script_id}")')
     # Third-person body: same real capsule-humanoid build_humanoid() gives
     # NPCs, replacing a flat billboard Sprite3D here too -- Player3D.gd
     # hides this whole "Body" node in first person (see the F5 toggle) and

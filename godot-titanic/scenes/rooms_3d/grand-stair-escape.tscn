@@ -1,7 +1,8 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="PackedScene" path="res://assets/models/grand_staircase.glb" id="Model"]
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+[ext_resource type="Script" path="res://scripts/FootstepAudio.gd" id="FootstepScript"]
 
 [sub_resource type="Environment" id="Environment_room"]
 background_mode = 1
@@ -66,6 +67,28 @@ height = 0.4
 albedo_color = Color(0.16, 0.22, 0.32, 1)
 roughness = 0.8
 
+[sub_resource type="Shader" id="Shader_checker"]
+code = "shader_type spatial;
+render_mode blend_mix, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec3 color_a : source_color = vec3(0.05, 0.05, 0.06);
+uniform vec3 color_b : source_color = vec3(0.92, 0.9, 0.85);
+uniform float tile_count = 6.0;
+
+void fragment() {
+	vec2 uv = UV * tile_count;
+	vec2 cell = floor(uv);
+	float check = mod(cell.x + cell.y, 2.0);
+	ALBEDO = mix(color_a, color_b, check);
+	ROUGHNESS = 0.25;
+	METALLIC = 0.0;
+	SPECULAR = 0.5;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_checker"]
+shader = SubResource("Shader_checker")
+
 [node name="grand-stair-escape" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -80,6 +103,15 @@ shadow_enabled = true
 
 [node name="Model" parent="." instance=ExtResource("Model")]
 
+[node name="EntryFloor" parent="Model" index="0"]
+material_override = SubResource("ShaderMaterial_checker")
+
+[node name="MidLanding" parent="Model" index="0"]
+material_override = SubResource("ShaderMaterial_checker")
+
+[node name="Gallery" parent="Model" index="0"]
+material_override = SubResource("ShaderMaterial_checker")
+
 [node name="Player" type="CharacterBody3D" parent="."]
 position = Vector3(4.0, 0.15, 1.0)
 script = ExtResource("PlayerScript")
@@ -87,6 +119,9 @@ script = ExtResource("PlayerScript")
 [node name="Collision" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="Player"]
+script = ExtResource("FootstepScript")
 
 [node name="Body" type="Node3D" parent="Player"]
 

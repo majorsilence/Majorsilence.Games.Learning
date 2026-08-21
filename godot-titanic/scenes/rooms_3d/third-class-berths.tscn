@@ -1,16 +1,14 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=40 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
 
 [ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
 
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/crate.png" id="Tex_crate_default"]
-
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/bed.png" id="Tex_bed_default"]
-
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[ext_resource type="Script" path="res://scripts/FootstepAudio.gd" id="FootstepScript"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door"]
 size = Vector3(1, 2, 1)
@@ -93,6 +91,26 @@ size = Vector3(1.0, 0.15, 0.12)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_doorframe"]
 albedo_color = Color(0.32, 0.22, 0.13, 1)
 roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_crate_body"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.35, 0.24, 0.14, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_bed_mattress"]
+size = Vector3(0.6, 0.28, 1.0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_linen_worn"]
+albedo_color = Color(0.55, 0.53, 0.5, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_bed_headboard"]
+size = Vector3(0.6, 0.5, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bed_pillow"]
+size = Vector3(0.4, 0.08, 0.22)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.3
@@ -2306,223 +2324,288 @@ shape = SubResource("BoxShape3D_door")
 [node name="Entity_crate__r2_c16" type="Node3D" parent="."]
 position = Vector3(16.0, 0.2, 2.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_crate__r2_c16"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_crate_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="body0" type="MeshInstance3D" parent="Entity_crate__r2_c16"]
+mesh = SubResource("BoxMesh_crate_body")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, 0)
 
 [node name="Entity_crate__r8_c16" type="Node3D" parent="."]
 position = Vector3(16.0, 0.2, 8.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_crate__r8_c16"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_crate_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="body0" type="MeshInstance3D" parent="Entity_crate__r8_c16"]
+mesh = SubResource("BoxMesh_crate_body")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, 0)
 
 [node name="Entity_bed__r2_c2" type="Node3D" parent="."]
 position = Vector3(2.0, 0.2, 2.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c2"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r2_c2"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r2_c2"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r2_c2"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r2_c5" type="Node3D" parent="."]
 position = Vector3(5.0, 0.2, 2.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c5"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r2_c5"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r2_c5"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r2_c5"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r2_c8" type="Node3D" parent="."]
 position = Vector3(8.0, 0.2, 2.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c8"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r2_c8"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r2_c8"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r2_c8"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r2_c11" type="Node3D" parent="."]
 position = Vector3(11.0, 0.2, 2.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c11"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r2_c11"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r2_c11"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r2_c11"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r2_c14" type="Node3D" parent="."]
 position = Vector3(14.0, 0.2, 2.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r2_c14"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r2_c14"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r2_c14"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r2_c14"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r5_c2" type="Node3D" parent="."]
 position = Vector3(2.0, 0.2, 5.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r5_c2"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r5_c2"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r5_c2"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r5_c2"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r5_c5" type="Node3D" parent="."]
 position = Vector3(5.0, 0.2, 5.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r5_c5"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r5_c5"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r5_c5"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r5_c5"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r5_c8" type="Node3D" parent="."]
 position = Vector3(8.0, 0.2, 5.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r5_c8"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r5_c8"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r5_c8"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r5_c8"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r5_c11" type="Node3D" parent="."]
 position = Vector3(11.0, 0.2, 5.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r5_c11"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r5_c11"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r5_c11"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r5_c11"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r5_c14" type="Node3D" parent="."]
 position = Vector3(14.0, 0.2, 5.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r5_c14"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r5_c14"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r5_c14"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r5_c14"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r8_c2" type="Node3D" parent="."]
 position = Vector3(2.0, 0.2, 8.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r8_c2"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r8_c2"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r8_c2"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r8_c2"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r8_c5" type="Node3D" parent="."]
 position = Vector3(5.0, 0.2, 8.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r8_c5"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r8_c5"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r8_c5"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r8_c5"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r8_c8" type="Node3D" parent="."]
 position = Vector3(8.0, 0.2, 8.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r8_c8"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r8_c8"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r8_c8"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r8_c8"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r8_c11" type="Node3D" parent="."]
 position = Vector3(11.0, 0.2, 8.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r8_c11"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r8_c11"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r8_c11"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r8_c11"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_bed__r8_c14" type="Node3D" parent="."]
 position = Vector3(14.0, 0.2, 8.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_bed__r8_c14"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_bed_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="mattress0" type="MeshInstance3D" parent="Entity_bed__r8_c14"]
+mesh = SubResource("BoxMesh_bed_mattress")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.14, 0)
+
+[node name="headboard1" type="MeshInstance3D" parent="Entity_bed__r8_c14"]
+mesh = SubResource("BoxMesh_bed_headboard")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, -0.47)
+
+[node name="pillow2" type="MeshInstance3D" parent="Entity_bed__r8_c14"]
+mesh = SubResource("BoxMesh_bed_pillow")
+material_override = SubResource("StandardMaterial3D_linen_worn")
+position = Vector3(0, 0.32, -0.35)
 
 [node name="Entity_tix__r3_c3" type="Node3D" parent="."]
 position = Vector3(3.0, 0.2, 3.0)
@@ -2661,6 +2744,9 @@ script = ExtResource("PlayerScript")
 [node name="Collision" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="Player"]
+script = ExtResource("FootstepScript")
 
 [node name="Body" type="Node3D" parent="Player"]
 

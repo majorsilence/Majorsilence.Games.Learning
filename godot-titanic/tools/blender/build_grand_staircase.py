@@ -245,6 +245,50 @@ def build_dome(x, depth, height, radius):
     return dome
 
 
+def build_dome_lattice(x, depth, height, radius):
+    """The ornate wrought-iron radial-spoke frame over the glass dome, from
+    the reference photos -- real geometry (thin oriented cylinder segments
+    following the hemisphere + a couple of concentric torus rings) rather
+    than a patterned texture, since Blender's node-based procedural
+    textures (a Checker node, say) don't survive glTF export -- only baked
+    image textures do, and baking one just for this is a lot of pipeline
+    for a decorative overlay when actual geometry gets the same look for
+    free with the tools already in use everywhere else in this file."""
+    n_ribs = 16
+    n_seg = 5
+    rib_r = 0.025
+    for i in range(n_ribs):
+        theta = (2 * math.pi * i) / n_ribs
+        pts = []
+        for j in range(n_seg + 1):
+            phi = (math.pi / 2) * (j / n_seg)  # 0 at apex .. pi/2 at rim
+            r = radius * math.sin(phi)
+            h = radius * math.cos(phi)
+            px = x + r * math.cos(theta)
+            pd = depth + r * math.sin(theta)
+            ph = height + h
+            pts.append(mathutils.Vector(P(px, pd, ph)))
+        for j in range(len(pts) - 1):
+            a, b = pts[j], pts[j + 1]
+            mid = (a + b) / 2.0
+            seg_len = (b - a).length
+            bpy.ops.mesh.primitive_cylinder_add(radius=rib_r, depth=seg_len, location=mid)
+            seg = bpy.context.active_object
+            seg.name = f"DomeRib{i}_{j}"
+            seg.data.materials.append(MAT_IRON)
+            seg.rotation_mode = "QUATERNION"
+            seg.rotation_quaternion = (b - a).to_track_quat("Z", "Y")
+
+    for phi_deg in (30, 60):
+        phi = math.radians(phi_deg)
+        r = radius * math.sin(phi)
+        h = height + radius * math.cos(phi)
+        bpy.ops.mesh.primitive_torus_add(major_radius=r, minor_radius=rib_r, location=P(x, depth, h))
+        ring = bpy.context.active_object
+        ring.name = f"DomeRing{phi_deg}"
+        ring.data.materials.append(MAT_GOLD)
+
+
 clear_scene()
 # Warmed toward the real replica's polished reddish mahogany (reference
 # photos of the actual Grand Staircase set/replica), and MAT_GOLD given
@@ -259,6 +303,7 @@ MAT_CLOCKFACE = make_material("ClockFace", (0.92, 0.88, 0.75))
 MAT_CLOCKHAND = make_material("ClockHand", (0.05, 0.05, 0.05))
 MAT_CHERUB = make_material("Cherub", (0.7, 0.55, 0.25), metallic=0.85, roughness=0.25)
 MAT_FLAME = make_material("Flame", (1.0, 0.75, 0.35), emission=4.0)
+MAT_IRON = make_material("Iron", (0.08, 0.08, 0.09), metallic=0.7, roughness=0.4)
 
 # Entry floor (depth 0..2.2), rises via center flight to mid-landing
 # (depth 2.4..4.4), splits into two flights climbing left/right to the
@@ -291,6 +336,7 @@ build_railing("RightFlightRailR", right_x + 1.2, LANDING_Y, split_d0, GALLERY_Y,
 
 build_clock(ROOM_W / 2.0, ROOM_D - 0.3, GALLERY_Y + 1.4)
 build_dome(ROOM_W / 2.0, ROOM_D / 2.0, WALL_H - 0.2, min(ROOM_W, ROOM_D) * 0.45)
+build_dome_lattice(ROOM_W / 2.0, ROOM_D / 2.0, WALL_H - 0.2, min(ROOM_W, ROOM_D) * 0.45)
 build_cherub_statue(ROOM_W / 2.0 - 1.7, 2.35, 0.0)
 
 bpy.ops.object.light_add(type="POINT", location=P(ROOM_W / 2.0, ROOM_D - 1.5, GALLERY_Y + 1.6))

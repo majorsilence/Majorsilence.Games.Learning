@@ -1,14 +1,14 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=40 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
-
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/shop-counter.png" id="Tex_shopCounter_default"]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
 
 [ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[ext_resource type="Script" path="res://scripts/FootstepAudio.gd" id="FootstepScript"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door"]
 size = Vector3(1, 2, 1)
@@ -89,6 +89,20 @@ size = Vector3(0.2, 2.3, 7)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_boundary4"]
 size = Vector3(0.2, 2.3, 7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_shopCounter_body"]
+size = Vector3(0.9, 0.75, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.35, 0.24, 0.14, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_shopCounter_top"]
+size = Vector3(1.0, 0.06, 0.46)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood_light"]
+albedo_color = Color(0.46, 0.33, 0.2, 1)
+roughness = 0.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_doorpost"]
 size = Vector3(0.08, 1.15, 0.12)
@@ -812,15 +826,15 @@ shape = SubResource("BoxShape3D_boundary4")
 [node name="Entity_shopCounter__r1_c4" type="Node3D" parent="."]
 position = Vector3(4.0, 0.2, 1.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_shopCounter__r1_c4"]
-position = Vector3(0, 0.4375, 0)
-texture = ExtResource("Tex_shopCounter_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="body0" type="MeshInstance3D" parent="Entity_shopCounter__r1_c4"]
+mesh = SubResource("BoxMesh_shopCounter_body")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.375, 0)
+
+[node name="top1" type="MeshInstance3D" parent="Entity_shopCounter__r1_c4"]
+mesh = SubResource("BoxMesh_shopCounter_top")
+material_override = SubResource("StandardMaterial3D_wood_light")
+position = Vector3(0, 0.78, 0)
 
 [node name="Entity_tix__r1_c7" type="Node3D" parent="."]
 position = Vector3(7.0, 0.2, 1.0)
@@ -890,6 +904,9 @@ script = ExtResource("PlayerScript")
 [node name="Collision" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="Player"]
+script = ExtResource("FootstepScript")
 
 [node name="Body" type="Node3D" parent="Player"]
 

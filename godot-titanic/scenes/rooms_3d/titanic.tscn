@@ -1,8 +1,10 @@
-[gd_scene load_steps=44 format=3]
+[gd_scene load_steps=46 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tileset.png" id="Tileset"]
 
 [ext_resource type="Script" path="res://scripts/DayNightCycle.gd" id="DayNightScript"]
+
+[ext_resource type="Script" path="res://scripts/AmbientOcean.gd" id="AmbientOceanScript"]
 
 [ext_resource type="PackedScene" path="res://assets/models/iceberg.glb" id="Model_iceberg"]
 
@@ -17,6 +19,8 @@
 [ext_resource type="PackedScene" path="res://assets/models/lifeboat.glb" id="Model_lifeboat"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[ext_resource type="Script" path="res://scripts/FootstepAudio.gd" id="FootstepScript"]
 
 [ext_resource type="PackedScene" path="res://assets/models/titanic_hull.glb" id="ExteriorModel"]
 
@@ -274,6 +278,9 @@ night_light_color = Color(0.55, 0.65, 0.9, 1)
 day_light_color = Color(1.0, 0.97, 0.9, 1)
 night_light_energy = 0.55
 day_light_energy = 1.3
+
+[node name="AmbientOcean" type="AudioStreamPlayer" parent="."]
+script = ExtResource("AmbientOceanScript")
 
 [node name="Cell_r0_c0" type="CSGBox3D" parent="."]
 position = Vector3(0.0, 0.1, 0.0)
@@ -10218,6 +10225,9 @@ script = ExtResource("PlayerScript")
 [node name="Collision" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="Player"]
+script = ExtResource("FootstepScript")
 
 [node name="Body" type="Node3D" parent="Player"]
 

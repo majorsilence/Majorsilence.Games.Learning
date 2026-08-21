@@ -16,6 +16,13 @@ func _dump(n: Node, depth: int) -> void:
 	if n is Node3D:
 		var n3 := n as Node3D
 		extra = " pos=" + str(n3.global_position) + " scale=" + str(n3.scale) + " gscale=" + str(n3.global_transform.basis.get_scale())
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		if mi.material_override:
+			extra += " override_mat=" + mi.material_override.resource_path + "/" + mi.material_override.get_class()
+		elif mi.mesh and mi.mesh.get_surface_count() > 0:
+			var m = mi.get_active_material(0)
+			extra += " active_mat=" + (m.get_class() if m else "null")
 	if n is CollisionShape3D:
 		var shape = (n as CollisionShape3D).shape
 		if shape:

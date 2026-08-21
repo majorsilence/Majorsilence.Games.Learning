@@ -1,14 +1,18 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=38 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
 
 [ext_resource type="PackedScene" path="res://assets/models/wheel.glb" id="Model_wheel"]
+
+[ext_resource type="Script" path="res://scripts/NpcIdle.gd" id="NpcIdleScript"]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
 
 [ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[ext_resource type="Script" path="res://scripts/FootstepAudio.gd" id="FootstepScript"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door"]
 size = Vector3(1, 2, 1)
@@ -928,6 +932,7 @@ rotation_degrees = Vector3(0.0, 0.0, 0.0)
 
 [node name="Entity_npc_captain_r2_c5" type="Node3D" parent="."]
 position = Vector3(5.0, 0.2, 2.0)
+script = ExtResource("NpcIdleScript")
 
 [node name="Leg0" type="MeshInstance3D" parent="Entity_npc_captain_r2_c5"]
 mesh = SubResource("CapsuleMesh_leg")
@@ -1003,6 +1008,9 @@ script = ExtResource("PlayerScript")
 [node name="Collision" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="Player"]
+script = ExtResource("FootstepScript")
 
 [node name="Body" type="Node3D" parent="Player"]
 

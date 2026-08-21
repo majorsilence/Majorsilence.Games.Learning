@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const SPEED := 4.0
 const GRAVITY := 9.8
+const JUMP_VELOCITY := 3.2  # sqrt(2 * GRAVITY * 0.5) -- a ~0.5-unit hop
 const MOUSE_SENSITIVITY := 0.0025
 const MAX_PITCH := deg_to_rad(80.0)
 
@@ -14,12 +15,15 @@ enum ViewMode { FIRST_PERSON, THIRD_PERSON }
 var _anim_time := 0.0
 var _pitch := 0.0
 var _view_mode := ViewMode.FIRST_PERSON
+var _prev_step_phase := 0.0
+var _jump_requested := false
 
 @onready var _body: Node3D = $Body
 @onready var _leg0: Node3D = $Body/Leg0
 @onready var _leg1: Node3D = $Body/Leg1
 @onready var _camera: Camera3D = $Camera3D
 @onready var _arm: Node3D = $Camera3D/Arm
+@onready var _footstep: Node = $Footstep
 
 
 func _ready() -> void:
@@ -33,6 +37,14 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= GRAVITY * delta
 	else:
 		velocity.y = 0.0
+		if _jump_requested:
+			# Only cleared once actually consumed -- a request arriving on
+			# a frame where is_on_floor() hasn't been refreshed yet (e.g.
+			# the very first physics frame after spawning, before
+			# move_and_slide() has run once) would otherwise get silently
+			# dropped instead of firing the moment the player next lands.
+			velocity.y = JUMP_VELOCITY
+			_jump_requested = false
 
 	# Movement is relative to which way the body (== camera yaw) is
 	# currently facing, not fixed world axes -- turning comes from
@@ -67,6 +79,14 @@ func _physics_process(delta: float) -> void:
 	_leg0.rotation.x = swing
 	_leg1.rotation.x = -swing
 
+	# Footstep: one per half-stride, on the same swing timer -- fire on a
+	# rising zero-crossing (previous sample negative/zero, this one
+	# positive) so it triggers exactly twice per full arm/leg swing cycle
+	# rather than every frame the sign happens to be positive.
+	if swing > 0.0 and _prev_step_phase <= 0.0 and _anim_time > 0.0:
+		_footstep.trigger()
+	_prev_step_phase = swing
+
 
 func _movement_input() -> Vector2:
 	# ui_left/right/up/down are arrow-keys-only in Godot's built-in
@@ -94,6 +114,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F5:
 		_view_mode = ViewMode.THIRD_PERSON if _view_mode == ViewMode.FIRST_PERSON else ViewMode.FIRST_PERSON
 		_apply_view_mode()
+
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_SPACE:
+		# Consumed (and cleared) in _physics_process, not set directly
+		# there -- _unhandled_input fires once per real keypress, exactly
+		# the "just pressed" edge move_and_slide's jump needs, without
+		# needing a separate was-it-held-last-frame tracker.
+		_jump_requested = true
 
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

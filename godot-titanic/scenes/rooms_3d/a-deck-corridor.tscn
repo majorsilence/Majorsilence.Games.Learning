@@ -1,16 +1,14 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=39 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
 
 [ext_resource type="Script" path="res://scripts/Door3D.gd" id="DoorScript"]
 
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/table.png" id="Tex_table_default"]
-
-[ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/crate.png" id="Tex_crate_default"]
-
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/tix-coin.png" id="Tex_tix_default"]
 
 [ext_resource type="Script" path="res://scripts/Player3D.gd" id="PlayerScript"]
+
+[ext_resource type="Script" path="res://scripts/FootstepAudio.gd" id="FootstepScript"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door"]
 size = Vector3(1, 2, 1)
@@ -96,6 +94,23 @@ size = Vector3(1.0, 0.15, 0.12)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_doorframe"]
 albedo_color = Color(0.32, 0.22, 0.13, 1)
 roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_table_top"]
+size = Vector3(0.8, 0.05, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_linen_fine"]
+albedo_color = Color(0.95, 0.94, 0.9, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_table_leg"]
+size = Vector3(0.04, 0.4, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.35, 0.24, 0.14, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_crate_body"]
+size = Vector3(0.5, 0.5, 0.5)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.3
@@ -5909,41 +5924,66 @@ shape = SubResource("BoxShape3D_door")
 [node name="Entity_table__r6_c6" type="Node3D" parent="."]
 position = Vector3(6.0, 0.2, 6.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_table__r6_c6"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_table_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="top0" type="MeshInstance3D" parent="Entity_table__r6_c6"]
+mesh = SubResource("BoxMesh_table_top")
+material_override = SubResource("StandardMaterial3D_linen_fine")
+position = Vector3(0, 0.4, 0)
+
+[node name="leg1" type="MeshInstance3D" parent="Entity_table__r6_c6"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(-0.36, 0.2, -0.21)
+
+[node name="leg2" type="MeshInstance3D" parent="Entity_table__r6_c6"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0.36, 0.2, -0.21)
+
+[node name="leg3" type="MeshInstance3D" parent="Entity_table__r6_c6"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(-0.36, 0.2, 0.21)
+
+[node name="leg4" type="MeshInstance3D" parent="Entity_table__r6_c6"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0.36, 0.2, 0.21)
 
 [node name="Entity_table__r6_c26" type="Node3D" parent="."]
 position = Vector3(26.0, 0.2, 6.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_table__r6_c26"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_table_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="top0" type="MeshInstance3D" parent="Entity_table__r6_c26"]
+mesh = SubResource("BoxMesh_table_top")
+material_override = SubResource("StandardMaterial3D_linen_fine")
+position = Vector3(0, 0.4, 0)
+
+[node name="leg1" type="MeshInstance3D" parent="Entity_table__r6_c26"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(-0.36, 0.2, -0.21)
+
+[node name="leg2" type="MeshInstance3D" parent="Entity_table__r6_c26"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0.36, 0.2, -0.21)
+
+[node name="leg3" type="MeshInstance3D" parent="Entity_table__r6_c26"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(-0.36, 0.2, 0.21)
+
+[node name="leg4" type="MeshInstance3D" parent="Entity_table__r6_c26"]
+mesh = SubResource("BoxMesh_table_leg")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0.36, 0.2, 0.21)
 
 [node name="Entity_crate__r3_c34" type="Node3D" parent="."]
 position = Vector3(34.0, 0.2, 3.0)
 
-[node name="Sprite" type="Sprite3D" parent="Entity_crate__r3_c34"]
-position = Vector3(0, 0.375, 0)
-texture = ExtResource("Tex_crate_default")
-pixel_size = 0.03125
-billboard = 2
-shaded = false
-texture_filter = 0
-hframes = 1
-frame = 0
+[node name="body0" type="MeshInstance3D" parent="Entity_crate__r3_c34"]
+mesh = SubResource("BoxMesh_crate_body")
+material_override = SubResource("StandardMaterial3D_wood")
+position = Vector3(0, 0.25, 0)
 
 [node name="Entity_tix__r3_c12" type="Node3D" parent="."]
 position = Vector3(12.0, 0.2, 3.0)
@@ -6052,6 +6092,9 @@ script = ExtResource("PlayerScript")
 [node name="Collision" type="CollisionShape3D" parent="Player"]
 position = Vector3(0, 0.5, 0)
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Footstep" type="AudioStreamPlayer" parent="Player"]
+script = ExtResource("FootstepScript")
 
 [node name="Body" type="Node3D" parent="Player"]
 
