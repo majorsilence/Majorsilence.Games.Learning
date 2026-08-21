@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/artwork/titanic-demo/interior-tileset.png" id="Tileset"]
 
@@ -27,10 +27,47 @@ region = Rect2(0, 0, 32, 16)
 albedo_texture = SubResource("AtlasTexture_floor")
 texture_filter = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.3219, 0.3128, 0.3231, 1)
-roughness = 0.75
-metallic_specular = 0.35
+[sub_resource type="Shader" id="Shader_wall_detail"]
+code = "shader_type spatial;
+render_mode blend_mix, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec3 base_color : source_color = vec3(0.5, 0.5, 0.5);
+uniform float panel_count = 3.0;
+uniform float seam_width = 0.035;
+uniform float grain_strength = 0.05;
+uniform float rough : hint_range(0.0, 1.0) = 0.75;
+uniform float spec : hint_range(0.0, 1.0) = 0.35;
+
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+void fragment() {
+    vec2 uv = UV * panel_count;
+    vec2 cell = fract(uv);
+    float seam = min(
+        min(smoothstep(0.0, seam_width, cell.x), smoothstep(0.0, seam_width, cell.y)),
+        min(smoothstep(0.0, seam_width, 1.0 - cell.x), smoothstep(0.0, seam_width, 1.0 - cell.y))
+    );
+    float grain = (hash21(floor(uv * 41.0)) - 0.5) * grain_strength;
+    ALBEDO = clamp(base_color * (0.86 + 0.14 * seam) + grain, vec3(0.0), vec3(1.0));
+    ROUGHNESS = rough;
+    METALLIC = 0.0;
+    SPECULAR = spec;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="StandardMaterial3D_wall"]
+shader = SubResource("Shader_wall_detail")
+shader_parameter/base_color = Color(0.3219, 0.3128, 0.3231, 1)
+shader_parameter/panel_count = 3.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ceiling"]
+shader = SubResource("Shader_wall_detail")
+shader_parameter/base_color = Color(0.5500, 0.4675, 0.3575, 1)
+shader_parameter/panel_count = 3.0
 
 [sub_resource type="Environment" id="Environment_room"]
 background_mode = 1
@@ -58,15 +95,34 @@ size = Vector3(0.2, 2.3, 14)
 radius = 0.3
 height = 1.0
 
-[sub_resource type="BoxMesh" id="BoxMesh_forearm"]
-size = Vector3(0.12, 0.12, 0.5)
+[sub_resource type="CylinderMesh" id="CylinderMesh_sleeve"]
+top_radius = 0.085
+bottom_radius = 0.07
+height = 0.14
 
-[sub_resource type="BoxMesh" id="BoxMesh_hand"]
-size = Vector3(0.14, 0.1, 0.16)
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_forearm"]
+radius = 0.05
+height = 0.34
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_palm"]
+radius = 0.045
+height = 0.1
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_finger"]
+radius = 0.013
+height = 0.1
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_thumb"]
+radius = 0.015
+height = 0.08
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
 albedo_color = Color(0.85, 0.68, 0.54, 1)
 roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sleeve"]
+albedo_color = Color(0.14, 0.18, 0.27, 1)
+roughness = 0.85
 
 [node name="a-deck-corridor" type="Node3D"]
 
@@ -78,7 +134,7 @@ position = Vector3(0, 8, 0)
 rotation_degrees = Vector3(-50, -30, 0)
 light_color = Color(1.0, 0.78, 0.52, 1)
 light_energy = 1.05
-shadow_enabled = true
+shadow_enabled = false
 
 [node name="Cell_r0_c0" type="CSGBox3D" parent="."]
 position = Vector3(0.0, 0.65, 0.0)
@@ -332,11 +388,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 1.0)
@@ -344,11 +410,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 1.0)
@@ -356,11 +432,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 1.0)
@@ -368,11 +454,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 1.0)
@@ -380,11 +476,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 1.0)
@@ -392,11 +498,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 1.0)
@@ -404,11 +520,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 1.0)
@@ -416,11 +542,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 1.0)
@@ -428,11 +564,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 1.0)
@@ -440,11 +586,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 1.0)
@@ -452,11 +608,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 1.0)
@@ -464,11 +630,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 1.0)
@@ -476,11 +652,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 1.0)
@@ -488,11 +674,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 1.0)
@@ -500,11 +696,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 1.0)
@@ -512,11 +718,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 1.0)
@@ -524,11 +740,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 1.0)
@@ -536,11 +762,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 1.0)
@@ -548,11 +784,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r1_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r1_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 1.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r1_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 1.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r1_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 1.0)
@@ -572,11 +818,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 2.0)
@@ -584,11 +840,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 2.0)
@@ -596,11 +862,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 2.0)
@@ -608,11 +884,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 2.0)
@@ -620,11 +906,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 2.0)
@@ -632,11 +928,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 2.0)
@@ -644,11 +950,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 2.0)
@@ -656,11 +972,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 2.0)
@@ -668,11 +994,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 2.0)
@@ -680,11 +1016,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 2.0)
@@ -692,11 +1038,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 2.0)
@@ -704,11 +1060,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 2.0)
@@ -716,11 +1082,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 2.0)
@@ -728,11 +1104,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 2.0)
@@ -740,11 +1126,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 2.0)
@@ -752,11 +1148,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 2.0)
@@ -764,11 +1170,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 2.0)
@@ -776,11 +1192,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 2.0)
@@ -788,11 +1214,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r2_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r2_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 2.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r2_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 2.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r2_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 2.0)
@@ -812,11 +1248,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 3.0)
@@ -824,11 +1270,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 3.0)
@@ -836,11 +1292,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 3.0)
@@ -848,11 +1314,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 3.0)
@@ -860,11 +1336,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 3.0)
@@ -872,11 +1358,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 3.0)
@@ -884,11 +1380,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 3.0)
@@ -896,11 +1402,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 3.0)
@@ -908,11 +1424,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 3.0)
@@ -920,11 +1446,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 3.0)
@@ -932,11 +1468,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 3.0)
@@ -944,11 +1490,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 3.0)
@@ -956,11 +1512,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 3.0)
@@ -968,11 +1534,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 3.0)
@@ -980,11 +1556,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 3.0)
@@ -992,11 +1578,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 3.0)
@@ -1004,11 +1600,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 3.0)
@@ -1016,11 +1622,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 3.0)
@@ -1028,11 +1644,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r3_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r3_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 3.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r3_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 3.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r3_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 3.0)
@@ -1052,11 +1678,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 4.0)
@@ -1064,11 +1700,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 4.0)
@@ -1076,17 +1722,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.65, 4.0)
@@ -1100,11 +1761,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 4.0)
@@ -1112,11 +1783,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 4.0)
@@ -1124,17 +1805,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.65, 4.0)
@@ -1148,11 +1844,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 4.0)
@@ -1160,11 +1866,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 4.0)
@@ -1172,17 +1888,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.65, 4.0)
@@ -1196,11 +1927,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 4.0)
@@ -1208,11 +1949,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 4.0)
@@ -1220,17 +1971,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.65, 4.0)
@@ -1244,11 +2010,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 4.0)
@@ -1256,11 +2032,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 4.0)
@@ -1268,11 +2054,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r4_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r4_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 4.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r4_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 4.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r4_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 4.0)
@@ -1292,11 +2088,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 5.0)
@@ -1304,11 +2110,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 5.0)
@@ -1316,11 +2132,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 5.0)
@@ -1328,11 +2154,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 5.0)
@@ -1340,11 +2176,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 5.0)
@@ -1352,11 +2198,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 5.0)
@@ -1364,11 +2220,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 5.0)
@@ -1376,11 +2242,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 5.0)
@@ -1388,11 +2264,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 5.0)
@@ -1400,11 +2286,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 5.0)
@@ -1412,11 +2308,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 5.0)
@@ -1424,11 +2330,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 5.0)
@@ -1436,11 +2352,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 5.0)
@@ -1448,11 +2374,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 5.0)
@@ -1460,11 +2396,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 5.0)
@@ -1472,11 +2418,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 5.0)
@@ -1484,11 +2440,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 5.0)
@@ -1496,11 +2462,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 5.0)
@@ -1508,11 +2484,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r5_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r5_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 5.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r5_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 5.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r5_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 5.0)
@@ -1532,11 +2518,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 6.0)
@@ -1544,11 +2540,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 6.0)
@@ -1556,11 +2562,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 6.0)
@@ -1568,11 +2584,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 6.0)
@@ -1580,11 +2606,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 6.0)
@@ -1592,11 +2628,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 6.0)
@@ -1604,11 +2650,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 6.0)
@@ -1616,11 +2672,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 6.0)
@@ -1628,11 +2694,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 6.0)
@@ -1640,11 +2716,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 6.0)
@@ -1652,11 +2738,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 6.0)
@@ -1664,11 +2760,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 6.0)
@@ -1676,11 +2782,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 6.0)
@@ -1688,11 +2804,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 6.0)
@@ -1700,11 +2826,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 6.0)
@@ -1712,11 +2848,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 6.0)
@@ -1724,11 +2870,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 6.0)
@@ -1736,11 +2892,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 6.0)
@@ -1748,11 +2914,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r6_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r6_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 6.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r6_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 6.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r6_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 6.0)
@@ -1772,11 +2948,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 7.0)
@@ -1784,11 +2970,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 7.0)
@@ -1796,11 +2992,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 7.0)
@@ -1808,11 +3014,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 7.0)
@@ -1820,11 +3036,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 7.0)
@@ -1832,11 +3058,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 7.0)
@@ -1844,11 +3080,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 7.0)
@@ -1856,11 +3102,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 7.0)
@@ -1868,11 +3124,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 7.0)
@@ -1880,11 +3146,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 7.0)
@@ -1892,11 +3168,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 7.0)
@@ -1904,11 +3190,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 7.0)
@@ -1916,11 +3212,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 7.0)
@@ -1928,11 +3234,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 7.0)
@@ -1940,11 +3256,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 7.0)
@@ -1952,11 +3278,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 7.0)
@@ -1964,11 +3300,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 7.0)
@@ -1976,11 +3322,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 7.0)
@@ -1988,11 +3344,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r7_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r7_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 7.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r7_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 7.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r7_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 7.0)
@@ -2012,11 +3378,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 8.0)
@@ -2024,11 +3400,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 8.0)
@@ -2036,11 +3422,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 8.0)
@@ -2048,11 +3444,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 8.0)
@@ -2060,11 +3466,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 8.0)
@@ -2072,11 +3488,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 8.0)
@@ -2084,11 +3510,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 8.0)
@@ -2096,11 +3532,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 8.0)
@@ -2108,11 +3554,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 8.0)
@@ -2120,11 +3576,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 8.0)
@@ -2132,11 +3598,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 8.0)
@@ -2144,11 +3620,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 8.0)
@@ -2156,11 +3642,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 8.0)
@@ -2168,11 +3664,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 8.0)
@@ -2180,11 +3686,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 8.0)
@@ -2192,11 +3708,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 8.0)
@@ -2204,11 +3730,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 8.0)
@@ -2216,11 +3752,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 8.0)
@@ -2228,11 +3774,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r8_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r8_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 8.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r8_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 8.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r8_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 8.0)
@@ -2252,11 +3808,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 9.0)
@@ -2264,11 +3830,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 9.0)
@@ -2276,17 +3852,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.65, 9.0)
@@ -2300,11 +3891,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 9.0)
@@ -2312,11 +3913,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 9.0)
@@ -2324,17 +3935,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.65, 9.0)
@@ -2348,11 +3974,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 9.0)
@@ -2360,11 +3996,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 9.0)
@@ -2372,17 +4018,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.65, 9.0)
@@ -2396,11 +4057,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 9.0)
@@ -2408,11 +4079,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 9.0)
@@ -2420,17 +4101,32 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.65, 9.0)
@@ -2444,11 +4140,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 9.0)
@@ -2456,11 +4162,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 9.0)
@@ -2468,11 +4184,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r9_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r9_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 9.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r9_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 9.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r9_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 9.0)
@@ -2492,11 +4218,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 10.0)
@@ -2504,11 +4240,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 10.0)
@@ -2516,11 +4262,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 10.0)
@@ -2528,11 +4284,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 10.0)
@@ -2540,11 +4306,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 10.0)
@@ -2552,11 +4328,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 10.0)
@@ -2564,11 +4350,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 10.0)
@@ -2576,11 +4372,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 10.0)
@@ -2588,11 +4394,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 10.0)
@@ -2600,11 +4416,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 10.0)
@@ -2612,11 +4438,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 10.0)
@@ -2624,11 +4460,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 10.0)
@@ -2636,11 +4482,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 10.0)
@@ -2648,11 +4504,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 10.0)
@@ -2660,11 +4526,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 10.0)
@@ -2672,11 +4548,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 10.0)
@@ -2684,11 +4570,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 10.0)
@@ -2696,11 +4592,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 10.0)
@@ -2708,11 +4614,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r10_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r10_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 10.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r10_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 10.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r10_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 10.0)
@@ -2732,11 +4648,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 11.0)
@@ -2744,11 +4670,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 11.0)
@@ -2756,11 +4692,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 11.0)
@@ -2768,11 +4714,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 11.0)
@@ -2780,11 +4736,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 11.0)
@@ -2792,11 +4758,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 11.0)
@@ -2804,11 +4780,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 11.0)
@@ -2816,11 +4802,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 11.0)
@@ -2828,11 +4824,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 11.0)
@@ -2840,11 +4846,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 11.0)
@@ -2852,11 +4868,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 11.0)
@@ -2864,11 +4890,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 11.0)
@@ -2876,11 +4912,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 11.0)
@@ -2888,11 +4934,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 11.0)
@@ -2900,11 +4956,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 11.0)
@@ -2912,11 +4978,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 11.0)
@@ -2924,11 +5000,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 11.0)
@@ -2936,11 +5022,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 11.0)
@@ -2948,11 +5044,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r11_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r11_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 11.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r11_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 11.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r11_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 11.0)
@@ -2972,11 +5078,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c1" type="CSGBox3D" parent="."]
+position = Vector3(1.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c2" type="CSGBox3D" parent="."]
 position = Vector3(2.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c2" type="CSGBox3D" parent="."]
+position = Vector3(2.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c3" type="CSGBox3D" parent="."]
 position = Vector3(3.0, 0.1, 12.0)
@@ -2984,11 +5100,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c3" type="CSGBox3D" parent="."]
+position = Vector3(3.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c4" type="CSGBox3D" parent="."]
 position = Vector3(4.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c4" type="CSGBox3D" parent="."]
+position = Vector3(4.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c5" type="CSGBox3D" parent="."]
 position = Vector3(5.0, 0.1, 12.0)
@@ -2996,11 +5122,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c5" type="CSGBox3D" parent="."]
+position = Vector3(5.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c6" type="CSGBox3D" parent="."]
 position = Vector3(6.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c6" type="CSGBox3D" parent="."]
+position = Vector3(6.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c7" type="CSGBox3D" parent="."]
 position = Vector3(7.0, 0.1, 12.0)
@@ -3008,11 +5144,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c7" type="CSGBox3D" parent="."]
+position = Vector3(7.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c8" type="CSGBox3D" parent="."]
 position = Vector3(8.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c8" type="CSGBox3D" parent="."]
+position = Vector3(8.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c9" type="CSGBox3D" parent="."]
 position = Vector3(9.0, 0.1, 12.0)
@@ -3020,11 +5166,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c9" type="CSGBox3D" parent="."]
+position = Vector3(9.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c10" type="CSGBox3D" parent="."]
 position = Vector3(10.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c10" type="CSGBox3D" parent="."]
+position = Vector3(10.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c11" type="CSGBox3D" parent="."]
 position = Vector3(11.0, 0.1, 12.0)
@@ -3032,11 +5188,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c11" type="CSGBox3D" parent="."]
+position = Vector3(11.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c12" type="CSGBox3D" parent="."]
 position = Vector3(12.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c12" type="CSGBox3D" parent="."]
+position = Vector3(12.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c13" type="CSGBox3D" parent="."]
 position = Vector3(13.0, 0.1, 12.0)
@@ -3044,11 +5210,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c13" type="CSGBox3D" parent="."]
+position = Vector3(13.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c14" type="CSGBox3D" parent="."]
 position = Vector3(14.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c14" type="CSGBox3D" parent="."]
+position = Vector3(14.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c15" type="CSGBox3D" parent="."]
 position = Vector3(15.0, 0.1, 12.0)
@@ -3056,11 +5232,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c15" type="CSGBox3D" parent="."]
+position = Vector3(15.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c16" type="CSGBox3D" parent="."]
 position = Vector3(16.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c16" type="CSGBox3D" parent="."]
+position = Vector3(16.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c17" type="CSGBox3D" parent="."]
 position = Vector3(17.0, 0.1, 12.0)
@@ -3068,11 +5254,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c17" type="CSGBox3D" parent="."]
+position = Vector3(17.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c18" type="CSGBox3D" parent="."]
 position = Vector3(18.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c18" type="CSGBox3D" parent="."]
+position = Vector3(18.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c19" type="CSGBox3D" parent="."]
 position = Vector3(19.0, 0.1, 12.0)
@@ -3080,11 +5276,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c19" type="CSGBox3D" parent="."]
+position = Vector3(19.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c20" type="CSGBox3D" parent="."]
 position = Vector3(20.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c20" type="CSGBox3D" parent="."]
+position = Vector3(20.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c21" type="CSGBox3D" parent="."]
 position = Vector3(21.0, 0.1, 12.0)
@@ -3092,11 +5298,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c21" type="CSGBox3D" parent="."]
+position = Vector3(21.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c22" type="CSGBox3D" parent="."]
 position = Vector3(22.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c22" type="CSGBox3D" parent="."]
+position = Vector3(22.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c23" type="CSGBox3D" parent="."]
 position = Vector3(23.0, 0.1, 12.0)
@@ -3104,11 +5320,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c23" type="CSGBox3D" parent="."]
+position = Vector3(23.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c24" type="CSGBox3D" parent="."]
 position = Vector3(24.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c24" type="CSGBox3D" parent="."]
+position = Vector3(24.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c25" type="CSGBox3D" parent="."]
 position = Vector3(25.0, 0.1, 12.0)
@@ -3116,11 +5342,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c25" type="CSGBox3D" parent="."]
+position = Vector3(25.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c26" type="CSGBox3D" parent="."]
 position = Vector3(26.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c26" type="CSGBox3D" parent="."]
+position = Vector3(26.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c27" type="CSGBox3D" parent="."]
 position = Vector3(27.0, 0.1, 12.0)
@@ -3128,11 +5364,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c27" type="CSGBox3D" parent="."]
+position = Vector3(27.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c28" type="CSGBox3D" parent="."]
 position = Vector3(28.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c28" type="CSGBox3D" parent="."]
+position = Vector3(28.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c29" type="CSGBox3D" parent="."]
 position = Vector3(29.0, 0.1, 12.0)
@@ -3140,11 +5386,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c29" type="CSGBox3D" parent="."]
+position = Vector3(29.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c30" type="CSGBox3D" parent="."]
 position = Vector3(30.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c30" type="CSGBox3D" parent="."]
+position = Vector3(30.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c31" type="CSGBox3D" parent="."]
 position = Vector3(31.0, 0.1, 12.0)
@@ -3152,11 +5408,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c31" type="CSGBox3D" parent="."]
+position = Vector3(31.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c32" type="CSGBox3D" parent="."]
 position = Vector3(32.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c32" type="CSGBox3D" parent="."]
+position = Vector3(32.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c33" type="CSGBox3D" parent="."]
 position = Vector3(33.0, 0.1, 12.0)
@@ -3164,11 +5430,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c33" type="CSGBox3D" parent="."]
+position = Vector3(33.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c34" type="CSGBox3D" parent="."]
 position = Vector3(34.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c34" type="CSGBox3D" parent="."]
+position = Vector3(34.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c35" type="CSGBox3D" parent="."]
 position = Vector3(35.0, 0.1, 12.0)
@@ -3176,11 +5452,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c35" type="CSGBox3D" parent="."]
+position = Vector3(35.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c36" type="CSGBox3D" parent="."]
 position = Vector3(36.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c36" type="CSGBox3D" parent="."]
+position = Vector3(36.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c37" type="CSGBox3D" parent="."]
 position = Vector3(37.0, 0.1, 12.0)
@@ -3188,11 +5474,21 @@ size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
 
+[node name="Ceiling_r12_c37" type="CSGBox3D" parent="."]
+position = Vector3(37.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
+
 [node name="Cell_r12_c38" type="CSGBox3D" parent="."]
 position = Vector3(38.0, 0.1, 12.0)
 size = Vector3(1, 0.2, 1)
 use_collision = true
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="Ceiling_r12_c38" type="CSGBox3D" parent="."]
+position = Vector3(38.0, 1.4000000000000001, 12.0)
+size = Vector3(1, 0.2, 1)
+material = SubResource("ShaderMaterial_ceiling")
 
 [node name="Cell_r12_c39" type="CSGBox3D" parent="."]
 position = Vector3(39.0, 0.65, 12.0)
@@ -3714,15 +6010,54 @@ fov = 75
 position = Vector3(0.32, -0.32, -0.45)
 rotation_degrees = Vector3(15, -20, 10)
 
-[node name="Forearm" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
-mesh = SubResource("BoxMesh_forearm")
-material_override = SubResource("StandardMaterial3D_skin")
-position = Vector3(0, 0, -0.15)
+[node name="Sleeve" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CylinderMesh_sleeve")
+material_override = SubResource("StandardMaterial3D_sleeve")
+position = Vector3(0, 0, 0.03)
+rotation_degrees = Vector3(90, 0, 0)
 
-[node name="Hand" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
-mesh = SubResource("BoxMesh_hand")
+[node name="Forearm" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_forearm")
 material_override = SubResource("StandardMaterial3D_skin")
-position = Vector3(0, 0, -0.42)
+position = Vector3(0, 0, -0.17)
+rotation_degrees = Vector3(90, 0, 0)
+
+[node name="Palm" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_palm")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0, 0, -0.4)
+rotation_degrees = Vector3(90, 0, 0)
+scale = Vector3(1.3, 1.0, 0.65)
+
+[node name="Finger0" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_finger")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(-0.045, -0.01, -0.52)
+rotation_degrees = Vector3(110, 0, 0)
+
+[node name="Finger1" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_finger")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(-0.015, -0.01, -0.52)
+rotation_degrees = Vector3(110, 0, 0)
+
+[node name="Finger2" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_finger")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0.015, -0.01, -0.52)
+rotation_degrees = Vector3(110, 0, 0)
+
+[node name="Finger3" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_finger")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0.045, -0.01, -0.52)
+rotation_degrees = Vector3(110, 0, 0)
+
+[node name="Thumb" type="MeshInstance3D" parent="Player/Camera3D/Arm"]
+mesh = SubResource("CapsuleMesh_thumb")
+material_override = SubResource("StandardMaterial3D_skin")
+position = Vector3(0.065, 0.015, -0.42)
+rotation_degrees = Vector3(95, 0, 45)
 
 [connection signal="body_entered" from="Entity_door__r2_c2" to="Entity_door__r2_c2" method="_on_body_entered"]
 

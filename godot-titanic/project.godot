@@ -22,6 +22,22 @@ project/assembly_name="Godot Titanic"
 
 common/enable_pause_aware_picking=true
 
+[importer_defaults]
+
+; All source art here is small pixel-art (16-40px tiles). Godot's own
+; default texture import preset auto-detects "used on a 3D node" (Sprite3D,
+; a 3D material) and switches those textures to VRAM block compression --
+; fine for normal-sized 3D textures, but block-compressing a 32x16 tile
+; smears it into visible blur/artifacts. Force lossless + no mipmaps for
+; every future import so this can't regress; the 19 textures imported
+; before this was added were patched by hand (see godot-titanic-port memory).
+texture={
+"compress/mode": 0,
+"compress/normal_map": 0,
+"mipmaps/generate": false,
+"detect_3d/compress_to": 0
+}
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

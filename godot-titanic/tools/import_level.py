@@ -227,6 +227,44 @@ void fragment() {
 }
 """
 
+# A single flat albedo_color (see the "chevron mess" note further down)
+# reads clean but genuinely flat/plastic up close in first person -- this
+# adds resolution-independent (never blurry, unlike a stretched low-res
+# tile texture) panel seams + a little grain, used for both walls and the
+# new ceiling. panel_count controls how many seam divisions cross each
+# 0..1 face UV -- CSGBox3D always UVs a face 0..1 regardless of its real
+# world size, so this stays consistent across differently-sized rooms.
+WALL_DETAIL_SHADER = """shader_type spatial;
+render_mode blend_mix, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec3 base_color : source_color = vec3(0.5, 0.5, 0.5);
+uniform float panel_count = 3.0;
+uniform float seam_width = 0.035;
+uniform float grain_strength = 0.05;
+uniform float rough : hint_range(0.0, 1.0) = 0.75;
+uniform float spec : hint_range(0.0, 1.0) = 0.35;
+
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+void fragment() {
+    vec2 uv = UV * panel_count;
+    vec2 cell = fract(uv);
+    float seam = min(
+        min(smoothstep(0.0, seam_width, cell.x), smoothstep(0.0, seam_width, cell.y)),
+        min(smoothstep(0.0, seam_width, 1.0 - cell.x), smoothstep(0.0, seam_width, 1.0 - cell.y))
+    );
+    float grain = (hash21(floor(uv * 41.0)) - 0.5) * grain_strength;
+    ALBEDO = clamp(base_color * (0.86 + 0.14 * seam) + grain, vec3(0.0), vec3(1.0));
+    ROUGHNESS = rough;
+    METALLIC = 0.0;
+    SPECULAR = spec;
+}
+"""
+
 # Entity types that get a real 3D model (built in tools/blender/) instead
 # of the generic billboarded Sprite3D in 3D rooms. (rotation_degrees) turns
 # the model to face the direction that reads right for that kind of prop --
@@ -334,6 +372,69 @@ def add_sub_once(sub_resources: list, type_: str, id_: str, body: str) -> str:
     if not any(f'id="{id_}"' in s for s in sub_resources):
         sub_resources.append(f'[sub_resource type="{type_}" id="{id_}"]\n{body}')
     return id_
+
+
+FIRST_PERSON_ARM_LOAD_STEPS = 7  # 5 meshes + 2 materials, see below
+
+
+def build_first_person_arm(add_sub_once, sub_resources: list) -> list:
+    """Node blocks for a first-person arm: a sleeve, forearm, palm, four
+    fingers, and a thumb -- plain primitive meshes (Capsule/Cylinder, no
+    Blender model needed for a prop this small and permanently on-screen),
+    replacing an earlier flat forearm+hand box pair that read as two
+    Minecraft-style blocks rather than a hand. Every node's `parent=` is
+    relative to the *scene root* -- "Player/Camera3D/Arm" -- not to the
+    node immediately before it in the file (see the "vanished" NodePath
+    gotcha recorded where this is called from)."""
+    sleeve_mesh = add_sub_once(sub_resources, "CylinderMesh", "CylinderMesh_sleeve", 'top_radius = 0.085\nbottom_radius = 0.07\nheight = 0.14')
+    forearm_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_forearm", 'radius = 0.05\nheight = 0.34')
+    palm_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_palm", 'radius = 0.045\nheight = 0.1')
+    finger_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_finger", 'radius = 0.013\nheight = 0.1')
+    thumb_mesh = add_sub_once(sub_resources, "CapsuleMesh", "CapsuleMesh_thumb", 'radius = 0.015\nheight = 0.08')
+    skin_mat = add_sub_once(sub_resources, "StandardMaterial3D", "StandardMaterial3D_skin", 'albedo_color = Color(0.85, 0.68, 0.54, 1)\nroughness = 0.7')
+    sleeve_mat = add_sub_once(sub_resources, "StandardMaterial3D", "StandardMaterial3D_sleeve", 'albedo_color = Color(0.14, 0.18, 0.27, 1)\nroughness = 0.85')
+
+    parent = "Player/Camera3D/Arm"
+    nodes = [
+        '[node name="Arm" type="Node3D" parent="Player/Camera3D"]\n'
+        'position = Vector3(0.32, -0.32, -0.45)\n'
+        'rotation_degrees = Vector3(15, -20, 10)',
+
+        f'[node name="Sleeve" type="MeshInstance3D" parent="{parent}"]\n'
+        f'mesh = SubResource("{sleeve_mesh}")\n'
+        f'material_override = SubResource("{sleeve_mat}")\n'
+        'position = Vector3(0, 0, 0.03)\n'
+        'rotation_degrees = Vector3(90, 0, 0)',
+
+        f'[node name="Forearm" type="MeshInstance3D" parent="{parent}"]\n'
+        f'mesh = SubResource("{forearm_mesh}")\n'
+        f'material_override = SubResource("{skin_mat}")\n'
+        'position = Vector3(0, 0, -0.17)\n'
+        'rotation_degrees = Vector3(90, 0, 0)',
+
+        f'[node name="Palm" type="MeshInstance3D" parent="{parent}"]\n'
+        f'mesh = SubResource("{palm_mesh}")\n'
+        f'material_override = SubResource("{skin_mat}")\n'
+        'position = Vector3(0, 0, -0.4)\n'
+        'rotation_degrees = Vector3(90, 0, 0)\n'
+        'scale = Vector3(1.3, 1.0, 0.65)',
+    ]
+    for i, fx in enumerate((-0.045, -0.015, 0.015, 0.045)):
+        nodes.append(
+            f'[node name="Finger{i}" type="MeshInstance3D" parent="{parent}"]\n'
+            f'mesh = SubResource("{finger_mesh}")\n'
+            f'material_override = SubResource("{skin_mat}")\n'
+            f'position = Vector3({fx}, -0.01, -0.52)\n'
+            'rotation_degrees = Vector3(110, 0, 0)'
+        )
+    nodes.append(
+        f'[node name="Thumb" type="MeshInstance3D" parent="{parent}"]\n'
+        f'mesh = SubResource("{thumb_mesh}")\n'
+        f'material_override = SubResource("{skin_mat}")\n'
+        'position = Vector3(0.065, 0.015, -0.42)\n'
+        'rotation_degrees = Vector3(95, 0, 45)'
+    )
+    return nodes
 
 
 def build_2d_scene(level: dict, room_name: str) -> str:
@@ -621,6 +722,28 @@ def build_3d_scene(level: dict, room_name: str) -> str:
     tileset_ext_id = add_ext("Tileset", "Texture2D", tileset_res_path)
     solid_types = set(level.get("solid", []))
 
+    wall_shader_id = None
+
+    def wall_shader_material(mat_id: str, color: tuple, panel_count: float = 3.0) -> None:
+        # Shared by every wall AND the ceiling (see below) -- a flat
+        # albedo_color reads clean but genuinely flat/plastic up close in
+        # first person, so this swaps in WALL_DETAIL_SHADER for
+        # resolution-independent panel seams + grain instead (never
+        # blurry, unlike a stretched low-res tile texture would be).
+        nonlocal wall_shader_id, load_steps
+        if wall_shader_id is None:
+            wall_shader_id = "Shader_wall_detail"
+            sub_resources.append(f'[sub_resource type="Shader" id="{wall_shader_id}"]\ncode = {gd_str(WALL_DETAIL_SHADER)}')
+            load_steps += 1
+        r, g, b = color
+        sub_resources.append(
+            f'[sub_resource type="ShaderMaterial" id="{mat_id}"]\n'
+            f'shader = SubResource("{wall_shader_id}")\n'
+            f'shader_parameter/base_color = Color({r:.4f}, {g:.4f}, {b:.4f}, 1)\n'
+            f'shader_parameter/panel_count = {panel_count}'
+        )
+        load_steps += 1
+
     frame_mat_ids = {}
     for name, idx in level["tileFrames"].items():
         used = any(tile_type(level, ch) == name for row in level["tiles"] for ch in row)
@@ -631,21 +754,12 @@ def build_3d_scene(level: dict, room_name: str) -> str:
             # The 2D iso tile art is a small diamond on a mostly-transparent
             # 32x16 canvas, meant to be viewed flat from above -- stretched
             # across a tall vertical wall face it tiles into an illegible
-            # chevron mess. Flat-color (sampled from the real art) reads as
-            # a clean solid wall instead; real wall side-textures are a
-            # later refinement (see plan Roadmap).
+            # chevron mess. A flat base color (sampled from the real art),
+            # detailed up by WALL_DETAIL_SHADER, reads as a clean solid wall
+            # instead; real wall side-textures are a later refinement (see
+            # plan Roadmap).
             r, g, b = frame_average_color(tileset_res_suffix, idx)
-            # roughness < the StandardMaterial3D default (1.0, fully matte)
-            # so walls catch a soft specular highlight off the
-            # DirectionalLight3D instead of reading as flat construction-
-            # paper cutouts -- a small, broad-impact realism nudge that
-            # costs nothing since it's just material params, not geometry.
-            sub_resources.append(
-                f'[sub_resource type="StandardMaterial3D" id="{mid}"]\n'
-                f'albedo_color = Color({r:.4f}, {g:.4f}, {b:.4f}, 1)\n'
-                'roughness = 0.75\n'
-                'metallic_specular = 0.35'
-            )
+            wall_shader_material(mid, (r, g, b))
         else:
             aid = f"AtlasTexture_{name}"
             sub_resources.append(
@@ -659,13 +773,28 @@ def build_3d_scene(level: dict, room_name: str) -> str:
                 f'albedo_texture = SubResource("{aid}")\n'
                 f'texture_filter = 0'
             )
-        load_steps += 1
+            load_steps += 1
         frame_mat_ids[name] = mid
 
     mood = room_mood(room_name)
     ac, ae = mood["ambient_color"], mood["ambient_energy"]
     lc, le = mood["light_color"], mood["light_energy"]
     bg = mood["bg"]
+
+    # Ceilings: every indoor room gets one (a room with open sky above --
+    # the outdoor deck rooms, which set fallbackTileType -- obviously
+    # shouldn't). Without one, first-person view straight up just showed
+    # the void past the wall tops, the single biggest "this isn't a real
+    # enclosed building" tell. Tinted darker than the room's own ambient
+    # so it still reads as "overhead" rather than another wall.
+    ceiling_mat_id = None
+    if not level.get("fallbackTileType"):
+        ceiling_mat_id = "ShaderMaterial_ceiling"
+        # Same per-cell 0..1 UV scale as a wall face (each ceiling cell is
+        # its own 1x1 CSGBox3D, like the floor), so the default panel_count
+        # (one subtle seam per tile edge) matches.
+        wall_shader_material(ceiling_mat_id, tuple(c * 0.55 for c in ac))
+
     env_lines = [
         # Flat ambient fill so wall faces angled away from the one
         # DirectionalLight3D aren't fully unlit (near-black) -- a single
@@ -729,7 +858,15 @@ def build_3d_scene(level: dict, room_name: str) -> str:
         'rotation_degrees = Vector3(-50, -30, 0)\n'
         f'light_color = Color({lc[0]}, {lc[1]}, {lc[2]}, 1)\n'
         f'light_energy = {le}\n'
-        'shadow_enabled = true'
+        # Real-time shadows from a light positioned *outside* the room read
+        # great outdoors (the deck), but now that every indoor room has a
+        # ceiling (see ceiling_mat_id below), the same light sitting above
+        # that ceiling would have its own shadow entirely block it and
+        # plunge indoor rooms into near-darkness -- there's no other light
+        # source standing in for "indoor lighting fixtures" yet. Shadows
+        # stay off for indoor rooms so the directional light still reads as
+        # ambient room lighting; only outdoor rooms (no ceiling) keep them.
+        f'shadow_enabled = {"false" if ceiling_mat_id is not None else "true"}'
     )
 
     window_cells = set()
@@ -765,6 +902,17 @@ def build_3d_scene(level: dict, room_name: str) -> str:
                 f'use_collision = true\n'
                 f'material = SubResource("{cell_mat}")'
             )
+            if ceiling_mat_id is not None and not is_wall:
+                # Flush with the top of a wall at this same elevation --
+                # no collision needed, purely overhead dressing the player
+                # can never reach.
+                ceil_y = elev_units + WALL_HEIGHT_UNITS + FLOOR_THICKNESS_UNITS / 2.0
+                nodes.append(
+                    f'[node name="Ceiling_r{r}_c{c}" type="CSGBox3D" parent="."]\n'
+                    f'position = Vector3({float(c)}, {ceil_y}, {float(r)})\n'
+                    f'size = Vector3(1, {FLOOR_THICKNESS_UNITS}, 1)\n'
+                    f'material = SubResource("{ceiling_mat_id}")'
+                )
 
     cols, rows = level["_cols"], level["_rows"]
     fallback_type = level.get("fallbackTileType")
@@ -959,43 +1107,9 @@ def build_3d_scene(level: dict, room_name: str) -> str:
         'position = Vector3(0, 0.85, 0)\n'
         'fov = 75'
     )
-    # Minecraft-style first-person arm: a plain forearm+hand box pair (no
-    # Blender model -- this is screen-space set dressing, not world
-    # geometry), parented to the camera so it inherits its pitch and sits
-    # in the same lower-right-of-view spot every FPS game puts the
-    # player's own arm. Player3D.gd bobs its local position while walking
-    # and hides it in third-person view.
-    arm_mesh_id = add_sub_once(sub_resources, "BoxMesh", "BoxMesh_forearm", 'size = Vector3(0.12, 0.12, 0.5)')
-    hand_mesh_id = add_sub_once(sub_resources, "BoxMesh", "BoxMesh_hand", 'size = Vector3(0.14, 0.1, 0.16)')
-    skin_mat_id = add_sub_once(
-        sub_resources, "StandardMaterial3D", "StandardMaterial3D_skin",
-        'albedo_color = Color(0.85, 0.68, 0.54, 1)\nroughness = 0.7'
-    )
-    load_steps += 3
-    nodes.append(
-        # NodePath in `parent=` is relative to the *scene root*, not the
-        # immediately preceding node -- Camera3D itself lives at
-        # "Player/Camera3D" from root, so its children need that full
-        # path, not just "Camera3D" (got this wrong on the first pass:
-        # Godot silently drops the node with a "vanished" warning instead
-        # of a hard parse error, so this only surfaced by grepping the
-        # scene-run output for "WARNING"/"vanished", not just "error").
-        '[node name="Arm" type="Node3D" parent="Player/Camera3D"]\n'
-        'position = Vector3(0.32, -0.32, -0.45)\n'
-        'rotation_degrees = Vector3(15, -20, 10)'
-    )
-    nodes.append(
-        f'[node name="Forearm" type="MeshInstance3D" parent="Player/Camera3D/Arm"]\n'
-        f'mesh = SubResource("{arm_mesh_id}")\n'
-        f'material_override = SubResource("{skin_mat_id}")\n'
-        'position = Vector3(0, 0, -0.15)'
-    )
-    nodes.append(
-        f'[node name="Hand" type="MeshInstance3D" parent="Player/Camera3D/Arm"]\n'
-        f'mesh = SubResource("{hand_mesh_id}")\n'
-        f'material_override = SubResource("{skin_mat_id}")\n'
-        'position = Vector3(0, 0, -0.42)'
-    )
+    for node_str in build_first_person_arm(add_sub_once, sub_resources):
+        nodes.append(node_str)
+    load_steps += FIRST_PERSON_ARM_LOAD_STEPS
 
     if room_name in EXTERIOR_MODELS:
         model_id = add_ext("ExteriorModel", "PackedScene", EXTERIOR_MODELS[room_name])
